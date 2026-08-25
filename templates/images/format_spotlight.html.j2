@@ -1,0 +1,23 @@
+{# Slide singola: focus sul formato in programma quel giorno. #}
+{% extends "_base.html.j2" %}
+
+{% block eyebrow %}Si gioca {{ day|giorno }}{% endblock %}
+{% block title %}{{ format }}<span class="thin">{{ day|data }}{% if events %} · {{ events[0].start_time }}{% endif %}</span>{% endblock %}
+
+{% block styles %}
+  .lead { font-size: 34px; line-height: 1.35; color: {{ brand.muted }}; }
+  .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 8px; }
+  .fact .k { font-size: 22px; letter-spacing: .18em; text-transform: uppercase; color: {{ brand.accent }}; }
+  .fact .v { font-size: 34px; font-weight: 700; margin-top: 6px; line-height: 1.2; }
+  .cta { font-size: 30px; font-weight: 700; margin-top: 10px; }
+{% endblock %}
+
+{% block content %}
+{% if tagline %}<div class="lead">{{ tagline }}</div>{% endif %}
+<div class="facts">
+  {% for k, v in facts %}
+  <div class="fact card"><div class="k">{{ k }}</div><div class="v">{{ v }}</div></div>
+  {% endfor %}
+</div>
+{% if cta %}<div class="cta accent">{{ cta }}</div>{% endif %}
+{% endblock %}

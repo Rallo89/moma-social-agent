@@ -1,0 +1,25 @@
+{# Caption del post "formato del giorno" (mercoledi e giovedi ore 10).
+   Variabili: org, day, format, events, main (evento principale), facts,
+   tagline, hashtags. Filtri: |data, |giorno #}
+🎴 {{ format|upper }} · {{ day|giorno }} {{ day|data }}
+
+{% if tagline %}
+{{ tagline }}
+
+{% endif %}
+{% for e in events %}
+▪️ {{ e.label }}
+{% if e.start_time %}   🕗 Inizio {{ e.start_time }}{% endif +%}
+{% if e.venue %}   📍 {{ e.venue }}{% if e.city %} — {{ e.city }}{% endif %}{% endif +%}
+{% if e.entry_fee %}   💶 Iscrizione {{ e.entry_fee }}{% endif +%}
+{% if e.prize %}   🏆 {{ e.prize }}{% endif +%}
+{% if e.notes %}   ℹ️ {{ e.notes }}{% endif +%}
+{% endfor %}
+
+{% if main and main.signup_url %}
+✍️ Iscriviti qui: {{ main.signup_url }}
+{% else %}
+✍️ Iscrizioni: link in bio
+{% endif %}
+
+{{ hashtags }}

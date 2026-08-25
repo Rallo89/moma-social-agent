@@ -1,0 +1,26 @@
+name: Setup mtg-social
+description: Python, dipendenze e browser per generare e pubblicare i post
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+        cache: pip
+
+    - name: Installa dipendenze
+      shell: bash
+      run: pip install --disable-pip-version-check -e ".[sql,s3]"
+
+    - name: Verifica presenza di un browser per il rendering
+      shell: bash
+      run: |
+        # I runner ubuntu-latest hanno gia' Google Chrome: si installa
+        # chromium solo se manca davvero, per non pagare l'apt a ogni run.
+        if command -v google-chrome >/dev/null || command -v chromium >/dev/null \
+           || command -v chromium-browser >/dev/null; then
+          echo "Browser gia' presente: $(command -v google-chrome chromium chromium-browser | head -1)"
+        else
+          sudo apt-get update -qq && sudo apt-get install -y -qq chromium-browser
+        fi

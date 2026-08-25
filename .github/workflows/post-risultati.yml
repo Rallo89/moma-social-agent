@@ -1,0 +1,91 @@
+name: Post risultati di tappa
+
+# Giovedi e venerdi alle 03:00 Europe/Rome: carosello con i risultati della
+# tappa giocata la sera prima e la classifica generale aggiornata.
+on:
+  schedule:
+    - cron: "0 1,2 * * 4"
+    - cron: "0 1,2 * * 5"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Giorno della tappa (AAAA-MM-GG, default ieri)"
+        required: false
+      format:
+        description: "Forza il formato di gioco (di norma si deduce dal calendario)"
+        required: false
+      dry_run:
+        description: "Genera senza pubblicare"
+        type: boolean
+        default: false
+
+concurrency:
+  group: post-risultati
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  pubblica:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup
+
+      # I cron sono in UTC e non seguono l'ora legale: se ne schedulano due e
+      # solo quello che a Roma corrisponde a 03:00 prosegue.
+      - name: "Sono le 03:00 a Roma?"
+        id: gate
+        if: github.event_name == 'schedule'
+        run: mtgsocial gate --hour 3
+
+      - name: Genera e pubblica
+        id: post
+        if: github.event_name != 'schedule' || steps.gate.outputs.run == 'true'
+        env:
+          # Gli input del dispatch passano dall'ambiente e vengono quotati in
+          # bash: non vanno interpolati nella riga di comando.
+          POST_DATE: ${{ inputs.date }}
+          POST_FORMAT: ${{ inputs.format }}
+          POST_DRY_RUN: ${{ inputs.dry_run }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          MEDIA_BUCKET: ${{ secrets.MEDIA_BUCKET }}
+          MEDIA_PUBLIC_BASE: ${{ vars.MEDIA_PUBLIC_BASE }}
+          IMGBB_API_KEY: ${{ secrets.IMGBB_API_KEY }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          EVENTS_API_TOKEN: ${{ secrets.EVENTS_API_TOKEN }}
+          RESULTS_API_TOKEN: ${{ secrets.RESULTS_API_TOKEN }}
+        run: |
+          args=()
+          if [ -n "${POST_DATE:-}" ]; then args+=(--date "$POST_DATE"); fi
+          if [ -n "${POST_FORMAT:-}" ]; then args+=(--format "$POST_FORMAT"); fi
+          if [ "${POST_DRY_RUN:-}" = "true" ]; then args+=(--dry-run); fi
+
+          set +e
+          mtgsocial results "${args[@]}"
+          code=$?
+          set -e
+          # 78 = nessun dato per quel giorno: esito legittimo, il post si salta.
+          if [ $code -eq 78 ]; then
+            echo "::notice::Risultati della tappa non ancora disponibili nel DB: post saltato."
+            exit 0
+          fi
+          exit $code
+
+      - name: Archivia immagini e caption
+        if: steps.post.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: post-risultati-${{ github.run_id }}
+          path: out/
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Aggiorna il registro pubblicazioni
+        if: steps.post.outcome == 'success'
+        uses: ./.github/actions/commit-ledger

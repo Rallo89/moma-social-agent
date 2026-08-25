@@ -1,0 +1,120 @@
+{#
+  Layout base di tutte le slide (1080x1350, formato feed Instagram 4:5).
+
+  COME SOSTITUIRE IL TEMPLATE GRAFICO FORNITO DAL GRAFICO
+  -------------------------------------------------------
+  1. Salva l'immagine di sfondo in templates/images/assets/ (es. sfondo_calendario.png,
+     esportata a 1080x1350 o multipli).
+  2. In config/config.toml, nella sezione del post, aggiungi:
+        background = "templates/images/assets/sfondo_calendario.png"
+  3. Nient'altro: lo sfondo viene inlinato come data URI e il testo resta
+     sovrapposto nelle "safe zone" definite qui sotto.
+
+  Se `background` non e' impostato, si usa il fondo generato dai colori brand.
+#}
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: {{ width }}px {{ height }}px; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: {{ width }}px; height: {{ height }}px;
+    overflow: hidden;
+    font-family: {{ brand.font_family }};
+    color: {{ brand.text }};
+    background: {{ brand.primary }};
+    -webkit-font-smoothing: antialiased;
+  }
+  .canvas {
+    position: relative;
+    width: {{ width }}px; height: {{ height }}px;
+    display: flex; flex-direction: column;
+    padding: 72px 64px 64px;
+  }
+  .bg {
+    position: absolute; inset: 0;
+    background-size: cover; background-position: center;
+    z-index: 0;
+  }
+  {% if not background %}
+  /* Fondo generato: gradiente brand + alone d'accento in alto a destra. */
+  .bg {
+    background:
+      radial-gradient(120% 80% at 85% 0%, {{ brand.accent }}33 0%, transparent 55%),
+      linear-gradient(160deg, {{ brand.primary }} 0%, #0d1026 100%);
+  }
+  .bg::after {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      linear-gradient({{ brand.text }}08 1px, transparent 1px),
+      linear-gradient(90deg, {{ brand.text }}08 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  {% endif %}
+  /* Griglia a tre fasce: intestazione e footer hanno sempre la loro altezza,
+     il corpo prende il resto. Con flex un corpo troppo alto spingeva il footer
+     fuori dalla slide; con `1fr` + `min-height:0` viene invece contenuto. */
+  .layer {
+    position: relative; z-index: 1; height: 100%;
+    display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+
+  .eyebrow {
+    font-size: 26px; letter-spacing: .28em; text-transform: uppercase;
+    color: {{ brand.accent }}; font-weight: 700;
+  }
+  h1 { font-size: 78px; line-height: .98; font-weight: 800; letter-spacing: -.02em; }
+  h1 .thin { font-weight: 300; color: {{ brand.muted }}; display: block; font-size: 46px;
+             letter-spacing: 0; margin-top: 12px; }
+  .rule { width: 120px; height: 8px; background: {{ brand.accent }}; border-radius: 4px; margin: 28px 0 0; }
+
+  .body   { display: flex; flex-direction: column; justify-content: center;
+            gap: 18px; padding: 40px 0 24px; min-height: 0; overflow: hidden; }
+  .footer { display: flex; align-items: center; justify-content: space-between;
+            gap: 24px; border-top: 2px solid {{ brand.text }}22; padding-top: 24px; }
+  .footer .handle { font-size: 30px; font-weight: 700; }
+  .footer .site   { font-size: 24px; color: {{ brand.muted }}; }
+  .footer img.logo { height: 64px; width: auto; }
+
+  .card {
+    background: {{ brand.text }}0F;
+    border: 2px solid {{ brand.text }}1A;
+    border-left: 8px solid {{ brand.accent }};
+    border-radius: 20px;
+    padding: 22px 28px;
+  }
+  .muted { color: {{ brand.muted }}; }
+  .accent { color: {{ brand.accent }}; }
+  .nowrap { white-space: nowrap; }
+  /* Riduce automaticamente il corpo quando le righe sono tante. */
+  .dense-8  { font-size: .92em; }
+  .dense-10 { font-size: .84em; }
+  .dense-12 { font-size: .76em; }
+  {% block styles %}{% endblock %}
+</style>
+</head>
+<body>
+  <div class="canvas">
+    <div class="bg"{% if background %} style="background-image:url('{{ background|asset }}')"{% endif %}></div>
+    <div class="layer">
+      <div class="header">
+        {% block header %}
+        <div class="eyebrow">{% block eyebrow %}{{ org.name }}{% endblock %}</div>
+        <h1>{% block title %}{% endblock %}</h1>
+        <div class="rule"></div>
+        {% endblock %}
+      </div>
+      <div class="body">{% block content %}{% endblock %}</div>
+      <div class="footer">
+        <div>
+          <div class="handle">{{ org.handle }}</div>
+          <div class="site">{{ org.site }}</div>
+        </div>
+        {% if brand.logo and brand.logo|asset %}<img class="logo" src="{{ brand.logo|asset }}" alt="">{% endif %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

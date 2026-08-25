@@ -1,0 +1,164 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# mtg-social — configurazione dell'agente
+# Questo file e' versionato e NON contiene segreti: i valori ${NOME_VAR} sono
+# risolti a runtime dalle variabili d'ambiente (.env in locale, GitHub Secrets
+# in CI). Per override locali crea config/config.local.toml (git-ignored):
+# viene unito sopra a questo file chiave per chiave.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[org]
+name          = "Nome Associazione"
+handle        = "@nome_associazione"       # handle Instagram, usato nelle caption
+site          = "https://esempio.it"
+timezone      = "Europe/Rome"              # tutti gli orari nei log/schedule
+locale        = "it_IT"
+
+[brand]
+# Colori usati dai template HTML se NON viene fornito uno sfondo grafico.
+primary       = "#1B1F3B"
+accent        = "#E8A33D"
+text          = "#FFFFFF"
+muted         = "#B9C0D4"
+# Font: se metti un .ttf/.woff2 in templates/images/fonts/ indicane qui il nome.
+font_family   = "Inter, 'Helvetica Neue', Arial, sans-serif"
+logo          = "templates/images/assets/logo.png"   # opzionale
+
+[render]
+width         = 1080      # formato feed Instagram 4:5
+height        = 1350
+scale         = 2         # deviceScaleFactor: esporta a 2160x2700
+output_dir    = "out"
+# backend: "chromium" (headless CLI, zero dipendenze) | "playwright"
+backend       = "chromium"
+# Lasciato vuoto: cerca chrome/chromium nel PATH e in PLAYWRIGHT_BROWSERS_PATH
+chromium_path = ""
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SORGENTI DATI
+# Ogni sorgente accetta: url, kind (auto|json|csv|sql|yaml), root, query,
+# headers, params, map. `map` traduce i campi della vostra sorgente nei campi
+# del modello interno: "campo_interno" = "campo_sorgente".
+# Placeholder disponibili in url/params/query: {date_from} {date_to} {date}
+# {format} {season} — sostituiti a runtime (filtro server-side, opzionale:
+# se la sorgente non li supporta il filtro viene comunque riapplicato in locale).
+# ─────────────────────────────────────────────────────────────────────────────
+
+[sources.events]
+# Esempi:
+#   url = "https://api.esempio.it/eventi?from={date_from}&to={date_to}"
+#   url = "https://docs.google.com/spreadsheets/d/<ID>/edit#gid=0"   # -> CSV export
+#   url = "postgresql+psycopg://user:pw@host/db"
+#   url = "data/samples/events.json"
+url    = "data/samples/events.json"
+kind   = "auto"
+root   = ""            # JSON: chiave che contiene la lista (es. "data" o "results")
+# query = "SELECT * FROM eventi WHERE data BETWEEN '{date_from}' AND '{date_to}'"
+
+[sources.events.map]
+date          = "date"
+title         = "title"
+format        = "format"
+start_time    = "start_time"
+venue         = "venue"
+city          = "city"
+entry_fee     = "entry_fee"
+prize         = "prize"
+signup_url    = "signup_url"
+notes         = "notes"
+
+[sources.results]
+url    = "data/samples/results.json"
+kind   = "auto"
+root   = ""
+
+[sources.results.map]
+date          = "date"
+format        = "format"
+leg           = "leg"
+rank          = "rank"
+player        = "player"
+deck          = "deck"
+record        = "record"
+points        = "points"
+players_count = "players_count"
+venue         = "venue"
+
+[sources.standings]
+url    = "data/samples/standings.json"
+kind   = "auto"
+root   = ""
+
+[sources.standings.map]
+format        = "format"
+season        = "season"
+rank          = "rank"
+player        = "player"
+points        = "points"
+events_played = "events_played"
+delta         = "delta"          # variazione posizione vs tappa precedente
+
+# ─────────────────────────────────────────────────────────────────────────────
+# INSTAGRAM — Graph API (account Business/Creator collegato a una Pagina FB)
+# ─────────────────────────────────────────────────────────────────────────────
+[instagram]
+enabled        = true
+ig_user_id     = "${IG_USER_ID}"
+access_token   = "${IG_ACCESS_TOKEN}"     # long-lived token, mai committato
+api_version    = "v21.0"
+# Kill switch globale: se false ogni pipeline si ferma prima della pubblicazione
+# e lascia solo i file in out/ (utile per pausa senza toccare i workflow).
+publish_enabled = true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HOSTING IMMAGINI — la Graph API scarica le immagini da un URL PUBBLICO,
+# quindi i PNG generati vanno caricati da qualche parte prima di pubblicare.
+# backend: "s3" (S3/R2/MinIO) | "imgbb" | "none" (solo dry-run/export locale)
+# ─────────────────────────────────────────────────────────────────────────────
+[media]
+backend     = "s3"
+
+[media.s3]
+bucket      = "${MEDIA_BUCKET}"
+prefix      = "instagram/"
+region      = "${AWS_REGION}"
+endpoint_url = ""                          # valorizza per Cloudflare R2 / MinIO
+public_base = "${MEDIA_PUBLIC_BASE}"       # es. https://cdn.esempio.it
+acl         = "public-read"
+
+[media.imgbb]
+api_key     = "${IMGBB_API_KEY}"
+expiration  = 0                            # secondi; 0 = mai
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONTENUTI
+# ─────────────────────────────────────────────────────────────────────────────
+[content]
+hashtags_base   = ["#magicthegathering", "#mtg", "#tcg"]
+hashtags_max    = 20
+caption_max     = 2200          # limite Instagram
+# Fallback formati per giorno se la sorgente eventi non copre quel giorno
+[content.formats_by_weekday]
+wednesday = ""
+thursday  = ""
+
+[publish]
+# Registro versionato delle pubblicazioni: garantisce l'idempotenza fra run
+# diversi (un workflow rilanciato non produce un doppione).
+ledger = "state/published.jsonl"
+
+[posts.weekly_calendar]
+image_template   = "weekly_calendar.html.j2"
+caption_template = "weekly_calendar.txt.j2"
+hashtags         = ["#tornei", "#calendario"]
+
+[posts.format_spotlight]
+image_template   = "format_spotlight.html.j2"
+caption_template = "format_spotlight.txt.j2"
+hashtags         = ["#torneomagic"]
+
+[posts.leg_results]
+image_templates  = ["leg_results.html.j2", "standings.html.j2"]   # carosello 2 slide
+caption_template = "leg_results.txt.j2"
+hashtags         = ["#classifica", "#risultati"]
+top_n            = 8            # righe mostrate nella slide risultati
+standings_top_n  = 10

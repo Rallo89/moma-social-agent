@@ -1,0 +1,17 @@
+[
+  {"date": "2026-03-09", "title": "Serata Commander", "format": "Commander", "start_time": "21:00",
+   "venue": "Circolo Arcano", "city": "Bologna", "entry_fee": "5 €", "prize": "Buoni negozio",
+   "signup_url": "https://esempio.it/iscrizioni", "notes": "Tavoli da 4, no proxy"},
+  {"date": "2026-03-11", "title": "Tappa 4 - Modern League", "format": "Modern", "start_time": "20:30",
+   "venue": "Circolo Arcano", "city": "Bologna", "entry_fee": "10 €", "prize": "Montepremi 200 €",
+   "signup_url": "https://esempio.it/iscrizioni", "notes": "5 turni svizzera"},
+  {"date": "2026-03-12", "title": "Tappa 4 - Pioneer League", "format": "Pioneer", "start_time": "20:30",
+   "venue": "Circolo Arcano", "city": "Bologna", "entry_fee": "10 €", "prize": "Montepremi 180 €",
+   "signup_url": "https://esempio.it/iscrizioni", "notes": "4 turni svizzera + top 4"},
+  {"date": "2026-03-14", "title": "Prerelease", "format": "Limited", "start_time": "15:00",
+   "venue": "Palazzetto Fiera", "city": "Bologna", "entry_fee": "30 €", "prize": "Box promo",
+   "signup_url": "https://esempio.it/iscrizioni", "notes": "Posti limitati"},
+  {"date": "2026-03-15", "title": "Draft domenicale", "format": "Limited", "start_time": "16:00",
+   "venue": "Circolo Arcano", "city": "Bologna", "entry_fee": "18 €", "prize": "Buste ai primi 4",
+   "signup_url": "https://esempio.it/iscrizioni", "notes": ""}
+]

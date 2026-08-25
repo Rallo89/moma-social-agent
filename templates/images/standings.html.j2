@@ -1,0 +1,34 @@
+{# Slide 2 del carosello: classifica generale aggiornata del formato. #}
+{% extends "_base.html.j2" %}
+
+{% block eyebrow %}Classifica generale{% endblock %}
+{% block title %}{{ standings.format }}<span class="thin">{% if standings.season %}Stagione {{ standings.season }} · {% endif %}dopo {{ leg.leg or "l'ultima tappa" }}</span>{% endblock %}
+
+{% block styles %}
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 12px 8px; border-bottom: 1px solid {{ brand.text }}1A; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  .pos { width: 78px; font-size: 32px; font-weight: 800; color: {{ brand.muted }}; }
+  tr.top .pos { color: {{ brand.accent }}; }
+  .who { font-size: 31px; font-weight: 700; }
+  .meta { font-size: 22px; color: {{ brand.muted }}; }
+  .pts { text-align: right; font-size: 32px; font-weight: 800; white-space: nowrap; }
+  .trend { width: 54px; text-align: center; font-size: 24px; }
+  .up { color: #4ADE80; } .down { color: #F87171; } .flat { color: {{ brand.muted }}; }
+{% endblock %}
+
+{% block content %}
+<table class="{{ density }}">
+  {% for r in rows %}
+  <tr class="{% if r.rank <= 3 %}top{% endif %}">
+    <td class="pos">{{ r.rank }}</td>
+    <td class="trend {% if r.trend == '▲' %}up{% elif r.trend == '▼' %}down{% else %}flat{% endif %}">{{ r.trend }}</td>
+    <td>
+      <div class="who">{{ r.player }}</div>
+      {% if r.events_played %}<div class="meta">{{ r.events_played }} tappe</div>{% endif %}
+    </td>
+    <td class="pts">{{ r.points }} <span class="meta">pt</span></td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,218 @@
+[
+ {
+  "format": "Modern",
+  "season": "2025/26",
+  "rank": 1,
+  "player": "Chiara Gallo",
+  "points": 57,
+  "events_played": 2,
+  "delta": 1
+ },
+ {
+  "format": "Modern",
+  "season": "2025/26",
+  "rank": 2,
+  "player": "Ilaria Fontana",
+  "points": 55,
+  "events_played": 3,
+  "delta": 1
+ },
+ {
+  "format": "Modern",
+  "season": "2025/26",
+  "rank": 3,
+  "player": "Sara Conti",
+  "points": 49,
+  "events_played": 2,
+  "delta": 3
+ },
+ {
+  "format": "Modern",
+  "season": "2025/26",
+  "rank": 4,
+  "player": "Matteo Barbieri",
+  "points": 44,
+  "events_played": 4,
+  "delta": 1
+ },
+ {
+  "format": "Modern",
+  "season": "2025/26",
+  "rank": 5,
+  "player": "Andrea Costa",
+  "points": 41,
+  "events_played": 4,
+  "delta": 2
+ },
+ {
+  "format": "Modern",
+  "season": "2025/26",
+  "rank": 6,
+  "player": "Davide Greco",
+  "points": 39,
+  "events_played": 2,
+  "delta": 0
+ },
+ {
+  "format": "Modern",
+  "season": "2025/26",
+  "rank": 7,
+  "player": "Federica Lombardi",
+  "points": 32,
+  "events_played": 4,
+  "delta": 0
+ },
+ {
+  "format": "Modern",
+  "season": "2025/26",
+  "rank": 8,
+  "player": "Giulia Rossi",
+  "points": 30,
+  "events_played": 3,
+  "delta": 0
+ },
+ {
+  "format": "Modern",
+  "season": "2025/26",
+  "rank": 9,
+  "player": "Marco Bianchi",
+  "points": 24,
+  "events_played": 4,
+  "delta": -1
+ },
+ {
+  "format": "Modern",
+  "season": "2025/26",
+  "rank": 10,
+  "player": "Paolo Rizzo",
+  "points": 21,
+  "events_played": 2,
+  "delta": 0
+ },
+ {
+  "format": "Modern",
+  "season": "2025/26",
+  "rank": 11,
+  "player": "Luca Ferrari",
+  "points": 18,
+  "events_played": 2,
+  "delta": 1
+ },
+ {
+  "format": "Modern",
+  "season": "2025/26",
+  "rank": 12,
+  "player": "Elena Moretti",
+  "points": 12,
+  "events_played": 4,
+  "delta": 0
+ },
+ {
+  "format": "Pioneer",
+  "season": "2025/26",
+  "rank": 1,
+  "player": "Ilaria Fontana",
+  "points": 57,
+  "events_played": 4,
+  "delta": 0
+ },
+ {
+  "format": "Pioneer",
+  "season": "2025/26",
+  "rank": 2,
+  "player": "Marco Bianchi",
+  "points": 52,
+  "events_played": 4,
+  "delta": -1
+ },
+ {
+  "format": "Pioneer",
+  "season": "2025/26",
+  "rank": 3,
+  "player": "Giulia Rossi",
+  "points": 51,
+  "events_played": 3,
+  "delta": -3
+ },
+ {
+  "format": "Pioneer",
+  "season": "2025/26",
+  "rank": 4,
+  "player": "Luca Ferrari",
+  "points": 46,
+  "events_played": 4,
+  "delta": 1
+ },
+ {
+  "format": "Pioneer",
+  "season": "2025/26",
+  "rank": 5,
+  "player": "Federica Lombardi",
+  "points": 40,
+  "events_played": 4,
+  "delta": 3
+ },
+ {
+  "format": "Pioneer",
+  "season": "2025/26",
+  "rank": 6,
+  "player": "Davide Greco",
+  "points": 37,
+  "events_played": 3,
+  "delta": 0
+ },
+ {
+  "format": "Pioneer",
+  "season": "2025/26",
+  "rank": 7,
+  "player": "Sara Conti",
+  "points": 35,
+  "events_played": 3,
+  "delta": 2
+ },
+ {
+  "format": "Pioneer",
+  "season": "2025/26",
+  "rank": 8,
+  "player": "Elena Moretti",
+  "points": 28,
+  "events_played": 4,
+  "delta": -2
+ },
+ {
+  "format": "Pioneer",
+  "season": "2025/26",
+  "rank": 9,
+  "player": "Paolo Rizzo",
+  "points": 26,
+  "events_played": 4,
+  "delta": -2
+ },
+ {
+  "format": "Pioneer",
+  "season": "2025/26",
+  "rank": 10,
+  "player": "Andrea Costa",
+  "points": 23,
+  "events_played": 4,
+  "delta": -3
+ },
+ {
+  "format": "Pioneer",
+  "season": "2025/26",
+  "rank": 11,
+  "player": "Matteo Barbieri",
+  "points": 16,
+  "events_played": 2,
+  "delta": -1
+ },
+ {
+  "format": "Pioneer",
+  "season": "2025/26",
+  "rank": 12,
+  "player": "Chiara Gallo",
+  "points": 15,
+  "events_played": 4,
+  "delta": 1
+ }
+]

@@ -1,0 +1,161 @@
+"""Pubblicazione: dedupe, kill switch, dry-run, errori Graph API."""
+
+import json
+
+import pytest
+import responses
+
+from mtg_social.errors import ConfigError, PublishError
+from mtg_social.instagram import InstagramClient
+from mtg_social.models import PostDraft
+from mtg_social.publish import dedupe_key, ledger_path, publish_draft
+from mtg_social.uploader import upload
+
+API = "https://graph.facebook.com/v21.0"
+
+
+@pytest.fixture
+def draft(tmp_path):
+    image = tmp_path / "out" / "slide.png"
+    image.parent.mkdir(parents=True, exist_ok=True)
+    image.write_bytes(b"\x89PNG finto")
+    return PostDraft(kind="leg_results", images=[str(image)], caption="ciao",
+                     meta={"day": "2026-03-11", "format": "Modern"})
+
+
+def _credentials(cfg):
+    cfg.data["instagram"]["ig_user_id"] = "999"
+    cfg.data["instagram"]["access_token"] = "TOKEN"
+    cfg.data["media"]["backend"] = "imgbb"
+    cfg.data["media"]["imgbb"]["api_key"] = "K"
+
+
+def test_dedupe_key_stabile(draft):
+    assert dedupe_key(draft) == "leg_results:2026-03-11:Modern"
+
+
+def test_dry_run_non_chiama_la_rete(cfg, draft):
+    entry = publish_draft(cfg, draft, dry_run=True)
+    assert entry["status"] == "dry-run"
+    assert ledger_path(cfg).exists()
+
+
+def test_dry_run_salva_caption_e_metadati(cfg, draft):
+    publish_draft(cfg, draft, dry_run=True)
+    out = ledger_path(cfg).parent / "out"
+    assert (out / "slide.caption.txt").read_text(encoding="utf-8") == "ciao"
+    assert json.loads((out / "slide.json").read_text(encoding="utf-8"))["kind"] == "leg_results"
+
+
+def test_kill_switch_blocca_la_pubblicazione(cfg, draft):
+    cfg.data["instagram"]["publish_enabled"] = False
+    entry = publish_draft(cfg, draft)
+    assert entry["status"] == "skipped"
+    assert "publish_enabled" in entry["reason"]
+
+
+@responses.activate
+def test_pubblicazione_immagine_singola(cfg, draft):
+    _credentials(cfg)
+    responses.post("https://api.imgbb.com/1/upload",
+                   json={"data": {"url": "https://cdn/x.png"}})
+    responses.post(f"{API}/999/media", json={"id": "CONTAINER"})
+    responses.get(f"{API}/CONTAINER", json={"status_code": "FINISHED"})
+    responses.post(f"{API}/999/media_publish", json={"id": "POST1"})
+    responses.get(f"{API}/POST1", json={"permalink": "https://instagram.com/p/abc"})
+
+    entry = publish_draft(cfg, draft)
+    assert entry["status"] == "published"
+    assert entry["post_id"] == "POST1"
+    assert entry["permalink"] == "https://instagram.com/p/abc"
+
+
+@responses.activate
+def test_secondo_run_non_ripubblica(cfg, draft):
+    _credentials(cfg)
+    responses.post("https://api.imgbb.com/1/upload",
+                   json={"data": {"url": "https://cdn/x.png"}})
+    responses.post(f"{API}/999/media", json={"id": "C"})
+    responses.get(f"{API}/C", json={"status_code": "FINISHED"})
+    responses.post(f"{API}/999/media_publish", json={"id": "POST1"})
+    responses.get(f"{API}/POST1", json={"permalink": "p"})
+
+    assert publish_draft(cfg, draft)["status"] == "published"
+    second = publish_draft(cfg, draft)
+    assert second["status"] == "skipped"
+    assert second["post_id"] == "POST1"
+
+
+@responses.activate
+def test_force_ripubblica(cfg, draft):
+    _credentials(cfg)
+    responses.post("https://api.imgbb.com/1/upload",
+                   json={"data": {"url": "https://cdn/x.png"}})
+    responses.post(f"{API}/999/media", json={"id": "C"})
+    responses.get(f"{API}/C", json={"status_code": "FINISHED"})
+    responses.post(f"{API}/999/media_publish", json={"id": "POST2"})
+    responses.get(f"{API}/POST2", json={"permalink": "p"})
+
+    publish_draft(cfg, draft)
+    assert publish_draft(cfg, draft, force=True)["status"] == "published"
+
+
+@responses.activate
+def test_errore_graph_api_registrato(cfg, draft):
+    _credentials(cfg)
+    responses.post("https://api.imgbb.com/1/upload",
+                   json={"data": {"url": "https://cdn/x.png"}})
+    responses.post(f"{API}/999/media",
+                   json={"error": {"code": 190, "message": "Token scaduto"}})
+
+    with pytest.raises(PublishError, match="190"):
+        publish_draft(cfg, draft)
+    last = json.loads(ledger_path(cfg).read_text(encoding="utf-8").splitlines()[-1])
+    assert last["status"] == "error"
+
+
+@responses.activate
+def test_carosello_crea_i_figli_in_ordine(cfg, tmp_path):
+    _credentials(cfg)
+    images = []
+    for name in ("risultati.png", "classifica.png"):
+        path = tmp_path / "out" / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"png")
+        images.append(str(path))
+
+    responses.post("https://api.imgbb.com/1/upload",
+                   json={"data": {"url": "https://cdn/x.png"}})
+    responses.post(f"{API}/999/media", json={"id": "C1"})
+    responses.get(f"{API}/C1", json={"status_code": "FINISHED"})
+    responses.post(f"{API}/999/media_publish", json={"id": "POST"})
+    responses.get(f"{API}/POST", json={"permalink": "p"})
+
+    client = InstagramClient(cfg)
+    assert client.publish_post(["https://a/1.png", "https://a/2.png"], "c") == "POST"
+    carousel = [call.request for call in responses.calls
+                if call.request.url.endswith("/999/media")][-1]
+    assert "media_type=CAROUSEL" in carousel.body
+    assert "children=C1%2CC1" in carousel.body
+
+
+@responses.activate
+def test_container_in_errore(cfg):
+    _credentials(cfg)
+    responses.post(f"{API}/999/media", json={"id": "C"})
+    responses.get(f"{API}/C", json={"status_code": "ERROR", "status": "immagine non valida"})
+    with pytest.raises(PublishError, match="ERROR"):
+        InstagramClient(cfg).publish_post(["https://a/1.png"], "c")
+
+
+def test_credenziali_mancanti(cfg):
+    cfg.data["instagram"]["ig_user_id"] = ""
+    cfg.data["instagram"]["access_token"] = ""
+    with pytest.raises(ConfigError, match="IG_USER_ID"):
+        InstagramClient(cfg).check()
+
+
+def test_backend_media_assente(cfg, tmp_path):
+    cfg.data["media"]["backend"] = "none"
+    with pytest.raises(ConfigError, match="dry-run"):
+        upload(cfg, tmp_path)

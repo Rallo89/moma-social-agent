@@ -1,0 +1,77 @@
+---
+name: social-mtg
+description: Piano editoriale social dell'associazione MTG - come si generano, si rivedono e si pubblicano i post Instagram (calendario settimanale del lunedi, formato del giorno di mercoledi e giovedi, carosello risultati di tappa di giovedi e venerdi). Usala quando si parla di post Instagram, calendario eventi, spotlight di formato, risultati di tappa, classifiche, caption, o quando qualcosa nella pubblicazione automatica non ha funzionato.
+---
+
+# Piano editoriale social MTG
+
+## Il calendario editoriale
+
+| Quando (Europe/Rome) | Post | Contenuto | Comando |
+|---|---|---|---|
+| Lunedi 10:00 | Immagine singola | Calendario di tutti gli eventi della settimana | `mtgsocial weekly` |
+| Mercoledi 10:00 | Immagine singola | Formato in programma quel giorno | `mtgsocial format` |
+| Giovedi 10:00 | Immagine singola | Formato in programma quel giorno | `mtgsocial format` |
+| Giovedi 03:00 | Carosello 2 slide | Risultati tappa di mercoledi + classifica generale | `mtgsocial results` |
+| Venerdi 03:00 | Carosello 2 slide | Risultati tappa di giovedi + classifica generale | `mtgsocial results` |
+
+I due post dei risultati girano alle 03:00 e leggono la tappa **del giorno
+prima** (`--date yesterday`, che e' il default): a quell'ora il DB dei
+risultati e' stato compilato a fine serata.
+
+Il formato di mercoledi/giovedi **non e' cablato**: viene dedotto dagli eventi
+in calendario per quel giorno. Se in sorgente non c'e' nulla, si usa il
+fallback `content.formats_by_weekday` in `config/config.toml`.
+
+## Come lavorare
+
+Prima di toccare qualsiasi cosa, guarda i dati:
+
+```bash
+mtgsocial agenda                      # eventi della settimana corrente
+mtgsocial doctor                      # config, sorgenti, rendering, credenziali
+```
+
+Per generare un'anteprima senza pubblicare nulla:
+
+```bash
+mtgsocial weekly  --no-publish
+mtgsocial format  --date 2026-03-11 --no-publish
+mtgsocial results --date 2026-03-11 --no-publish
+```
+
+Ogni run lascia in `out/`: il PNG, l'HTML sorgente (per capire un layout
+sbagliato senza rilanciare), la caption in `.caption.txt` e i metadati `.json`.
+**Guarda sempre il PNG** prima di dire che un post e' pronto: la caption puo'
+essere perfetta e la slide illeggibile.
+
+## Regole di pubblicazione
+
+- La pubblicazione e' automatica: i workflow GitHub Actions pubblicano da soli
+  all'orario previsto. Non serve approvazione umana per il flusso normale.
+- Il ledger `out/published.jsonl` rende l'operazione **idempotente**: rilanciare
+  un workflow non produce un doppione. Per forzare davvero un secondo post
+  serve `--force`, e va usato solo se il primo e' stato cancellato a mano.
+- Kill switch: `instagram.publish_enabled = false` in config ferma ogni
+  pubblicazione lasciando comunque i file generati in `out/`. E' il modo
+  corretto di mettere in pausa i social (es. lutto, evento annullato), non
+  disabilitare i workflow.
+- `NoDataError` **non e' un errore**: se non ci sono eventi o risultati, la
+  pipeline esce con codice 78 e il workflow salta il post. Non inventare
+  contenuti per riempire un post vuoto, e non pubblicare una slide con dati
+  parziali: meglio nessun post che un post sbagliato.
+
+## Quando qualcosa non torna
+
+1. `mtgsocial doctor` dice quale anello si e' rotto (sorgente, rendering, token).
+2. Errori `SourceError` -> la sorgente dati e' cambiata: vedi la skill
+   **sorgenti-dati**.
+3. Errori di layout (testo tagliato, righe fuori slide) -> skill **template-grafici**.
+4. Errori `PublishError` con codice Graph API -> skill **instagram-publishing**.
+
+## Tono di voce
+
+Italiano, diretto, entusiasta senza esagerare. Seconda persona plurale ("ci
+vediamo ai tavoli"). Mai spoiler di risultati nel post del calendario. I nomi
+dei giocatori si scrivono come li ha scritti il DB: non correggere maiuscole o
+accenti a intuito, e non aggiungere soprannomi.

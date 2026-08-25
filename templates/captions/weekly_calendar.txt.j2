@@ -1,0 +1,33 @@
+{# ───────────────────────────────────────────────────────────────────────────
+   Caption del post "calendario settimanale" (lunedi ore 10).
+   Quando arriva il template testuale ufficiale, sostituisci il corpo qui sotto
+   mantenendo le variabili. Disponibili:
+     org.name / org.handle / org.site
+     periodo          -> "9 - 15 marzo"
+     days             -> lista di (data, [eventi]) ordinata
+     events_count     -> numero totale eventi
+     formats          -> lista formati distinti della settimana
+     hashtags         -> stringa gia' composta e deduplicata
+   Filtri: |data ("11 marzo"), |giorno ("Mercoledi")
+   ─────────────────────────────────────────────────────────────────────────── #}
+📅 LA SETTIMANA DI {{ org.name|upper }} · {{ periodo }}
+
+{% for day, events in days %}
+{{ day|giorno|upper }} {{ day|data }}
+{% for e in events %}
+{% if e.start_time %}🕗 {{ e.start_time }} · {% endif %}{{ e.label }}{% if e.format and e.format not in e.label %} ({{ e.format }}){% endif %}{% if e.venue %} — {{ e.venue }}{% endif +%}
+{% endfor %}
+
+{% endfor %}
+{% if formats %}
+🎴 Formati in programma: {{ formats|join(" · ") }}
+{% endif %}
+{% if signup_url %}
+✍️ Iscrizioni e regolamenti: {{ signup_url }}
+{% else %}
+✍️ Iscrizioni e info: link in bio
+{% endif %}
+
+Ci vediamo ai tavoli! 🔥
+
+{{ hashtags }}

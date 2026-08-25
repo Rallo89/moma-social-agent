@@ -1,0 +1,32 @@
+{# Slide 1 del carosello: risultati della tappa appena giocata. #}
+{% extends "_base.html.j2" %}
+
+{% block eyebrow %}Risultati {{ leg.leg or "tappa" }}{% endblock %}
+{% block title %}{{ leg.format }}<span class="thin">{{ leg.day_label }}{% if leg.players_count %} · {{ leg.players_count }} giocatori{% endif %}</span>{% endblock %}
+
+{% block styles %}
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 13px 8px; border-bottom: 1px solid {{ brand.text }}1A; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  .pos { width: 84px; font-size: 34px; font-weight: 800; color: {{ brand.muted }}; }
+  tr.top .pos { color: {{ brand.accent }}; }
+  .who { font-size: 32px; font-weight: 700; }
+  .deck { font-size: 23px; color: {{ brand.muted }}; }
+  .rec { text-align: right; font-size: 28px; font-weight: 700; white-space: nowrap; }
+  .medal { font-size: 30px; }
+{% endblock %}
+
+{% block content %}
+<table class="{{ density }}">
+  {% for r in rows %}
+  <tr class="{% if r.rank <= 3 %}top{% endif %}">
+    <td class="pos">{% if r.rank == 1 %}🏆{% elif r.rank == 2 %}🥈{% elif r.rank == 3 %}🥉{% else %}{{ r.rank }}{% endif %}</td>
+    <td>
+      <div class="who">{{ r.player }}</div>
+      {% if r.deck %}<div class="deck">{{ r.deck }}</div>{% endif %}
+    </td>
+    <td class="rec">{{ r.record }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,24 @@
+name: Commit ledger
+description: Ricommitta state/published.jsonl dopo una pubblicazione
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        set -euo pipefail
+        if git diff --quiet -- state/published.jsonl; then
+          echo "Nessuna nuova riga nel registro."
+          exit 0
+        fi
+        git config user.name  "mtg-social bot"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add state/published.jsonl
+        git commit -m "chore(social): aggiorna registro pubblicazioni"
+        # Un altro workflow puo' aver committato nel frattempo: si riprova
+        # sopra l'ultimo stato remoto invece di fallire.
+        for attempt in 1 2 3; do
+          if git push; then exit 0; fi
+          git pull --rebase --autostash
+        done
+        echo "::warning::Registro non ricommittato: il prossimo run potrebbe non vedere questa pubblicazione."

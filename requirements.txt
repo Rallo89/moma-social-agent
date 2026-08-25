@@ -1,0 +1,9 @@
+# Runtime
+Jinja2>=3.1
+requests>=2.31
+python-dateutil>=2.9
+PyYAML>=6.0
+# Optional data sources (installed by default, harmless if unused)
+SQLAlchemy>=2.0
+# Optional media hosting backend
+boto3>=1.34

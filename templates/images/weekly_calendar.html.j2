@@ -1,0 +1,43 @@
+{# Slide singola: calendario settimanale. Contesto: week_start, week_end, days #}
+{% extends "_base.html.j2" %}
+
+{% block eyebrow %}Calendario settimanale{% endblock %}
+{% block title %}{{ periodo }}<span class="thin">{{ days|length }} giorni di gioco · {{ events_count }} eventi</span>{% endblock %}
+
+{% block styles %}
+  .day { display: flex; gap: 24px; align-items: flex-start; }
+  .day + .day { margin-top: 16px; }
+  .day .when { flex: 0 0 190px; }
+  .day .dow  { font-size: 30px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+  .day .dnum { font-size: 24px; color: {{ brand.muted }}; }
+  .day .what { flex: 1 1 auto; }
+  .ev { display: flex; align-items: baseline; gap: 14px; }
+  .ev + .ev { margin-top: 10px; }
+  .ev .time { font-size: 26px; font-weight: 700; color: {{ brand.accent }}; flex: 0 0 92px; }
+  .ev .name { font-size: 32px; font-weight: 700; line-height: 1.15; }
+  .ev .fmt  { font-size: 24px; color: {{ brand.muted }}; }
+{% endblock %}
+
+{% block content %}
+<div class="{{ density }}">
+{% for day, events in days %}
+  <div class="day card">
+    <div class="when">
+      <div class="dow">{{ day|giorno }}</div>
+      <div class="dnum">{{ day|data }}</div>
+    </div>
+    <div class="what">
+      {% for e in events %}
+      <div class="ev">
+        <div class="time nowrap">{{ e.start_time or "—" }}</div>
+        <div>
+          <div class="name">{{ e.label }}</div>
+          <div class="fmt">{{ e.format }}{% if e.venue %} · {{ e.venue }}{% endif %}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endfor %}
+</div>
+{% endblock %}

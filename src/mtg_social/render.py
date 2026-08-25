@@ -1,0 +1,166 @@
+"""Rendering HTML -> PNG.
+
+I template sono HTML+CSS con Jinja2: il modo piu' pratico per riprodurre un
+template grafico fornito dal grafico (PNG/JPG di sfondo + testo sovrapposto)
+mantenendo tutto versionato e diffabile.
+
+Due backend, stessa interfaccia:
+  * "chromium"   -> chrome headless --screenshot (nessuna dipendenza Python)
+  * "playwright" -> piu' controllo (attesa font, clip), se installato
+"""
+
+from __future__ import annotations
+
+import base64
+import mimetypes
+import os
+import shutil
+import subprocess
+import tempfile
+from pathlib import Path
+
+from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
+
+from .config import Config
+from .errors import RenderError
+from .pngutil import crop_top_left
+from .timeutil import fmt_date, weekday_it
+
+CHROMIUM_CANDIDATES = (
+    "chromium", "chromium-browser", "google-chrome", "google-chrome-stable", "chrome",
+)
+
+
+# ── Jinja ───────────────────────────────────────────────────────────────────
+def _asset_data_uri(root: Path, relative: str) -> str:
+    """Inlina un asset come data URI: il PNG resta autonomo, niente path rotti."""
+    path = Path(relative)
+    if not path.is_absolute():
+        path = root / path
+    if not path.exists():
+        return ""
+    mime = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+    return f"data:{mime};base64,{base64.b64encode(path.read_bytes()).decode()}"
+
+
+def image_env(cfg: Config) -> Environment:
+    env = Environment(
+        loader=FileSystemLoader(cfg.root / "templates" / "images"),
+        autoescape=select_autoescape(["html", "xml"]),
+        undefined=StrictUndefined,
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+    env.filters["asset"] = lambda rel: _asset_data_uri(cfg.root, rel)
+    env.filters["data"] = fmt_date
+    env.filters["giorno"] = weekday_it
+    return env
+
+
+def build_html(cfg: Config, template: str, context: dict) -> str:
+    env = image_env(cfg)
+    # Undefined e' strict: ogni variabile usata dal layout base deve esistere
+    # sempre, anche quando il template concreto non la valorizza.
+    base = {
+        "brand": cfg.section("brand"),
+        "org": cfg.section("org"),
+        "width": cfg.get("render.width", 1080),
+        "height": cfg.get("render.height", 1350),
+        "background": "",
+        "density": "",
+    }
+    return env.get_template(template).render({**base, **context})
+
+
+# ── Screenshot ──────────────────────────────────────────────────────────────
+def _find_chromium(configured: str = "") -> str:
+    if configured:
+        if Path(configured).exists():
+            return configured
+        raise RenderError(f"chromium_path configurato ma inesistente: {configured}")
+    for name in CHROMIUM_CANDIDATES:
+        found = shutil.which(name)
+        if found:
+            return found
+    # Browser installati da Playwright (anche quello di Claude Code on the web)
+    pw_root = Path(os.environ.get("PLAYWRIGHT_BROWSERS_PATH", "")
+                   or Path.home() / ".cache/ms-playwright")
+    if pw_root.exists():
+        for candidate in sorted(pw_root.glob("chromium*/chrome-linux/chrome")):
+            return str(candidate)
+        mac_glob = "chromium*/chrome-mac/Chromium.app/Contents/MacOS/Chromium"
+        for candidate in sorted(pw_root.glob(mac_glob)):
+            return str(candidate)
+    raise RenderError(
+        "Nessun Chromium trovato. Installa chromium oppure imposta render.chromium_path."
+    )
+
+
+def _shot_chromium(cfg: Config, html: str, out_path: Path) -> Path:
+    binary = _find_chromium(cfg.get("render.chromium_path", ""))
+    width = cfg.get("render.width", 1080)
+    height = cfg.get("render.height", 1350)
+    scale = cfg.get("render.scale", 2)
+
+    # In headless la finestra riserva spazio alla UI del browser: il viewport
+    # e' piu' basso di --window-size e l'ultima fascia della slide resterebbe
+    # non dipinta. Si chiede una finestra abbondante e si ritaglia dopo.
+    margin = 240
+
+    with tempfile.TemporaryDirectory() as tmp:
+        page = Path(tmp) / "page.html"
+        page.write_text(html, encoding="utf-8")
+        cmd = [
+            binary, "--headless", "--disable-gpu", "--no-sandbox",
+            "--hide-scrollbars", "--force-color-profile=srgb",
+            "--font-render-hinting=none", "--disable-dev-shm-usage",
+            f"--user-data-dir={tmp}/profile",
+            f"--window-size={width},{height + margin}",
+            f"--force-device-scale-factor={scale}",
+            "--virtual-time-budget=4000",
+            f"--screenshot={out_path}",
+            page.as_uri(),
+        ]
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    if not out_path.exists() or out_path.stat().st_size == 0:
+        raise RenderError(
+            f"Screenshot fallito (exit {proc.returncode}).\n{proc.stderr[-1500:]}"
+        )
+    return crop_top_left(out_path, width * scale, height * scale)
+
+
+def _shot_playwright(cfg: Config, html: str, out_path: Path) -> Path:
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError as exc:  # pragma: no cover
+        raise RenderError("backend 'playwright' scelto ma pacchetto non installato") from exc
+    width = cfg.get("render.width", 1080)
+    height = cfg.get("render.height", 1350)
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch(args=["--no-sandbox"])
+        page = browser.new_page(
+            viewport={"width": width, "height": height},
+            device_scale_factor=cfg.get("render.scale", 2),
+        )
+        page.set_content(html, wait_until="networkidle")
+        page.wait_for_timeout(200)
+        page.screenshot(path=str(out_path))
+        browser.close()
+    return out_path
+
+
+def render(cfg: Config, template: str, context: dict, out_name: str) -> Path:
+    """Renderizza un template immagine e restituisce il path del PNG."""
+    html = build_html(cfg, template, context)
+    out_dir = cfg.resolve_path(cfg.get("render.output_dir", "out"))
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / (out_name if out_name.endswith(".png") else f"{out_name}.png")
+
+    # L'HTML resta accanto al PNG: e' l'artefatto da aprire per capire un
+    # rendering venuto male, senza rilanciare la pipeline.
+    out_path.with_suffix(".html").write_text(html, encoding="utf-8")
+
+    backend = cfg.get("render.backend", "chromium")
+    if backend == "playwright":
+        return _shot_playwright(cfg, html, out_path)
+    return _shot_chromium(cfg, html, out_path)

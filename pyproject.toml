@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mtg-social"
+version = "1.0.0"
+description = "Agente social per tornei Magic: The Gathering — calendario, format spotlight e risultati di tappa su Instagram"
+requires-python = ">=3.11"
+dependencies = [
+  "Jinja2>=3.1",
+  "requests>=2.31",
+  "python-dateutil>=2.9",
+  "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+sql = ["SQLAlchemy>=2.0"]
+s3 = ["boto3>=1.34"]
+mcp = ["mcp>=1.2"]
+dev = ["pytest>=8.0", "responses>=0.25", "ruff>=0.6"]
+
+[project.scripts]
+mtgsocial = "mtg_social.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+markers = ["slow: richiede Chromium e renderizza davvero le slide"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

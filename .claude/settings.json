@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(./.venv/bin/mtgsocial agenda:*)",
+      "Bash(./.venv/bin/mtgsocial doctor:*)",
+      "Bash(./.venv/bin/mtgsocial weekly:* --no-publish)",
+      "Bash(./.venv/bin/mtgsocial format:* --no-publish)",
+      "Bash(./.venv/bin/mtgsocial results:* --no-publish)",
+      "Bash(./.venv/bin/python -m pytest:*)",
+      "Bash(./.venv/bin/ruff:*)",
+      "Read(out/**)",
+      "Read(templates/**)",
+      "Read(config/config.toml)"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(config/config.local.toml)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-start.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard-publish.py"
+          }
+        ]
+      }
+    ]
+  },
+  "enabledMcpjsonServers": ["mtg-social"]
+}
