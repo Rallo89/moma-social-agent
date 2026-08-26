@@ -141,6 +141,33 @@ caption_max     = 2200          # limite Instagram
 wednesday = ""
 thursday  = ""
 
+# ─────────────────────────────────────────────────────────────────────────────
+# CANVA — recupero degli sfondi grafici (opzionale)
+# Si usa a mano con `momasocial canva-sync`, NON dai workflow schedulati:
+# l'OAuth di Canva ha refresh token monouso e una catena rotta richiede una
+# riautorizzazione dal browser. I workflow leggono i PNG committati nel repo.
+#   1. momasocial canva-auth   (una volta sola, dalla tua macchina)
+#   2. momasocial canva-sync   (quando il grafico cambia qualcosa)
+# ─────────────────────────────────────────────────────────────────────────────
+[canva]
+client_id      = "${CANVA_CLIENT_ID}"
+client_secret  = "${CANVA_CLIENT_SECRET}"
+redirect_port  = 8721                       # http://127.0.0.1:8721 su Canva
+token_file     = "config/canva-tokens.json" # git-ignored, contiene i token
+export_quality = "regular"                  # "pro" richiede un piano a pagamento
+
+# Un blocco per ogni sfondo. `design_id` e' la parte dopo /design/ nell'URL
+# Canva: https://www.canva.com/design/DAFxxxxxxxx/edit -> DAFxxxxxxxx
+# `page` serve se un solo design contiene piu' sfondi su pagine diverse.
+# [[canva.assets]]
+# design_id = "DAFxxxxxxxx"
+# page      = 1
+# target    = "templates/images/assets/sfondo_calendario.png"
+#
+# [[canva.assets]]
+# design_id = "DAFyyyyyyyy"
+# target    = "templates/images/assets/sfondo_formato.png"
+
 [publish]
 # Registro versionato delle pubblicazioni: garantisce l'idempotenza fra run
 # diversi (un workflow rilanciato non produce un doppione).

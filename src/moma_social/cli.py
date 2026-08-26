@@ -158,6 +158,43 @@ def _check_media(cfg, backend: str) -> str:
     raise ConfigError("nessun backend configurato: la pubblicazione fallira'")
 
 
+def cmd_canva_auth(args) -> int:
+    """Autorizzazione una tantum verso Canva (apre il browser)."""
+    from .canva import authorize
+
+    cfg = config.load(args.config)
+    path = authorize(cfg, open_browser=not args.no_browser)
+    print(f"\nToken salvati in {path}")
+    print("Da ora puoi lanciare: momasocial canva-sync")
+    return EXIT_OK
+
+
+def cmd_canva_sync(args) -> int:
+    """Riesporta da Canva gli sfondi configurati."""
+    from .canva import sync
+
+    cfg = config.load(args.config)
+    report = sync(cfg, only=args.only, check=args.check)
+
+    width = max(len(row["nome"]) for row in report)
+    icons = {"aggiornato": "⬇️ ", "da aggiornare": "🔸", "invariato": "✅"}
+    for row in report:
+        size = f"{row['byte'] / 1024:.0f} KB"
+        print(f"{icons.get(row['stato'], '  ')} {row['nome'].ljust(width)}  "
+              f"{row['stato']}  ({size}) → {row['file']}")
+
+    changed = [r for r in report if r["stato"] != "invariato"]
+    if args.check:
+        print(f"\n{len(changed)}/{len(report)} sfondi da aggiornare (nessun file scritto)")
+    elif changed:
+        print(f"\n{len(changed)} sfondi aggiornati. Rigenera i post e controlla i PNG:")
+        print("  momasocial weekly --no-publish")
+        print("Poi committa i file in templates/images/assets/.")
+    else:
+        print("\nTutti gli sfondi erano gia' aggiornati.")
+    return EXIT_OK
+
+
 def cmd_agenda(args) -> int:
     """Cosa c'e' in programma: utile per decidere a mano cosa postare."""
     cfg = config.load(args.config)
@@ -218,6 +255,19 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("doctor", help="diagnosi di configurazione, dati e credenziali")
     p.set_defaults(func=cmd_doctor)
     p.add_argument("--format", default="", help="formato da usare per il test classifiche")
+
+    p = sub.add_parser("canva-auth",
+                       help="autorizza l'accesso a Canva (una volta sola)")
+    p.set_defaults(func=cmd_canva_auth)
+    p.add_argument("--no-browser", action="store_true",
+                   help="non aprire il browser, stampa solo l'indirizzo")
+
+    p = sub.add_parser("canva-sync", help="riesporta da Canva gli sfondi configurati")
+    p.set_defaults(func=cmd_canva_sync)
+    p.add_argument("--only", default="",
+                   help="sincronizza un solo sfondo (nome file, path o design_id)")
+    p.add_argument("--check", action="store_true",
+                   help="mostra cosa cambierebbe senza scrivere nulla")
 
     p = sub.add_parser("agenda", help="elenca gli eventi della settimana")
     p.set_defaults(func=cmd_agenda)

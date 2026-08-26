@@ -14,6 +14,7 @@ tappa con classifica. Cinque post a settimana, tutti automatici.
 | `config/config.toml` | tutto cio' che cambia senza toccare il codice |
 | `.github/workflows/` | i cinque scatti settimanali |
 | `state/published.jsonl` | registro delle pubblicazioni (idempotenza) |
+| `config/canva-tokens.json` | token Canva, git-ignored, mai committare |
 | `out/` | anteprime generate, git-ignored |
 
 Le **skill** in `.claude/skills/` sono la documentazione operativa:
@@ -28,7 +29,8 @@ Le **skill** in `.claude/skills/` sono la documentazione operativa:
 ./.venv/bin/momasocial weekly  --no-publish   # anteprima calendario
 ./.venv/bin/momasocial format  --no-publish   # anteprima formato del giorno
 ./.venv/bin/momasocial results --no-publish   # anteprima carosello risultati
-./.venv/bin/python -m pytest -q              # 87 test (i marcati slow renderizzano davvero)
+./.venv/bin/momasocial canva-sync --check    # sfondi da riesportare da Canva
+./.venv/bin/python -m pytest -q              # 112 test (i marcati slow renderizzano davvero)
 ./.venv/bin/ruff check src tests
 ```
 

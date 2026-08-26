@@ -43,6 +43,40 @@ mezzo, non spinge fuori il footer.
 Lo sfondo viene inlinato come data URI: il PNG finale non dipende da file
 esterni e non puo' "rompersi" in produzione per un path sbagliato.
 
+## Recuperare gli sfondi da Canva
+
+Se i template vivono su Canva, `momasocial canva-sync` li riesporta e li
+scrive direttamente in `templates/images/assets/`.
+
+```bash
+momasocial canva-sync --check          # cosa cambierebbe, senza scrivere
+momasocial canva-sync                  # riesporta tutto
+momasocial canva-sync --only sfondo_calendario.png
+```
+
+La configurazione sta in `[canva]` e nei blocchi `[[canva.assets]]` di
+`config/config.toml`: ogni blocco lega un `design_id` (la parte dopo `/design/`
+nell'URL di Canva) a un file di destinazione. `page` serve quando un solo
+design contiene piu' sfondi su pagine diverse.
+
+**Il sync non gira nei workflow schedulati, e non va messo li'.** L'OAuth di
+Canva e' per utente, con refresh token monouso a rotazione: una catena rotta
+richiede una riautorizzazione dal browser, e non deve poter fermare il post del
+lunedi' mattina. I workflow leggono i PNG committati nel repo; Canva li
+aggiorna solo quando qualcuno lancia il sync a mano.
+
+Errori tipici:
+
+| Messaggio | Cosa significa |
+|---|---|
+| `Nessun token Canva in ...` | non e' mai stata fatta l'autorizzazione: `momasocial canva-auth` |
+| `invalid_grant` / `Refresh token used twice` | catena dei refresh token rotta: riesegui `canva-auth` |
+| `Risorsa non trovata su Canva` | `design_id` sbagliato, o il design non appartiene all'account autorizzato |
+| `richiesta pagina N ma il design ne ha M` | `page` fuori range in `[[canva.assets]]` |
+
+Dopo ogni sync che riporta "aggiornato", **guarda i PNG**: uno sfondo nuovo
+sposta quasi sempre le safe zone del testo.
+
 ## Font
 
 Il rendering usa i font di sistema. Per usare il font del brand:

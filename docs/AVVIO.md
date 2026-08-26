@@ -84,6 +84,9 @@ sempre bisognera' spostare le safe zone del testo, perche' lo sfondo ha gia'
 le sue decorazioni: si fa nel blocco `styles` della slide corrispondente in
 `templates/images/`.
 
+Se i design vivono su Canva, si possono riesportare con un comando invece che
+a mano: vedi [CANVA.md](CANVA.md).
+
 **Testi.** I template delle caption sono in `templates/captions/`. Sostituite
 il corpo mantenendo le variabili: l'elenco di quelle disponibili e' nel
 commento in testa a ogni file.

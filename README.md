@@ -84,6 +84,21 @@ Il repo e' attrezzato come progetto Claude Code:
 - **Hook** — preparazione automatica dell'ambiente; conferma richiesta prima
   di una pubblicazione reale lanciata a mano
 
+## Sfondi grafici da Canva
+
+Se i template vivono su Canva, si recuperano senza scaricarli a mano:
+
+```bash
+momasocial canva-auth                  # una volta sola, apre il browser
+momasocial canva-sync --check          # cosa cambierebbe
+momasocial canva-sync                  # riesporta in templates/images/assets/
+```
+
+Il sync **non** gira nei workflow schedulati: l'OAuth di Canva ha refresh token
+monouso a rotazione e una catena rotta richiede di riautorizzare dal browser,
+cosa che non deve poter fermare il post del lunedi'. I workflow leggono i PNG
+committati nel repo. Setup completo in [docs/CANVA.md](docs/CANVA.md).
+
 ## Mettere in pausa
 
 ```toml
