@@ -9,9 +9,17 @@ Serve una volta sola. Alla fine gli sfondi si riesportano con un comando.
 1. Vai su **[canva.com/developers](https://www.canva.com/developers/)** e accedi
    con l'account che possiede i design (o che vi ha accesso).
 2. **Developer Portal → Your integrations → Create an integration**.
-3. Tipo: **Public** o **Private** — per uso interno va bene *Private*, non
-   serve la revisione di Canva.
+3. Tipo: **Public**. Non farti ingannare dai nomi:
+   - **Private** non vuol dire "non pubblicata": vuol dire *riservata al tuo
+     team su un piano Canva **Enterprise***. Senza Enterprise non e' selezionabile.
+   - **Public** in stato *draft* e' gia' utilizzabile per uso individuale e
+     test. La revisione di Canva serve **solo** per renderla disponibile a
+     tutti gli utenti Canva: non e' il nostro caso.
 4. Dai un nome, es. `moma-social-agent`.
+
+> **Non premere "Submit for review".** L'integrazione resta in draft, tu la
+> autorizzi con il tuo account e funziona. La revisione servirebbe soltanto per
+> distribuirla ad altri utenti Canva.
 
 ## 2. Configurare l'integrazione
 

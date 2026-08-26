@@ -65,6 +65,10 @@ richiede una riautorizzazione dal browser, e non deve poter fermare il post del
 lunedi' mattina. I workflow leggono i PNG committati nel repo; Canva li
 aggiorna solo quando qualcuno lancia il sync a mano.
 
+Setup dell'integrazione: `docs/CANVA.md`. Nota che su Canva "Private" significa
+*riservata a un team Enterprise*: per un uso come il nostro si crea
+un'integrazione **Public** e la si lascia in draft, senza inviarla in revisione.
+
 Errori tipici:
 
 | Messaggio | Cosa significa |
