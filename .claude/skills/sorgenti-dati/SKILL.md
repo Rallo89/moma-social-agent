@@ -1,6 +1,6 @@
 ---
 name: sorgenti-dati
-description: Come collegare e mappare il DB di eventi, risultati di tappa e classifiche (HTTP JSON, CSV, Google Sheets, SQL) usato dai post Instagram. Usala quando arriva l'URL di una nuova sorgente, quando cambiano i nomi delle colonne, quando `mtgsocial doctor` segnala un SourceError, o quando i dati arrivano ma i post escono vuoti o incompleti.
+description: Come collegare e mappare il DB di eventi, risultati di tappa e classifiche (HTTP JSON, CSV, Google Sheets, SQL) usato dai post Instagram. Usala quando arriva l'URL di una nuova sorgente, quando cambiano i nomi delle colonne, quando `momasocial doctor` segnala un SourceError, o quando i dati arrivano ma i post escono vuoti o incompleti.
 ---
 
 # Collegare il DB
@@ -67,8 +67,8 @@ I token non si scrivono in `config/config.toml` (che e' versionato): si usa
 ## Diagnosi
 
 ```bash
-mtgsocial doctor           # prova tutte e tre le sorgenti e stampa cosa e' arrivato
-mtgsocial agenda --json    # dump degli eventi come li vede il codice
+momasocial doctor           # prova tutte e tre le sorgenti e stampa cosa e' arrivato
+momasocial agenda --json    # dump degli eventi come li vede il codice
 ```
 
 Sintomi ricorrenti:
@@ -77,7 +77,7 @@ Sintomi ricorrenti:
   risposta grezza con `curl` e correggi.
 - **Post vuoto ma la sorgente risponde** -> la mappatura dei campi non
   corrisponde, oppure le date arrivano in un formato che non viene
-  riconosciuto. `mtgsocial agenda --json` mostra subito quale dei due.
+  riconosciuto. `momasocial agenda --json` mostra subito quale dei due.
 - **Date sbagliate di qualche mese** -> formato ambiguo tipo `03/11/2026`:
   viene letto come giorno/mese (uso italiano). Se la sorgente e' americana,
   chiedi di esporre ISO `AAAA-MM-GG`, che non e' ambiguo.

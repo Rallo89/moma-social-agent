@@ -66,7 +66,7 @@ In ordine di preferenza:
 ## Verificare una modifica
 
 ```bash
-mtgsocial weekly --date 2026-03-11 --no-publish
+momasocial weekly --date 2026-03-11 --no-publish
 ```
 
 Poi apri il PNG in `out/`. L'HTML corrispondente e' salvato accanto: aprilo nel

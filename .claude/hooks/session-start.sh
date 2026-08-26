@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SessionStart: prepara l'ambiente in modo che i comandi `mtgsocial` e il
+# SessionStart: prepara l'ambiente in modo che i comandi `momasocial` e il
 # server MCP funzionino subito, anche in una sessione Claude Code sul web
 # dove il container e' appena stato creato.
 set -uo pipefail
@@ -19,7 +19,7 @@ for secret in IG_USER_ID IG_ACCESS_TOKEN; do
   [[ -z "${!secret:-}" ]] && missing+=("$secret")
 done
 
-echo "mtg-social pronto. CLI: ./.venv/bin/mtgsocial"
+echo "moma-social pronto. CLI: ./.venv/bin/momasocial"
 if (( ${#missing[@]} )); then
   echo "Nota: ${missing[*]} non impostate: la pubblicazione reale non e' disponibile in questa sessione (--dry-run funziona)."
 fi

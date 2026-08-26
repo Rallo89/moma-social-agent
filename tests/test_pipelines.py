@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from mtg_social import pipelines
-from mtg_social.errors import NoDataError
+from moma_social import pipelines
+from moma_social.errors import NoDataError
 
 RENDERED: list[tuple[str, dict]] = []
 

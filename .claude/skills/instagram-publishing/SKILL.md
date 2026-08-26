@@ -57,7 +57,7 @@ fallisce.
 | `code 4` / `code 32` | rate limit (25 post/24h) | non ritentare a raffica: aspetta e ricontrolla il ledger |
 | Carosello con slide in ordine sbagliato | `children` in ordine errato | l'ordine e' quello di `draft.images`: prima i risultati, poi la classifica |
 
-Diagnosi rapida: `mtgsocial doctor` chiama `GET /{ig-user-id}` e mostra subito
+Diagnosi rapida: `momasocial doctor` chiama `GET /{ig-user-id}` e mostra subito
 se il token e' ancora valido.
 
 ## Rinnovo del token

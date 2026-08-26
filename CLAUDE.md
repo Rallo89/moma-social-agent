@@ -8,7 +8,7 @@ tappa con classifica. Cinque post a settimana, tutti automatici.
 
 | Dove | Cosa c'e' |
 |---|---|
-| `src/mtg_social/` | il codice: sorgenti dati, rendering, caption, pubblicazione |
+| `src/moma_social/` | il codice: sorgenti dati, rendering, caption, pubblicazione |
 | `templates/images/` | le slide, HTML+Jinja2 renderizzate in PNG 1080x1350 |
 | `templates/captions/` | i testi dei post, Jinja2 |
 | `config/config.toml` | tutto cio' che cambia senza toccare il codice |
@@ -23,11 +23,11 @@ Le **skill** in `.claude/skills/` sono la documentazione operativa:
 ## Comandi
 
 ```bash
-./.venv/bin/mtgsocial doctor                 # diagnosi completa
-./.venv/bin/mtgsocial agenda                 # eventi della settimana
-./.venv/bin/mtgsocial weekly  --no-publish   # anteprima calendario
-./.venv/bin/mtgsocial format  --no-publish   # anteprima formato del giorno
-./.venv/bin/mtgsocial results --no-publish   # anteprima carosello risultati
+./.venv/bin/momasocial doctor                 # diagnosi completa
+./.venv/bin/momasocial agenda                 # eventi della settimana
+./.venv/bin/momasocial weekly  --no-publish   # anteprima calendario
+./.venv/bin/momasocial format  --no-publish   # anteprima formato del giorno
+./.venv/bin/momasocial results --no-publish   # anteprima carosello risultati
 ./.venv/bin/python -m pytest -q              # 87 test (i marcati slow renderizzano davvero)
 ./.venv/bin/ruff check src tests
 ```
@@ -52,6 +52,6 @@ Il `SessionStart` hook prepara `.venv` da solo alla prima sessione.
 ## Fuso orario
 
 Tutto ragiona in `Europe/Rome`. I cron di GitHub sono in UTC e non seguono
-l'ora legale: ogni workflow schedula due orari e il comando `mtgsocial gate`
+l'ora legale: ogni workflow schedula due orari e il comando `momasocial gate`
 lascia proseguire solo quello che a Roma corrisponde all'ora giusta. Se
 sposti un orario, sposta **entrambi** i cron.

@@ -81,7 +81,7 @@ class InstagramClient:
 
     # -- API -------------------------------------------------------------
     def check(self) -> dict:
-        """Verifica credenziali e permessi: usata da `mtgsocial doctor`."""
+        """Verifica credenziali e permessi: usata da `momasocial doctor`."""
         return self._get(self.ig_user_id, {"fields": "id,username,name,followers_count"})
 
     def create_item(self, image_url: str, *, caption: str = "",

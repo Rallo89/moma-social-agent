@@ -1,7 +1,7 @@
 ---
 description: Genera (e opzionalmente pubblica) il post con il calendario settimanale
 argument-hint: "[data] [--pubblica]"
-allowed-tools: Bash(./.venv/bin/mtgsocial:*), Bash(mtgsocial:*), Read, Glob
+allowed-tools: Bash(./.venv/bin/momasocial:*), Bash(momasocial:*), Read, Glob
 ---
 
 Genera il post del calendario settimanale.
@@ -11,7 +11,7 @@ pubblicare, e `--pubblica` per pubblicare davvero).
 
 Procedi cosi':
 
-1. Esegui `mtgsocial weekly --no-publish` aggiungendo `--date <data>` se e'
+1. Esegui `momasocial weekly --no-publish` aggiungendo `--date <data>` se e'
    stata indicata una data.
 2. Se esce `[skip]` (nessun evento in settimana), fermati e dillo: non si
    inventano eventi.

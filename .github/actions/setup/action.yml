@@ -1,4 +1,4 @@
-name: Setup mtg-social
+name: Setup moma-social
 description: Python, dipendenze e browser per generare e pubblicare i post
 
 runs:

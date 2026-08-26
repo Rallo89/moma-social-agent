@@ -7,8 +7,8 @@ import struct
 
 import pytest
 
-from mtg_social.render import build_html, render
-from mtg_social.repos import events_by_day, fetch_events
+from moma_social.render import build_html, render
+from moma_social.repos import events_by_day, fetch_events
 
 pytestmark = pytest.mark.slow
 
@@ -51,7 +51,7 @@ def test_footer_dentro_la_slide(cfg, contesto_calendario):
     E' la regressione che il layout a griglia ha risolto: con un flex il
     contenuto lungo spingeva handle e sito fuori dall'immagine.
     """
-    from mtg_social.pngutil import _decode
+    from moma_social.pngutil import _decode
 
     path = render(cfg, "weekly_calendar.html.j2", contesto_calendario, "test-footer")
     width, height, _, pixels = _decode(path)

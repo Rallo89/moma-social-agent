@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "mtg-social": {
+    "moma-social": {
       "command": "./.venv/bin/python",
-      "args": ["-m", "mtg_social.mcp_server"],
+      "args": ["-m", "moma_social.mcp_server"],
       "env": {
         "PYTHONPATH": "src"
       }

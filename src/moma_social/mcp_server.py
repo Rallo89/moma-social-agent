@@ -6,7 +6,7 @@ generare anteprime durante una conversazione, senza che l'operatore debba
 ricordare la sintassi dei comandi. La pubblicazione resta un tool separato
 e dichiarato, in modo che l'approvazione sia sempre esplicita.
 
-Avvio:  python -m mtg_social.mcp_server      (vedi .mcp.json)
+Avvio:  python -m moma_social.mcp_server      (vedi .mcp.json)
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ from .publish import ledger_path, publish_draft
 from .repos import events_by_day, fetch_events, fetch_leg_results, fetch_standings
 from .timeutil import fmt_range, resolve_date, week_bounds
 
-mcp = _Server("mtg-social", instructions=__doc__)
+mcp = _Server("moma-social", instructions=__doc__)
 
 
 def _cfg():
@@ -159,7 +159,7 @@ def diagnostica() -> str:
     return buffer.getvalue()
 
 
-@mcp.resource("mtgsocial://templates")
+@mcp.resource("momasocial://templates")
 def templates_disponibili() -> str:
     """Elenco dei template immagine e caption presenti nel repo."""
     root = Path(config.project_root()) / "templates"

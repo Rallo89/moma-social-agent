@@ -2,8 +2,8 @@ import datetime as dt
 
 import pytest
 
-from mtg_social.errors import MtgSocialError
-from mtg_social.timeutil import (
+from moma_social.errors import MtgSocialError
+from moma_social.timeutil import (
     fmt_range,
     parse_date,
     resolve_date,

@@ -7,7 +7,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from mtg_social import config  # noqa: E402
+from moma_social import config  # noqa: E402
 
 
 @pytest.fixture

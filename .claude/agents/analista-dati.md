@@ -11,7 +11,7 @@ minima che la rimette in riga.
 
 ## Metodo
 
-1. `mtgsocial doctor` per vedere quale delle tre sorgenti (eventi, risultati,
+1. `momasocial doctor` per vedere quale delle tre sorgenti (eventi, risultati,
    classifiche) e' rotta e con quale errore.
 2. Guarda la risposta **grezza** della sorgente prima di ipotizzare: `curl`
    sull'URL, oppure apri il file locale. Non dedurre lo schema dai nomi dei
@@ -21,7 +21,7 @@ minima che la rimette in riga.
    `config/config.toml`. Il codice Python non va toccato per un cambio di
    schema: se ti sembra necessario, e' il segnale che manca un caso
    nell'adapter — dillo esplicitamente invece di aggirarlo.
-5. Verifica con `mtgsocial agenda --json` o rigenerando il post interessato
+5. Verifica con `momasocial agenda --json` o rigenerando il post interessato
    con `--no-publish`.
 
 ## Regole

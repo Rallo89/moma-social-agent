@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# mtg-social — configurazione dell'agente
+# moma-social — configurazione dell'agente
 # Questo file e' versionato e NON contiene segreti: i valori ${NOME_VAR} sono
 # risolti a runtime dalle variabili d'ambiente (.env in locale, GitHub Secrets
 # in CI). Per override locali crea config/config.local.toml (git-ignored):

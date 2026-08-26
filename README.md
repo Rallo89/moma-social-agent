@@ -50,8 +50,8 @@ DB eventi/risultati ──► adapter sorgenti ──► modelli ──► templ
 ```bash
 python3 -m venv .venv
 ./.venv/bin/pip install -e ".[dev,sql,s3]"
-./.venv/bin/mtgsocial agenda                    # dati di esempio inclusi
-./.venv/bin/mtgsocial weekly --no-publish       # genera il primo post in out/
+./.venv/bin/momasocial agenda                    # dati di esempio inclusi
+./.venv/bin/momasocial weekly --no-publish       # genera il primo post in out/
 ```
 
 Il repo funziona da subito sui dati di esempio in `data/samples/`. Per
@@ -60,11 +60,11 @@ collegarlo ai vostri dati e al vostro account: **[docs/AVVIO.md](docs/AVVIO.md)*
 ## Uso quotidiano
 
 ```bash
-mtgsocial doctor                      # config, sorgenti, rendering, token
-mtgsocial agenda                      # cosa si gioca questa settimana
-mtgsocial weekly  --no-publish        # anteprima calendario
-mtgsocial format  --date 2026-03-11 --no-publish
-mtgsocial results --date 2026-03-11 --no-publish
+momasocial doctor                      # config, sorgenti, rendering, token
+momasocial agenda                      # cosa si gioca questa settimana
+momasocial weekly  --no-publish        # anteprima calendario
+momasocial format  --date 2026-03-11 --no-publish
+momasocial results --date 2026-03-11 --no-publish
 ```
 
 Ogni run lascia in `out/`: il PNG, l'HTML sorgente, la caption e i metadati.
@@ -79,7 +79,7 @@ Il repo e' attrezzato come progetto Claude Code:
   `/social-check`, `/rivedi-post`
 - **Subagent** — `revisore-social` (QA su slide e caption),
   `analista-dati` (diagnosi sorgenti)
-- **Server MCP** — `mtg-social`: interroga calendario, risultati e classifiche
+- **Server MCP** — `moma-social`: interroga calendario, risultati e classifiche
   e genera anteprime direttamente in conversazione
 - **Hook** — preparazione automatica dell'ambiente; conferma richiesta prima
   di una pubblicazione reale lanciata a mano

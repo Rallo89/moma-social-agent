@@ -21,7 +21,7 @@ LOCAL_CONFIG = Path("config/config.local.toml")
 
 
 def project_root() -> Path:
-    """Radice del repo: risalita da questo file (src/mtg_social/config.py)."""
+    """Radice del repo: risalita da questo file (src/moma_social/config.py)."""
     return Path(__file__).resolve().parents[2]
 
 

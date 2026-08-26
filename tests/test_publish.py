@@ -5,11 +5,11 @@ import json
 import pytest
 import responses
 
-from mtg_social.errors import ConfigError, PublishError
-from mtg_social.instagram import InstagramClient
-from mtg_social.models import PostDraft
-from mtg_social.publish import dedupe_key, ledger_path, publish_draft
-from mtg_social.uploader import upload
+from moma_social.errors import ConfigError, PublishError
+from moma_social.instagram import InstagramClient
+from moma_social.models import PostDraft
+from moma_social.publish import dedupe_key, ledger_path, publish_draft
+from moma_social.uploader import upload
 
 API = "https://graph.facebook.com/v21.0"
 

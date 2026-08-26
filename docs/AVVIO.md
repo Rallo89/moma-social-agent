@@ -52,8 +52,8 @@ Authorization = "Bearer ${EVENTS_API_TOKEN}"
 Verifica:
 
 ```bash
-mtgsocial doctor
-mtgsocial agenda --json      # gli eventi come li vede il codice
+momasocial doctor
+momasocial agenda --json      # gli eventi come li vede il codice
 ```
 
 Dettagli e casi particolari: `.claude/skills/sorgenti-dati/SKILL.md`.
@@ -94,9 +94,9 @@ il font del brand, mettete il `.woff2` in `templates/images/fonts/`.
 Verifica: rigenerate e **guardate i PNG**.
 
 ```bash
-mtgsocial weekly  --no-publish
-mtgsocial format  --no-publish
-mtgsocial results --no-publish
+momasocial weekly  --no-publish
+momasocial format  --no-publish
+momasocial results --no-publish
 ```
 
 Dettagli: `.claude/skills/template-grafici/SKILL.md`.
@@ -122,7 +122,7 @@ lunedi e apre una issue quando mancano meno di due settimane: quella issue e'
 la cosa piu' urgente da chiudere, perche' alla scadenza si fermano tutti e
 cinque i post.
 
-Verifica: `mtgsocial doctor` deve mostrare ✅ su "Credenziali Instagram".
+Verifica: `momasocial doctor` deve mostrare ✅ su "Credenziali Instagram".
 
 ---
 
@@ -140,7 +140,7 @@ Due opzioni:
 - **imgbb** — `media.backend = "imgbb"`, basta una API key. Piu' rapida da
   attivare, adatta per partire.
 
-Verifica: `mtgsocial weekly` (senza `--no-publish`) su una settimana di prova.
+Verifica: `momasocial weekly` (senza `--no-publish`) su una settimana di prova.
 
 ---
 

@@ -3,8 +3,8 @@ import zlib
 
 import pytest
 
-from mtg_social.errors import RenderError
-from mtg_social.pngutil import crop_top_left
+from moma_social.errors import RenderError
+from moma_social.pngutil import crop_top_left
 
 
 def _write_png(path, width, height, color=(200, 30, 30)):

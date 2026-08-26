@@ -3,7 +3,7 @@
 
 I workflow schedulati pubblicano da soli — e' il comportamento voluto. Questo
 hook riguarda solo i comandi lanciati a mano dentro una sessione Claude Code,
-dove un `mtgsocial weekly` senza `--dry-run` manderebbe un post online
+dove un `momasocial weekly` senza `--dry-run` manderebbe un post online
 immediatamente, magari mentre si stava solo provando un template.
 """
 
@@ -11,7 +11,7 @@ import json
 import re
 import sys
 
-PUBLISHING = re.compile(r"\bmtgsocial\b.*\b(weekly|format|results)\b")
+PUBLISHING = re.compile(r"\bmomasocial\b.*\b(weekly|format|results)\b")
 SAFE = ("--dry-run", "--no-publish")
 
 

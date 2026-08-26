@@ -2,8 +2,8 @@ import json
 
 import pytest
 
-from mtg_social.errors import SourceError
-from mtg_social.sources import (
+from moma_social.errors import SourceError
+from moma_social.sources import (
     _detect_kind,
     _gsheet_csv_url,
     _rows_from_csv,

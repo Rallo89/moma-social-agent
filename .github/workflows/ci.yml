@@ -27,8 +27,8 @@ jobs:
       # giusta, invece di scoprirlo il lunedi mattina.
       - name: Smoke test del rendering
         run: |
-          mtgsocial weekly --date 2026-03-11 --no-publish
-          mtgsocial results --date 2026-03-11 --no-publish
+          momasocial weekly --date 2026-03-11 --no-publish
+          momasocial results --date 2026-03-11 --no-publish
           python - <<'PY'
           import struct, sys
           from pathlib import Path

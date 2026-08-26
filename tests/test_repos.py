@@ -2,8 +2,8 @@ import datetime as dt
 
 import pytest
 
-from mtg_social.errors import NoDataError
-from mtg_social.repos import (
+from moma_social.errors import NoDataError
+from moma_social.repos import (
     fetch_events,
     fetch_leg_results,
     fetch_standings,

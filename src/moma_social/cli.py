@@ -1,4 +1,4 @@
-"""Interfaccia a riga di comando: `mtgsocial <comando>`.
+"""Interfaccia a riga di comando: `momasocial <comando>`.
 
 E' il punto d'ingresso usato sia dai workflow GitHub Actions sia dagli
 slash command di Claude Code, cosi' che i due percorsi eseguano esattamente
@@ -188,10 +188,10 @@ def cmd_agenda(args) -> int:
 # ── parser ──────────────────────────────────────────────────────────────────
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="mtgsocial",
+        prog="momasocial",
         description="Agente social per tornei Magic: The Gathering",
     )
-    parser.add_argument("--version", action="version", version=f"mtg-social {__version__}")
+    parser.add_argument("--version", action="version", version=f"moma-social {__version__}")
     parser.add_argument("-c", "--config", default=None, help="path a un config alternativo")
     sub = parser.add_subparsers(dest="command", required=True)
 

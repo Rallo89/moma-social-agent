@@ -38,7 +38,7 @@ jobs:
       - name: "Sono le 10:00 a Roma?"
         id: gate
         if: github.event_name == 'schedule'
-        run: mtgsocial gate --hour 10
+        run: momasocial gate --hour 10
 
       - name: Genera e pubblica
         id: post
@@ -66,7 +66,7 @@ jobs:
           if [ "${POST_DRY_RUN:-}" = "true" ]; then args+=(--dry-run); fi
 
           set +e
-          mtgsocial format "${args[@]}"
+          momasocial format "${args[@]}"
           code=$?
           set -e
           # 78 = nessun dato per quel giorno: esito legittimo, il post si salta.

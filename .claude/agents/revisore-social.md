@@ -16,7 +16,7 @@ tornei di Magic: The Gathering. Ricevi il riferimento a un post generato in
 2. **Apri ogni PNG con Read.** Non giudicare un'immagine dall'HTML: il testo
    tagliato si vede solo guardandola.
 3. Leggi la caption dal file `.caption.txt`.
-4. Confronta i dati mostrati con la sorgente (`mtgsocial agenda --json`,
+4. Confronta i dati mostrati con la sorgente (`momasocial agenda --json`,
    oppure il `.json` del post): nomi, date, orari e posizioni devono
    corrispondere. Un errore nei dati e' piu' grave di un errore estetico.
 

@@ -1,7 +1,7 @@
 ---
 description: Genera (e opzionalmente pubblica) il carosello risultati di tappa + classifica
 argument-hint: "[data] [formato] [--pubblica]"
-allowed-tools: Bash(./.venv/bin/mtgsocial:*), Bash(mtgsocial:*), Read, Glob
+allowed-tools: Bash(./.venv/bin/momasocial:*), Bash(momasocial:*), Read, Glob
 ---
 
 Genera il carosello a due slide con i risultati della tappa e la classifica
@@ -10,7 +10,7 @@ generale aggiornata.
 Argomenti ricevuti: `$ARGUMENTS`. Senza data si usa **ieri**, che e' il
 comportamento previsto dallo scatto notturno.
 
-1. Esegui `mtgsocial results --no-publish` (aggiungi `--date` / `--format` se
+1. Esegui `momasocial results --no-publish` (aggiungi `--date` / `--format` se
    indicati).
 2. Se esce `[skip]`, la tappa non e' ancora stata caricata nel DB: dillo e non
    proseguire. E' il caso piu' frequente e non e' un guasto.

@@ -2,8 +2,8 @@ import datetime as dt
 
 import pytest
 
-from mtg_social import cli
-from mtg_social.errors import NoDataError
+from moma_social import cli
+from moma_social.errors import NoDataError
 
 
 @pytest.fixture(autouse=True)
@@ -63,7 +63,7 @@ def test_gate_scrive_github_output(monkeypatch, tmp_path, capsys):
 
 
 def test_errore_di_configurazione_esce_con_1(monkeypatch, capsys):
-    from mtg_social.errors import ConfigError
+    from moma_social.errors import ConfigError
     monkeypatch.setitem(cli.PIPELINES, "weekly_calendar",
                         lambda *a, **k: (_ for _ in ()).throw(ConfigError("manca X")))
     assert cli.main(["weekly"]) == cli.EXIT_ERROR

@@ -1,7 +1,7 @@
 import datetime as dt
 
-from mtg_social.captions import build_hashtags, render_caption
-from mtg_social.repos import events_by_day, fetch_events, fetch_leg_results, fetch_standings
+from moma_social.captions import build_hashtags, render_caption
+from moma_social.repos import events_by_day, fetch_events, fetch_leg_results, fetch_standings
 
 
 def test_hashtag_deduplicati_e_normalizzati(cfg):

@@ -2,11 +2,11 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
-      "Bash(./.venv/bin/mtgsocial agenda:*)",
-      "Bash(./.venv/bin/mtgsocial doctor:*)",
-      "Bash(./.venv/bin/mtgsocial weekly:* --no-publish)",
-      "Bash(./.venv/bin/mtgsocial format:* --no-publish)",
-      "Bash(./.venv/bin/mtgsocial results:* --no-publish)",
+      "Bash(./.venv/bin/momasocial agenda:*)",
+      "Bash(./.venv/bin/momasocial doctor:*)",
+      "Bash(./.venv/bin/momasocial weekly:* --no-publish)",
+      "Bash(./.venv/bin/momasocial format:* --no-publish)",
+      "Bash(./.venv/bin/momasocial results:* --no-publish)",
       "Bash(./.venv/bin/python -m pytest:*)",
       "Bash(./.venv/bin/ruff:*)",
       "Read(out/**)",
@@ -42,5 +42,5 @@
       }
     ]
   },
-  "enabledMcpjsonServers": ["mtg-social"]
+  "enabledMcpjsonServers": ["moma-social"]
 }

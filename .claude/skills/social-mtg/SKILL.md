@@ -9,11 +9,11 @@ description: Piano editoriale social dell'associazione MTG - come si generano, s
 
 | Quando (Europe/Rome) | Post | Contenuto | Comando |
 |---|---|---|---|
-| Lunedi 10:00 | Immagine singola | Calendario di tutti gli eventi della settimana | `mtgsocial weekly` |
-| Mercoledi 10:00 | Immagine singola | Formato in programma quel giorno | `mtgsocial format` |
-| Giovedi 10:00 | Immagine singola | Formato in programma quel giorno | `mtgsocial format` |
-| Giovedi 03:00 | Carosello 2 slide | Risultati tappa di mercoledi + classifica generale | `mtgsocial results` |
-| Venerdi 03:00 | Carosello 2 slide | Risultati tappa di giovedi + classifica generale | `mtgsocial results` |
+| Lunedi 10:00 | Immagine singola | Calendario di tutti gli eventi della settimana | `momasocial weekly` |
+| Mercoledi 10:00 | Immagine singola | Formato in programma quel giorno | `momasocial format` |
+| Giovedi 10:00 | Immagine singola | Formato in programma quel giorno | `momasocial format` |
+| Giovedi 03:00 | Carosello 2 slide | Risultati tappa di mercoledi + classifica generale | `momasocial results` |
+| Venerdi 03:00 | Carosello 2 slide | Risultati tappa di giovedi + classifica generale | `momasocial results` |
 
 I due post dei risultati girano alle 03:00 e leggono la tappa **del giorno
 prima** (`--date yesterday`, che e' il default): a quell'ora il DB dei
@@ -28,16 +28,16 @@ fallback `content.formats_by_weekday` in `config/config.toml`.
 Prima di toccare qualsiasi cosa, guarda i dati:
 
 ```bash
-mtgsocial agenda                      # eventi della settimana corrente
-mtgsocial doctor                      # config, sorgenti, rendering, credenziali
+momasocial agenda                      # eventi della settimana corrente
+momasocial doctor                      # config, sorgenti, rendering, credenziali
 ```
 
 Per generare un'anteprima senza pubblicare nulla:
 
 ```bash
-mtgsocial weekly  --no-publish
-mtgsocial format  --date 2026-03-11 --no-publish
-mtgsocial results --date 2026-03-11 --no-publish
+momasocial weekly  --no-publish
+momasocial format  --date 2026-03-11 --no-publish
+momasocial results --date 2026-03-11 --no-publish
 ```
 
 Ogni run lascia in `out/`: il PNG, l'HTML sorgente (per capire un layout
@@ -63,7 +63,7 @@ essere perfetta e la slide illeggibile.
 
 ## Quando qualcosa non torna
 
-1. `mtgsocial doctor` dice quale anello si e' rotto (sorgente, rendering, token).
+1. `momasocial doctor` dice quale anello si e' rotto (sorgente, rendering, token).
 2. Errori `SourceError` -> la sorgente dati e' cambiata: vedi la skill
    **sorgenti-dati**.
 3. Errori di layout (testo tagliato, righe fuori slide) -> skill **template-grafici**.
