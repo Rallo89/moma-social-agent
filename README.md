@@ -48,10 +48,19 @@ DB eventi/risultati ──► adapter sorgenti ──► modelli ──► templ
 ## Avvio rapido
 
 ```bash
+# macOS / Linux
 python3 -m venv .venv
 ./.venv/bin/pip install -e ".[dev,sql,s3]"
 ./.venv/bin/momasocial agenda                    # dati di esempio inclusi
 ./.venv/bin/momasocial weekly --no-publish       # genera il primo post in out/
+```
+
+```powershell
+# Windows (PowerShell): un comando per riga, eseguibili in Scripts\
+python -m venv .venv
+.\.venv\Scripts\pip install -e ".[dev,sql,s3]"
+.\.venv\Scripts\momasocial agenda
+.\.venv\Scripts\momasocial weekly --no-publish
 ```
 
 Il repo funziona da subito sui dati di esempio in `data/samples/`. Per

@@ -8,12 +8,26 @@ Serve una volta sola. Alla fine gli sfondi si riesportano con un comando.
 > Non funziona da un container remoto o da una sessione web: il redirect
 > arriverebbe a un localhost che il tuo browser non raggiunge.
 >
+> **macOS / Linux**
 > ```bash
 > git clone https://github.com/Rallo89/moma-social-agent
 > cd moma-social-agent
 > python3 -m venv .venv && ./.venv/bin/pip install -e "."
 > cp .env.example .env        # e valorizza CANVA_CLIENT_ID / CANVA_CLIENT_SECRET
 > ```
+>
+> **Windows (PowerShell)** — un comando per riga: `&&` non esiste in
+> PowerShell 5.1, e il venv mette gli eseguibili in `Scripts\`, non in `bin/`.
+> ```powershell
+> git clone https://github.com/Rallo89/moma-social-agent
+> cd moma-social-agent
+> python -m venv .venv
+> .\.venv\Scripts\pip install -e "."
+> Copy-Item .env.example .env
+> ```
+> Se `python` non risponde, usa `py -3 -m venv .venv`. Conviene chiamare gli
+> eseguibili direttamente (`.\.venv\Scripts\momasocial ...`) invece di attivare
+> il venv: si evita il blocco dell'execution policy su `Activate.ps1`.
 >
 > Le credenziali Canva restano sul tuo computer, in `.env`, che e' git-ignored:
 > non vanno committate, ne' incollate in chat.
@@ -76,7 +90,8 @@ in CI. Il motivo e' spiegato in fondo.
 ## 4. Autorizzare
 
 ```bash
-momasocial canva-auth
+momasocial canva-auth                    # macOS / Linux
+.\.venv\Scripts\momasocial canva-auth     # Windows
 ```
 
 Si apre il browser sulla pagina di Canva, dai il consenso, e la scheda si
