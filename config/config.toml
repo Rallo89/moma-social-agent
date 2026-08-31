@@ -185,7 +185,14 @@ hashtags         = ["#torneomagic"]
 
 [posts.leg_results]
 image_templates  = ["leg_results.html.j2", "standings.html.j2"]   # carosello 2 slide
+# background     = "templates/images/assets/sfondo_risultati.png"
 caption_template = "leg_results.txt.j2"
 hashtags         = ["#classifica", "#risultati"]
 top_n            = 8            # righe mostrate nella slide risultati
 standings_top_n  = 10
+
+# Seconda slide del carosello (classifica generale): puo' avere uno sfondo
+# proprio. Se il file non c'e' ancora, la slide usa il fondo generato dai
+# colori brand, senza rompersi.
+[posts.leg_results_standings]
+background = "templates/images/assets/sfondo_classifica.png"
