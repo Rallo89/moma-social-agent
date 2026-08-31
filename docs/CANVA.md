@@ -2,6 +2,22 @@
 
 Serve una volta sola. Alla fine gli sfondi si riesportano con un comando.
 
+> **Prerequisito: il progetto deve stare sul tuo computer.**
+> L'autorizzazione (passo 4) apre il browser e Canva rimanda il codice su
+> `http://127.0.0.1:8721`, cioe' sulla macchina dove hai lanciato il comando.
+> Non funziona da un container remoto o da una sessione web: il redirect
+> arriverebbe a un localhost che il tuo browser non raggiunge.
+>
+> ```bash
+> git clone https://github.com/Rallo89/moma-social-agent
+> cd moma-social-agent
+> python3 -m venv .venv && ./.venv/bin/pip install -e "."
+> cp .env.example .env        # e valorizza CANVA_CLIENT_ID / CANVA_CLIENT_SECRET
+> ```
+>
+> Le credenziali Canva restano sul tuo computer, in `.env`, che e' git-ignored:
+> non vanno committate, ne' incollate in chat.
+
 ---
 
 ## 1. Creare l'integrazione su Canva
