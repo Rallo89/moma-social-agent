@@ -33,11 +33,18 @@ CHROMIUM_CANDIDATES = (
 
 # ── Jinja ───────────────────────────────────────────────────────────────────
 def _asset_data_uri(root: Path, relative: str) -> str:
-    """Inlina un asset come data URI: il PNG resta autonomo, niente path rotti."""
+    """Inlina un asset come data URI: il PNG resta autonomo, niente path rotti.
+
+    Totale per costruzione: input vuoto, path inesistente o cartella
+    restituiscono stringa vuota, cosi' i template possono chiamare il filtro
+    senza doversi proteggere prima.
+    """
+    if not relative:
+        return ""
     path = Path(relative)
     if not path.is_absolute():
         path = root / path
-    if not path.exists():
+    if not path.is_file():
         return ""
     mime = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
     return f"data:{mime};base64,{base64.b64encode(path.read_bytes()).decode()}"

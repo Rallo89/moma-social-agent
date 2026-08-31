@@ -60,3 +60,31 @@ def test_footer_dentro_la_slide(cfg, contesto_calendario):
     # Il testo del footer e' chiaro sul fondo scuro: senza pixel chiari qui
     # significa che il footer e' finito fuori dalla slide.
     assert any(band[i] > 180 for i in range(0, len(band), 3))
+
+
+def test_sfondo_configurato_ma_mancante_torna_al_fondo_generato(cfg, contesto_calendario):
+    """Un asset non ancora sincronizzato non deve produrre una slide nera."""
+    contesto_calendario["background"] = "templates/images/assets/non-esiste.png"
+    html = build_html(cfg, "weekly_calendar.html.j2", contesto_calendario)
+    assert "background-image:url('')" not in html
+    assert "linear-gradient" in html          # fondo generato dai colori brand
+
+
+def test_sfondo_presente_viene_inlinato(cfg, contesto_calendario, tmp_path):
+    asset = cfg.root / "templates/images/assets/_test_sfondo.png"
+    asset.write_bytes(b"\x89PNG\r\n\x1a\n" + b"0" * 32)
+    try:
+        contesto_calendario["background"] = "templates/images/assets/_test_sfondo.png"
+        html = build_html(cfg, "weekly_calendar.html.j2", contesto_calendario)
+        assert "background-image:url('data:image/png;base64," in html
+    finally:
+        asset.unlink()
+
+
+def test_filtro_asset_e_totale(cfg):
+    """Il filtro non deve esplodere su input vuoto, mancante o cartella."""
+    from moma_social.render import _asset_data_uri
+
+    assert _asset_data_uri(cfg.root, "") == ""
+    assert _asset_data_uri(cfg.root, "non/esiste.png") == ""
+    assert _asset_data_uri(cfg.root, "templates/images") == ""   # e' una cartella

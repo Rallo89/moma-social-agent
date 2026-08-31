@@ -1,0 +1,3 @@
+# Qui vanno gli sfondi grafici esportati da Canva (o dal grafico).
+# I nomi dei file sono quelli indicati in config/config.toml, sezioni
+# [posts.*].background e [[canva.assets]].target

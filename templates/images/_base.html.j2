@@ -10,8 +10,10 @@
   3. Nient'altro: lo sfondo viene inlinato come data URI e il testo resta
      sovrapposto nelle "safe zone" definite qui sotto.
 
-  Se `background` non e' impostato, si usa il fondo generato dai colori brand.
+  Se `background` non e' impostato — o punta a un file che non esiste — si usa
+  il fondo generato dai colori brand, invece di produrre una slide nera.
 #}
+{% set bg = background|asset %}
 <!doctype html>
 <html lang="it">
 <head>
@@ -38,7 +40,7 @@
     background-size: cover; background-position: center;
     z-index: 0;
   }
-  {% if not background %}
+  {% if not bg %}
   /* Fondo generato: gradiente brand + alone d'accento in alto a destra. */
   .bg {
     background:
@@ -97,7 +99,7 @@
 </head>
 <body>
   <div class="canvas">
-    <div class="bg"{% if background %} style="background-image:url('{{ background|asset }}')"{% endif %}></div>
+    <div class="bg"{% if bg %} style="background-image:url('{{ bg }}')"{% endif %}></div>
     <div class="layer">
       <div class="header">
         {% block header %}
