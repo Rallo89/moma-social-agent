@@ -20,7 +20,9 @@ accent        = "#A5CE39"     # verde lime dei titoli e delle posizioni
 text          = "#FFFFFF"
 muted         = "#B8B8B8"
 # Font: se metti un .ttf/.woff2 in templates/images/fonts/ indicane qui il nome.
-font_family   = "Inter, 'Helvetica Neue', Arial, sans-serif"
+# League Gothic e' incorporata nelle slide (templates/images/fonts/, SIL OFL).
+# I fallback servono solo se il file sparisce.
+font_family   = "'League Gothic', 'Arial Narrow', 'Helvetica Neue Condensed', sans-serif"
 logo          = "templates/images/assets/logo.png"   # opzionale
 
 [render]
@@ -210,7 +212,7 @@ hashtags         = ["#classifica", "#risultati"]
 # partecipanti il post diventa un carosello con piu' slide di risultati.
 # Trattamento dietro nome e punti: "strip" (striscia piena), "shadow" (alone
 # scuro attorno al testo) o "none" (testo nudo sulla foto).
-row_style          = "strip"
+row_style          = "shadow"
 rows_per_slide     = 16
 # 0 = tutti i partecipanti. Un numero li limita ai primi N.
 top_n              = 0

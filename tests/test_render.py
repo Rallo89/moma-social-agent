@@ -145,6 +145,27 @@ def test_geometria_in_pixel_non_in_percentuale(cfg):
                  if nome.endswith(("-size", "-top", "-w", "-h", "-gap", "-pad", "-safe"))]
     assert geometria, "nessuna variabile di geometria trovata"
     assert all(valore.strip().endswith("px") for _, valore in geometria), geometria
-    # Il titolo e' il 7.04% del lato: a 1080 sono ~76px.
-    titolo = dict(geometria)["--title-size"]
-    assert 74 <= float(titolo.removesuffix("px")) <= 78, titolo
+    # Il corpo del titolo scala col lato della slide: la misura esatta e' una
+    # scelta grafica che cambia, il legame con la larghezza no.
+    def titolo(width):
+        html = build_html(cfg, "standings_2col.html.j2", {
+            "rows": [], "title": "T", "subtitle": "", "hashtag": "",
+            "background": "", "width": width, "height": width,
+        })
+        valore = re.search(r"--title-size:\s*([\d.]+)px", html).group(1)
+        return float(valore)
+
+    assert titolo(2160) == pytest.approx(titolo(1080) * 2, rel=0.01)
+
+
+def test_font_del_brand_inlinato_nella_slide(cfg):
+    """Il runner di CI non ha font installati: devono viaggiare nel PNG."""
+    html = build_html(cfg, "standings_2col.html.j2", {
+        "rows": [], "title": "T", "subtitle": "", "hashtag": "",
+        "background": "", "width": 1080, "height": 1080,
+    })
+    assert "@font-face" in html
+    assert "League Gothic" in html
+    assert "src: url('data:" in html
+    # League Gothic ha un peso solo: il falso grassetto va disattivato.
+    assert "font-synthesis: none" in html

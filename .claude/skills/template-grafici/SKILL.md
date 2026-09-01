@@ -87,13 +87,20 @@ sposta quasi sempre le safe zone del testo.
 
 ## Font
 
-Il rendering usa i font di sistema. Per usare il font del brand:
-1. Metti il `.woff2`/`.ttf` in `templates/images/fonts/`.
-2. Aggiungi in `_base.html.j2` una `@font-face` con `src: url('{{ "templates/images/fonts/Brand.woff2"|asset }}')`.
-3. Imposta `brand.font_family` in config.
+Il font del brand e' **League Gothic** (SIL Open Font License), incorporato in
+`templates/images/fonts/` e inlinato come data URI dal blocco
+`_fonts.css.j2`, incluso da tutti i template. Le slide non dipendono quindi da
+font installati sulla macchina: il runner di GitHub Actions non ne ha.
 
-Il filtro `|asset` inlina qualunque file come data URI: vale per font, logo e
-immagini.
+**League Gothic ha un solo peso.** `font-synthesis: none` impedisce al browser
+di costruire un finto grassetto deformando le lettere, quindi `font-weight: 700`
+non produce alcun effetto: la gerarchia si fa con **corpo e colore**, non con
+il peso. E' molto piu' stretta di un grottesco normale, quindi i corpi vanno
+piu' grandi di quanto verrebbe naturale.
+
+Per cambiare font: metti il file in `templates/images/fonts/`, aggiorna la
+`@font-face` in `_fonts.css.j2` e `brand.font_family` in config. Se il nuovo
+font ha piu' pesi, togli `font-synthesis: none` e rimetti i `font-weight`.
 
 ## Testo che non ci sta
 

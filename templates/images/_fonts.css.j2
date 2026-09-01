@@ -1,0 +1,21 @@
+{#
+  Font del brand, inlinato come data URI: la slide resta autonoma e non
+  dipende da font installati sulla macchina che renderizza (il runner di
+  GitHub Actions non ne ha).
+
+  League Gothic ha un solo peso. Con font-weight: 700/900 il browser
+  costruirebbe un finto grassetto deformando le lettere, quindi la sintesi
+  e' disattivata e la gerarchia si fa con corpo e colore.
+
+  Licenza SIL Open Font License 1.1 — vedi fonts/OFL.txt
+#}
+{% set font_file = "templates/images/fonts/LeagueGothic-Regular.ttf"|asset %}
+{% if font_file %}
+@font-face {
+  font-family: 'League Gothic';
+  font-style: normal;
+  font-weight: 400;
+  src: url('{{ font_file }}') format('truetype');
+}
+{% endif %}
+* { font-synthesis: none; -webkit-font-synthesis: none; }

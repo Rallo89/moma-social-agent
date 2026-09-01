@@ -24,6 +24,8 @@
 <head>
 <meta charset="utf-8">
 <style>
+{% include "_fonts.css.j2" %}
+
   /* Geometria in pixel, ricavata misurando l'artwork a 1080x1080 e espressa
      come frazione del lato, cosi' vale a qualunque dimensione.
        barre delle posizioni : x 21-72 e 541-592, larghe 52
@@ -46,12 +48,15 @@
     --pos-w:      {{ (width * 0.048148) | round(2) }}px;   /*  52 */
 
     --title-top:  {{ (width * 0.048148) | round(2) }}px;   /*  52 */
-    --title-size: {{ (width * 0.070370) | round(2) }}px;   /*  76 */
+    --title-size: {{ (width * 0.092593) | round(2) }}px;   /* 100: League Gothic
+                                                              e' molto stretta, serve
+                                                              piu' corpo per occupare
+                                                              lo stesso spazio */
     --sub-gap:    {{ (width * 0.012963) | round(2) }}px;   /*  14 */
-    --sub-size:   {{ (width * 0.028704) | round(2) }}px;   /*  31 */
+    --sub-size:   {{ (width * 0.037037) | round(2) }}px;   /*  40 */
 
-    --name-size:  {{ (width * 0.025926) | round(2) }}px;   /*  28 */
-    --pts-size:   {{ (width * 0.027778) | round(2) }}px;   /*  30 */
+    --name-size:  {{ (width * 0.035185) | round(2) }}px;   /*  38 */
+    --pts-size:   {{ (width * 0.037037) | round(2) }}px;   /*  40 */
     --name-pad:   {{ (width * 0.016667) | round(2) }}px;   /*  18 */
     --pts-pad:    {{ (width * 0.022222) | round(2) }}px;   /*  24 */
     --logo-safe:  {{ (width * 0.111111) | round(2) }}px;   /* 120: il titolo non
@@ -87,7 +92,7 @@
                 height: {{ (width * 0.065) | round(2) }}px; background: var(--dark); }
   .foot {
     position: absolute; left: 0; right: 0; bottom: {{ (width * 0.020) | round(2) }}px;
-    text-align: center; font-size: var(--foot-size); font-weight: 800;
+    text-align: center; font-size: var(--foot-size); font-weight: 400;
     letter-spacing: .06em; color: var(--lime);
   }
   {% endif %}
@@ -101,12 +106,12 @@
     text-align: center;
   }
   .title {
-    font-size: var(--title-size); line-height: .95; font-weight: 900;
+    font-size: var(--title-size); line-height: .95; font-weight: 400;
     letter-spacing: -.01em; text-transform: uppercase; color: var(--lime);
   }
   .title.lungo { font-size: calc(var(--title-size) * .74); }
   .subtitle {
-    margin-top: var(--sub-gap); font-size: var(--sub-size); font-weight: 800;
+    margin-top: var(--sub-gap); font-size: var(--sub-size); font-weight: 400;
     letter-spacing: .12em; text-transform: uppercase; color: var(--white);
   }
 
@@ -126,7 +131,7 @@
   .pos {
     flex: 0 0 var(--pos-w); align-self: center; height: var(--strip-h);
     display: flex; align-items: center; justify-content: center;
-    font-size: var(--pts-size); font-weight: 900; color: var(--lime);
+    font-size: var(--pts-size); font-weight: 400; color: var(--lime);
     /* Con l'artwork la barra verticale delle posizioni c'e' gia': ridipingerla
        con un nero leggermente diverso creerebbe una banda visibile. */
     {% if not bg %}background: var(--strip);{% endif %}
@@ -151,11 +156,11 @@
   }
   .name {
     flex: 1 1 auto; min-width: 0;
-    font-size: var(--name-size); font-weight: 800; text-transform: uppercase;
+    font-size: var(--name-size); font-weight: 400; text-transform: uppercase;
     /* Un nome lungo si restringe invece di spingere via i punti. */
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .pts { flex: 0 0 auto; font-size: var(--pts-size); font-weight: 900; }
+  .pts { flex: 0 0 auto; font-size: var(--pts-size); font-weight: 400; }
 </style>
 </head>
 <body>
