@@ -156,8 +156,10 @@ redirect_port  = 8721                       # http://127.0.0.1:8721 su Canva
 token_file     = "config/canva-tokens.json" # git-ignored, contiene i token
 export_quality = "regular"                  # "pro" richiede un piano a pagamento
 
-# Un blocco per ogni sfondo. `design_id` e' la parte dopo /design/ nell'URL
-# Canva: https://www.canva.com/design/DAFxxxxxxxx/edit -> DAFxxxxxxxx
+# Un blocco per ogni sfondo. `design_id` e' il PRIMO segmento dopo /design/
+# nell'URL Canva; il secondo e' il token del link e non va messo qui:
+#   https://www.canva.com/design/DAF5kNaAdDU/sNtVNbJOh1j7RmAGeIgfUA/edit
+#                                ^^^^^^^^^^^ = design_id
 # `page` serve se un solo design contiene piu' sfondi su pagine diverse.
 # [[canva.assets]]
 # design_id = "DAFxxxxxxxx"
