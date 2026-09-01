@@ -7,18 +7,18 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 [org]
-name          = "Nome Associazione"
-handle        = "@nome_associazione"       # handle Instagram, usato nelle caption
-site          = "https://esempio.it"
+name          = "Modena Magic"
+handle        = "@modenamagic"             # DA CONFERMARE: handle Instagram reale
+site          = "https://esempio.it"       # DA COMPLETARE
 timezone      = "Europe/Rome"              # tutti gli orari nei log/schedule
 locale        = "it_IT"
 
 [brand]
 # Colori usati dai template HTML se NON viene fornito uno sfondo grafico.
-primary       = "#1B1F3B"
-accent        = "#E8A33D"
+primary       = "#1C1C1C"     # nero della grafica Modena Magic
+accent        = "#A5CE39"     # verde lime dei titoli e delle posizioni
 text          = "#FFFFFF"
-muted         = "#B9C0D4"
+muted         = "#B8B8B8"
 # Font: se metti un .ttf/.woff2 in templates/images/fonts/ indicane qui il nome.
 font_family   = "Inter, 'Helvetica Neue', Arial, sans-serif"
 logo          = "templates/images/assets/logo.png"   # opzionale
@@ -136,7 +136,11 @@ expiration  = 0                            # secondi; 0 = mai
 # CONTENUTI
 # ─────────────────────────────────────────────────────────────────────────────
 [content]
-hashtags_base   = ["#magicthegathering", "#mtg", "#tcg"]
+hashtags_base   = ["#modenamagic", "#magicthegathering", "#mtg", "#tcg"]
+# Nome del torneo mostrato nel titolo della grafica. {format} = formato di gioco.
+tournament_name = "Torneo {format}"
+standings_subtitle = "Classifica generale"
+hashtag_grafica = "#modenamagic"          # hashtag stampato in fondo alla slide
 hashtags_max    = 20
 caption_max     = 2200          # limite Instagram
 # Fallback formati per giorno se la sorgente eventi non copre quel giorno
@@ -189,15 +193,21 @@ caption_template = "format_spotlight.txt.j2"
 hashtags         = ["#torneomagic"]
 
 [posts.leg_results]
-image_templates  = ["leg_results.html.j2", "standings.html.j2"]   # carosello 2 slide
+# Il template grafico dell'associazione e' quadrato e vale per entrambe le
+# slide del carosello: cambiano solo titolo, sottotitolo e righe.
+image_templates  = ["standings_2col.html.j2", "standings_2col.html.j2"]
+width            = 1080
+height           = 1080
 # background     = "templates/images/assets/sfondo_risultati.png"
 caption_template = "leg_results.txt.j2"
 hashtags         = ["#classifica", "#risultati"]
-top_n            = 8            # righe mostrate nella slide risultati
-standings_top_n  = 10
+top_n            = 16           # righe mostrate: la grafica ne prevede 16 su due colonne
+standings_top_n  = 16
 
 # Seconda slide del carosello (classifica generale): puo' avere uno sfondo
 # proprio. Se il file non c'e' ancora, la slide usa il fondo generato dai
 # colori brand, senza rompersi.
 [posts.leg_results_standings]
 background = "templates/images/assets/sfondo_classifica.png"
+width      = 1080
+height     = 1080

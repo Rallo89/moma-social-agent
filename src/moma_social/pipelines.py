@@ -159,15 +159,27 @@ def leg_results(cfg: Config, day: dt.date | None = None, fmt: str = "") -> PostD
 
     templates = cfg.require("posts.leg_results.image_templates")
     background = _background(cfg, "leg_results")
+    # Il nome del torneo compare nel titolo della grafica: "Torneo Pauper".
+    torneo = cfg.get("content.tournament_name", "Torneo {format}").format(
+        format=leg.format
+    )
+    hashtag = cfg.get("content.hashtag_grafica", "")
+
     slide_results = render(
         cfg, templates[0],
-        {"leg": leg, "rows": rows, "background": background, "density": _density(len(rows))},
+        {"leg": leg, "rows": rows, "standings": standings,
+         "title": torneo, "subtitle": leg.leg or "Risultati di tappa",
+         "hashtag": hashtag,
+         "background": background, "density": _density(len(rows))},
         _stamp(cfg, "risultati", day, leg.format.lower().replace(" ", "-")),
         size=post_size(cfg, "leg_results"),
     )
     slide_standings = render(
         cfg, templates[1],
         {"standings": standings, "rows": standings_rows, "leg": leg,
+         "title": torneo,
+         "subtitle": cfg.get("content.standings_subtitle", "Classifica generale"),
+         "hashtag": hashtag,
          "background": _background(cfg, "leg_results_standings") or background,
          "density": _density(len(standings_rows))},
         _stamp(cfg, "classifica", day, leg.format.lower().replace(" ", "-")),

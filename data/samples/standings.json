@@ -214,5 +214,149 @@
   "points": 15,
   "events_played": 4,
   "delta": 1
+ },
+ {
+  "format": "Pauper",
+  "season": "2025/26",
+  "rank": 1,
+  "player": "Francesco Battilani",
+  "points": 81,
+  "events_played": 9,
+  "delta": 0
+ },
+ {
+  "format": "Pauper",
+  "season": "2025/26",
+  "rank": 2,
+  "player": "Leonardo Pilo",
+  "points": 76,
+  "events_played": 9,
+  "delta": 1
+ },
+ {
+  "format": "Pauper",
+  "season": "2025/26",
+  "rank": 3,
+  "player": "Antonio Fiore",
+  "points": 72,
+  "events_played": 8,
+  "delta": 1
+ },
+ {
+  "format": "Pauper",
+  "season": "2025/26",
+  "rank": 4,
+  "player": "Emanuele Melotti",
+  "points": 69,
+  "events_played": 7,
+  "delta": -3
+ },
+ {
+  "format": "Pauper",
+  "season": "2025/26",
+  "rank": 5,
+  "player": "Francesco Musto",
+  "points": 65,
+  "events_played": 6,
+  "delta": 3
+ },
+ {
+  "format": "Pauper",
+  "season": "2025/26",
+  "rank": 6,
+  "player": "Giacomo Vandelli",
+  "points": 59,
+  "events_played": 7,
+  "delta": 0
+ },
+ {
+  "format": "Pauper",
+  "season": "2025/26",
+  "rank": 7,
+  "player": "Vincenzo Pannarale",
+  "points": 56,
+  "events_played": 10,
+  "delta": -1
+ },
+ {
+  "format": "Pauper",
+  "season": "2025/26",
+  "rank": 8,
+  "player": "Francesco Ferrari",
+  "points": 51,
+  "events_played": 8,
+  "delta": -3
+ },
+ {
+  "format": "Pauper",
+  "season": "2025/26",
+  "rank": 9,
+  "player": "Luca Nobili",
+  "points": 49,
+  "events_played": 9,
+  "delta": 2
+ },
+ {
+  "format": "Pauper",
+  "season": "2025/26",
+  "rank": 10,
+  "player": "Matteo Cassano",
+  "points": 44,
+  "events_played": 10,
+  "delta": 1
+ },
+ {
+  "format": "Pauper",
+  "season": "2025/26",
+  "rank": 11,
+  "player": "Filippo Artioli",
+  "points": 39,
+  "events_played": 9,
+  "delta": 0
+ },
+ {
+  "format": "Pauper",
+  "season": "2025/26",
+  "rank": 12,
+  "player": "Mattia Miceli",
+  "points": 34,
+  "events_played": 6,
+  "delta": -3
+ },
+ {
+  "format": "Pauper",
+  "season": "2025/26",
+  "rank": 13,
+  "player": "Saverio Giulio Barbieri",
+  "points": 32,
+  "events_played": 10,
+  "delta": 2
+ },
+ {
+  "format": "Pauper",
+  "season": "2025/26",
+  "rank": 14,
+  "player": "Samuel Meazzo",
+  "points": 26,
+  "events_played": 7,
+  "delta": -2
+ },
+ {
+  "format": "Pauper",
+  "season": "2025/26",
+  "rank": 15,
+  "player": "Giacomo Cavazzuti",
+  "points": 24,
+  "events_played": 10,
+  "delta": 1
+ },
+ {
+  "format": "Pauper",
+  "season": "2025/26",
+  "rank": 16,
+  "player": "Michael Ghiselli",
+  "points": 18,
+  "events_played": 6,
+  "delta": -3
  }
 ]

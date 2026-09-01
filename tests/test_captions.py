@@ -6,7 +6,8 @@ from moma_social.repos import events_by_day, fetch_events, fetch_leg_results, fe
 
 def test_hashtag_deduplicati_e_normalizzati(cfg):
     tokens = build_hashtags(cfg, "weekly_calendar", ["modern", "#mtg", "#Modern"]).split()
-    assert tokens[0] == "#magicthegathering"
+    assert tokens[0] == cfg.get("content.hashtags_base")[0]
+    assert "#magicthegathering" in tokens
     assert tokens.count("#mtg") == 1                 # gia' presente fra i base
     assert sum(t.lower() == "#modern" for t in tokens) == 1   # dedup case-insensitive
     assert all(t.startswith("#") for t in tokens)

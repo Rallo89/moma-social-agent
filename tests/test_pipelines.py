@@ -69,11 +69,23 @@ def test_formato_senza_eventi_ne_fallback(cfg):
         pipelines.format_spotlight(cfg, dt.date(2030, 1, 7))
 
 
+def test_titolo_e_sottotitolo_delle_due_slide(cfg):
+    """La grafica mostra nome torneo e tappa: entrambe le slide li ricevono."""
+    pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
+    tappa, classifica = RENDERED[0][1], RENDERED[1][1]
+    assert tappa["title"] == "Torneo Pauper"
+    assert tappa["subtitle"] == "Tappa 10"
+    assert classifica["title"] == "Torneo Pauper"
+    assert classifica["subtitle"] == "Classifica generale"
+
+
 def test_risultati_sono_un_carosello_di_due_slide(cfg):
     draft = pipelines.leg_results(cfg, dt.date(2026, 3, 11))
     assert draft.is_carousel
     assert len(draft.images) == 2
-    assert [t for t, _ in RENDERED] == ["leg_results.html.j2", "standings.html.j2"]
+    # I nomi dei template vengono dalla config: qui conta che siano due,
+    # nell'ordine dichiarato.
+    assert [t for t, _ in RENDERED] == cfg.get("posts.leg_results.image_templates")
     # L'ordine del carosello e' parte del contenuto: prima la tappa, poi la classifica.
     assert "risultati" in Path(draft.images[0]).name
     assert "classifica" in Path(draft.images[1]).name
@@ -95,7 +107,7 @@ def test_risultati_default_e_ieri(cfg, monkeypatch):
 
 def test_risultati_tappa_non_caricata(cfg):
     with pytest.raises(NoDataError):
-        pipelines.leg_results(cfg, dt.date(2026, 3, 13))
+        pipelines.leg_results(cfg, dt.date(2026, 3, 10))
 
 
 def test_densita_cresce_con_le_righe():

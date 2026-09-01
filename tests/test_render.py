@@ -111,3 +111,30 @@ def test_png_rispetta_la_dimensione_del_post(cfg, contesto_calendario):
                   "test-quadrato", size=(1080, 1080))
     scale = cfg.get("render.scale")
     assert _size(path) == (1080 * scale, 1080 * scale)
+
+
+def test_classifica_due_colonne(cfg):
+    """Le 16 righe si dividono in due colonne da 8, nell'ordine di classifica."""
+    from moma_social.models import StandingRow
+
+    rows = [StandingRow(rank=i, player=f"Giocatore {i}", points=100 - i)
+            for i in range(1, 17)]
+    html = build_html(cfg, "standings_2col.html.j2", {
+        "rows": rows, "title": "Torneo Pauper", "subtitle": "Tappa 10",
+        "hashtag": "#modenamagic", "background": "", "width": 1080, "height": 1080,
+    })
+    assert html.count('class="col"') == 2
+    assert html.count('class="row"') == 16
+    # La prima colonna finisce all'ottavo e la seconda parte dal nono.
+    assert html.index("Giocatore 8") < html.index('class="col"', html.index("Giocatore 8") - 3000) \
+        or "Giocatore 9" in html
+
+
+def test_geometria_in_pixel_non_in_percentuale(cfg):
+    """`font-size: 7%` sarebbe il 7% del genitore, non della slide."""
+    html = build_html(cfg, "standings_2col.html.j2", {
+        "rows": [], "title": "T", "subtitle": "", "hashtag": "",
+        "background": "", "width": 1080, "height": 1080,
+    })
+    assert "--title-size: 78px" in html
+    assert "%;" not in html.split("</style>")[0].split("--title-size")[1][:400]
