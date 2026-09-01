@@ -136,5 +136,15 @@ def test_geometria_in_pixel_non_in_percentuale(cfg):
         "rows": [], "title": "T", "subtitle": "", "hashtag": "",
         "background": "", "width": 1080, "height": 1080,
     })
-    assert "--title-size: 78px" in html
-    assert "%;" not in html.split("</style>")[0].split("--title-size")[1][:400]
+    import re
+
+    style = html.split("</style>")[0]
+    # Ogni variabile di geometria dev'essere in px, mai in percentuale.
+    variabili = re.findall(r"(--[a-z0-9-]+):\s*([^;]+);", style)
+    geometria = [(nome, valore) for nome, valore in variabili
+                 if nome.endswith(("-size", "-top", "-w", "-h", "-gap", "-pad", "-safe"))]
+    assert geometria, "nessuna variabile di geometria trovata"
+    assert all(valore.strip().endswith("px") for _, valore in geometria), geometria
+    # Il titolo e' il 7.04% del lato: a 1080 sono ~76px.
+    titolo = dict(geometria)["--title-size"]
+    assert 74 <= float(titolo.removesuffix("px")) <= 78, titolo

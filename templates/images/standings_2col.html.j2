@@ -24,30 +24,45 @@
 <head>
 <meta charset="utf-8">
 <style>
-  /* Geometria in pixel, calcolata dal lato della slide.
-     Non si usano percentuali: `font-size: 7%` sarebbe il 7% del corpo del
-     genitore, non della slide, e `calc(6% * 1080 / 100)` non e' valido. */
+  /* Geometria in pixel, ricavata misurando l'artwork a 1080x1080 e espressa
+     come frazione del lato, cosi' vale a qualunque dimensione.
+       barre delle posizioni : x 21-72 e 541-592, larghe 52
+       fascia delle righe    : y 317-950, 8 righe da 79.25
+       header scuro          : fino a y 171 (sinistra) / 253 (centro)
+     Niente percentuali: `font-size: 7%` sarebbe il 7% del corpo del genitore,
+     non della slide. */
   :root {
-    --pad-x:      {{ (width * 0.028) | round | int }}px;
-    --title-top:  {{ (width * 0.055) | round | int }}px;
-    --title-size: {{ (width * 0.072) | round | int }}px;
-    --sub-gap:    {{ (width * 0.014) | round | int }}px;
-    --sub-size:   {{ (width * 0.029) | round | int }}px;
-    --grid-top:   {{ (width * 0.285) | round | int }}px;
-    --row-h:      {{ (width * 0.064) | round | int }}px;
-    --row-gap:    {{ (width * 0.0075) | round | int }}px;
-    --col-gap:    {{ (width * 0.016) | round | int }}px;
-    --pos-w:      {{ (width * 0.044) | round | int }}px;
-    --name-size:  {{ (width * 0.025) | round | int }}px;
-    --pts-size:   {{ (width * 0.026) | round | int }}px;
-    --foot-size:  {{ (width * 0.019) | round | int }}px;
-    --foot-bot:   {{ (width * 0.020) | round | int }}px;
+    --pad-x:      {{ (width * 0.019444) | round(2) }}px;   /*  21 */
+    --col1-w:     {{ (width * 0.469444) | round(2) }}px;   /* 507 */
+    --col2-w:     {{ (width * 0.479630) | round(2) }}px;   /* 518 */
+    --col-gap:    {{ (width * 0.012037) | round(2) }}px;   /*  13 */
+    --grid-top:   {{ (width * 0.293519) | round(2) }}px;   /* 317 */
+    --row-h:      {{ (width * 0.073380) | round(2) }}px;   /*  79.25 passo */
+    --strip-h:    {{ (width * 0.062963) | round(2) }}px;   /*  68 striscia:
+                                                              piu' bassa del passo,
+                                                              cosi' fra una riga e
+                                                              l'altra resta l'aria
+                                                              che c'e' nell'originale */
+    --pos-w:      {{ (width * 0.048148) | round(2) }}px;   /*  52 */
+
+    --title-top:  {{ (width * 0.048148) | round(2) }}px;   /*  52 */
+    --title-size: {{ (width * 0.070370) | round(2) }}px;   /*  76 */
+    --sub-gap:    {{ (width * 0.012963) | round(2) }}px;   /*  14 */
+    --sub-size:   {{ (width * 0.028704) | round(2) }}px;   /*  31 */
+
+    --name-size:  {{ (width * 0.025926) | round(2) }}px;   /*  28 */
+    --pts-size:   {{ (width * 0.027778) | round(2) }}px;   /*  30 */
+    --name-pad:   {{ (width * 0.016667) | round(2) }}px;   /*  18 */
+    --pts-pad:    {{ (width * 0.022222) | round(2) }}px;   /*  24 */
+    --logo-safe:  {{ (width * 0.111111) | round(2) }}px;   /* 120: il titolo non
+                                                              deve arrivare sotto
+                                                              al logo in alto a destra */
+    --foot-size:  {{ (width * 0.019) | round(2) }}px;
 
     --dark:   {{ brand.primary }};
     --lime:   {{ brand.accent }};
     --white:  {{ brand.text }};
     --strip:  rgba(12, 12, 12, .88);
-    --posbox: rgba(0, 0, 0, .55);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -58,8 +73,8 @@
     -webkit-font-smoothing: antialiased;
   }
   .slide { position: relative; width: {{ width }}px; height: {{ height }}px; }
-
   .bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
+
   {% if not bg %}
   /* Approssimazione della grafica, usata solo finche' manca lo sfondo vero. */
   .bg {
@@ -69,16 +84,27 @@
       radial-gradient(60% 45% at 45% 55%, #2b4a63 0%, #16202b 70%);
   }
   .footer-bar { position: absolute; left: 0; right: 0; bottom: 0;
-                height: {{ (width * 0.065) | round | int }}px; background: var(--dark); }
+                height: {{ (width * 0.065) | round(2) }}px; background: var(--dark); }
+  .foot {
+    position: absolute; left: 0; right: 0; bottom: {{ (width * 0.020) | round(2) }}px;
+    text-align: center; font-size: var(--foot-size); font-weight: 800;
+    letter-spacing: .06em; color: var(--lime);
+  }
   {% endif %}
 
   .layer { position: relative; height: 100%; }
 
-  .head { position: absolute; top: var(--title-top); left: 0; right: 0; text-align: center; }
+  .head {
+    position: absolute; top: var(--title-top);
+    left: 0; right: {{ (width * 0.024074) | round(2) }}px;   /* centro a x=527 */
+    padding: 0 var(--logo-safe);
+    text-align: center;
+  }
   .title {
     font-size: var(--title-size); line-height: .95; font-weight: 900;
     letter-spacing: -.01em; text-transform: uppercase; color: var(--lime);
   }
+  .title.lungo { font-size: calc(var(--title-size) * .74); }
   .subtitle {
     margin-top: var(--sub-gap); font-size: var(--sub-size); font-weight: 800;
     letter-spacing: .12em; text-transform: uppercase; color: var(--white);
@@ -87,37 +113,39 @@
   .grid {
     position: absolute; top: var(--grid-top);
     left: var(--pad-x); right: var(--pad-x);
-    display: grid; grid-template-columns: 1fr 1fr; gap: 0 var(--col-gap);
+    /* Le due colonne non sono larghe uguali nell'originale: la seconda parte
+       dalla barra disegnata nell'artwork a x=541 e arriva al margine. */
+    display: grid; grid-template-columns: var(--col1-w) var(--col2-w);
+    gap: 0 var(--col-gap);
   }
-  .col { display: flex; flex-direction: column; gap: var(--row-gap); }
+  /* Righe a passo fisso: devono combaciare con le barre disegnate nell'artwork,
+     non ridistribuirsi quando i giocatori sono meno di sedici. */
+  .col { display: grid; grid-auto-rows: var(--row-h); align-content: start; }
 
-  .row {
-    display: flex; align-items: center; height: var(--row-h);
-    {% if not bg %}background: var(--strip);{% endif %}
-  }
+  .row { display: flex; align-items: center; height: var(--row-h); }
   .pos {
-    flex: 0 0 var(--pos-w); align-self: stretch;
+    flex: 0 0 var(--pos-w); align-self: center; height: var(--strip-h);
     display: flex; align-items: center; justify-content: center;
     font-size: var(--pts-size); font-weight: 900; color: var(--lime);
-    {% if not bg %}background: var(--posbox);{% endif %}
+    /* Con l'artwork la barra verticale delle posizioni c'e' gia': ridipingerla
+       con un nero leggermente diverso creerebbe una banda visibile. */
+    {% if not bg %}background: var(--strip);{% endif %}
+  }
+  /* La striscia dietro nome e punti: nell'artwork non c'e' piu', ma senza il
+     testo bianco finirebbe direttamente sulla foto e diventerebbe illeggibile. */
+  .campo {
+    flex: 1 1 auto; min-width: 0; align-self: center; height: var(--strip-h);
+    display: flex; align-items: center; gap: var(--name-pad);
+    padding: 0 var(--pts-pad) 0 var(--name-pad);
+    background: var(--strip);
   }
   .name {
     flex: 1 1 auto; min-width: 0;
-    padding: 0 {{ (width * 0.018) | round | int }}px;
     font-size: var(--name-size); font-weight: 800; text-transform: uppercase;
     /* Un nome lungo si restringe invece di spingere via i punti. */
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .pts {
-    flex: 0 0 auto; padding-right: {{ (width * 0.025) | round | int }}px;
-    font-size: var(--pts-size); font-weight: 900; text-align: right;
-  }
-
-  .foot {
-    position: absolute; left: 0; right: 0; bottom: var(--foot-bot);
-    text-align: center; font-size: var(--foot-size); font-weight: 800;
-    letter-spacing: .06em; color: var(--lime);
-  }
+  .pts { flex: 0 0 auto; font-size: var(--pts-size); font-weight: 900; }
 </style>
 </head>
 <body>
@@ -126,7 +154,7 @@
     {% if not bg %}<div class="footer-bar"></div>{% endif %}
     <div class="layer">
       <div class="head">
-        <div class="title">{{ title }}</div>
+        <div class="title{% if title|length > 18 %} lungo{% endif %}">{{ title }}</div>
         {% if subtitle %}<div class="subtitle">{{ subtitle }}</div>{% endif %}
       </div>
 
@@ -136,15 +164,17 @@
           {% for r in colonna %}
           <div class="row">
             <div class="pos">{{ r.rank }}</div>
-            <div class="name">{{ r.player }}</div>
-            <div class="pts">{{ r.points }}</div>
+            <div class="campo">
+              <div class="name">{{ r.player }}</div>
+              <div class="pts">{{ r.points }}</div>
+            </div>
           </div>
           {% endfor %}
         </div>
         {% endfor %}
       </div>
 
-      {% if hashtag %}<div class="foot">{{ hashtag }}</div>{% endif %}
+      {% if hashtag and not bg %}<div class="foot">{{ hashtag }}</div>{% endif %}
     </div>
   </div>
 </body>
