@@ -146,6 +146,16 @@ Poi vanno collegati alle slide, nelle sezioni `[posts.*]`:
 background = "templates/images/assets/sfondo_calendario.png"
 ```
 
+> **Punta il sync al design PULITO, non a quello con i placeholder.**
+> Un template di lavorazione contiene i segnaposto come testo (`{{NOME}}`,
+> `{p}`, `{{pt}}`): esportato diventa uno sfondo con quelle scritte impresse.
+> Lo sfondo va ricavato da un **duplicato del design senza i livelli di testo**,
+> ed e' l'ID di quel duplicato che va in `[[canva.assets]]`.
+>
+> Se in `target` lasci il design di lavorazione, il primo `canva-sync` che
+> qualcuno lancia sovrascrive lo sfondo pulito con quello pieno di segnaposto.
+> Il comando sta facendo il suo mestiere: e' puntato al design sbagliato.
+
 ## 6. Usarlo
 
 ```bash
