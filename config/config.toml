@@ -198,7 +198,8 @@ hashtags         = ["#torneomagic"]
 image_templates  = ["standings_2col.html.j2", "standings_2col.html.j2"]
 width            = 1080
 height           = 1080
-# background     = "templates/images/assets/sfondo_risultati.png"
+# Stessa grafica per entrambe le slide del carosello.
+background       = "templates/images/assets/sfondo_classifica.png"
 caption_template = "leg_results.txt.j2"
 hashtags         = ["#classifica", "#risultati"]
 top_n            = 16           # righe mostrate: la grafica ne prevede 16 su due colonne
