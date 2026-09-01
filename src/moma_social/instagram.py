@@ -19,6 +19,9 @@ from .errors import ConfigError, PublishError
 TIMEOUT = 60
 POLL_INTERVAL = 3
 POLL_ATTEMPTS = 20
+# L'app Instagram permette 20 slide, la Content Publishing API 10: pubblicando
+# via API vale il secondo limite.
+MAX_CAROUSEL = 10
 
 
 class InstagramClient:
@@ -130,6 +133,12 @@ class InstagramClient:
         """Pubblica immagine singola o carosello. Restituisce l'id del post."""
         if not image_urls:
             raise PublishError("Nessuna immagine da pubblicare")
+        if len(image_urls) > MAX_CAROUSEL:
+            raise PublishError(
+                f"Carosello di {len(image_urls)} slide: la Graph API ne accetta "
+                f"al massimo {MAX_CAROUSEL}. Riduci posts.leg_results."
+                f"max_carousel_slides o aumenta rows_per_slide."
+            )
         if len(image_urls) == 1:
             container = self.create_item(image_urls[0], caption=caption)
         else:

@@ -131,13 +131,23 @@
        con un nero leggermente diverso creerebbe una banda visibile. */
     {% if not bg %}background: var(--strip);{% endif %}
   }
-  /* La striscia dietro nome e punti: nell'artwork non c'e' piu', ma senza il
-     testo bianco finirebbe direttamente sulla foto e diventerebbe illeggibile. */
+  /* Trattamento dietro nome e punti (posts.leg_results.row_style):
+       strip  - striscia piena, massima leggibilita'
+       shadow - niente striscia, alone scuro attorno al testo
+       none   - testo nudo sulla foto
+     Nell'artwork pulito la striscia non c'e' piu': senza un trattamento il
+     testo bianco finisce direttamente sulla foto sfocata. */
   .campo {
     flex: 1 1 auto; min-width: 0; align-self: center; height: var(--strip-h);
     display: flex; align-items: center; gap: var(--name-pad);
     padding: 0 var(--pts-pad) 0 var(--name-pad);
+    {% if row_style == "strip" %}
     background: var(--strip);
+    {% elif row_style == "shadow" %}
+    text-shadow:
+      0 0 {{ (width * 0.011) | round(2) }}px rgba(0, 0, 0, .95),
+      0 {{ (width * 0.002) | round(2) }}px {{ (width * 0.005) | round(2) }}px rgba(0, 0, 0, .9);
+    {% endif %}
   }
   .name {
     flex: 1 1 auto; min-width: 0;

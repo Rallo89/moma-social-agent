@@ -87,6 +87,7 @@ def build_html(cfg: Config, template: str, context: dict) -> str:
         "height": cfg.get("render.height", 1350),
         "background": "",
         "density": "",
+        "row_style": "strip",
     }
     return env.get_template(template).render({**base, **context})
 

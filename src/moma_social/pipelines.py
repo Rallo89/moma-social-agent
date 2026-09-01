@@ -41,6 +41,13 @@ def _stamp(cfg: Config, kind: str, day: dt.date, suffix: str = "") -> str:
     return f"{day.isoformat()}-{kind}{tail}"
 
 
+def _pagine(righe: list, per_pagina: int) -> list[list]:
+    """Spezza le righe in slide. Almeno una pagina, anche se vuota."""
+    if per_pagina <= 0:
+        return [righe]
+    return [righe[i:i + per_pagina] for i in range(0, len(righe), per_pagina)] or [[]]
+
+
 def _background(cfg: Config, kind: str) -> str:
     return cfg.get(f"posts.{kind}.background", "") or ""
 
@@ -152,10 +159,29 @@ def leg_results(cfg: Config, day: dt.date | None = None, fmt: str = "") -> PostD
     leg = fetch_leg_results(cfg, day, fmt)
     standings = fetch_standings(cfg, leg.format)
 
-    top_n = cfg.get("posts.leg_results.top_n", 8)
-    standings_top_n = cfg.get("posts.leg_results.standings_top_n", 10)
-    rows = leg.rows[:top_n]
-    standings_rows = standings.rows[:standings_top_n]
+    # top_n = 0 significa "tutti": con piu' partecipanti di quanti ne stiano in
+    # una slide il post diventa un carosello, non un elenco troncato in silenzio.
+    top_n = cfg.get("posts.leg_results.top_n", 0)
+    standings_top_n = cfg.get("posts.leg_results.standings_top_n", 16)
+    rows = leg.rows[:top_n] if top_n else leg.rows
+    standings_rows = standings.rows[:standings_top_n] if standings_top_n else standings.rows
+
+    per_slide = cfg.get("posts.leg_results.rows_per_slide", 16)
+    # La Graph API accetta al massimo 10 elementi per carosello (l'app ne
+    # permette 20, ma noi pubblichiamo via API).
+    max_slide = min(cfg.get("posts.leg_results.max_carousel_slides", 10), 10)
+
+    pagine_tappa = _pagine(rows, per_slide)
+    pagine_classifica = _pagine(standings_rows, per_slide)
+    tagliate = 0
+    if len(pagine_tappa) + len(pagine_classifica) > max_slide:
+        # I risultati sono la notizia: la classifica cede spazio per prima.
+        spazio_classifica = max(1, max_slide - len(pagine_tappa))
+        tagliate = len(pagine_classifica) - spazio_classifica
+        pagine_classifica = pagine_classifica[:spazio_classifica]
+        if len(pagine_tappa) + len(pagine_classifica) > max_slide:
+            tagliate += len(pagine_tappa) - (max_slide - len(pagine_classifica))
+            pagine_tappa = pagine_tappa[:max_slide - len(pagine_classifica)]
 
     templates = cfg.require("posts.leg_results.image_templates")
     background = _background(cfg, "leg_results")
@@ -165,26 +191,32 @@ def leg_results(cfg: Config, day: dt.date | None = None, fmt: str = "") -> PostD
     )
     hashtag = cfg.get("content.hashtag_grafica", "")
 
-    slide_results = render(
-        cfg, templates[0],
-        {"leg": leg, "rows": rows, "standings": standings,
-         "title": torneo, "subtitle": leg.leg or "Risultati di tappa",
-         "hashtag": hashtag,
-         "background": background, "density": _density(len(rows))},
-        _stamp(cfg, "risultati", day, leg.format.lower().replace(" ", "-")),
-        size=post_size(cfg, "leg_results"),
-    )
-    slide_standings = render(
-        cfg, templates[1],
-        {"standings": standings, "rows": standings_rows, "leg": leg,
-         "title": torneo,
-         "subtitle": cfg.get("content.standings_subtitle", "Classifica generale"),
-         "hashtag": hashtag,
-         "background": _background(cfg, "leg_results_standings") or background,
-         "density": _density(len(standings_rows))},
-        _stamp(cfg, "classifica", day, leg.format.lower().replace(" ", "-")),
-        size=post_size(cfg, "leg_results_standings"),
-    )
+    def _slide(template, kind, etichetta, pagina, indice, totale, contesto):
+        # Il numero di pagina compare solo quando ce n'e' piu' di una.
+        suffisso = f" · {indice + 1}/{totale}" if totale > 1 else ""
+        nome = _stamp(cfg, etichetta, day, leg.format.lower().replace(" ", "-"))
+        return render(
+            cfg, template,
+            {"leg": leg, "standings": standings, "title": torneo,
+             "hashtag": hashtag, "rows": pagina,
+             "row_style": cfg.get("posts.leg_results.row_style", "strip"),
+             "subtitle": contesto + suffisso,
+             "background": _background(cfg, kind) or background,
+             "density": _density(len(pagina))},
+            f"{nome}-{indice + 1}" if totale > 1 else nome,
+            size=post_size(cfg, kind),
+        )
+
+    immagini = [
+        _slide(templates[0], "leg_results", "risultati", pagina, i,
+               len(pagine_tappa), leg.leg or "Risultati di tappa")
+        for i, pagina in enumerate(pagine_tappa)
+    ] + [
+        _slide(templates[1], "leg_results_standings", "classifica", pagina, i,
+               len(pagine_classifica),
+               cfg.get("content.standings_subtitle", "Classifica generale"))
+        for i, pagina in enumerate(pagine_classifica)
+    ]
 
     caption = render_caption(
         cfg, "leg_results",
@@ -195,10 +227,14 @@ def leg_results(cfg: Config, day: dt.date | None = None, fmt: str = "") -> PostD
     )
     return PostDraft(
         kind="leg_results",
-        images=[str(slide_results), str(slide_standings)],
+        images=[str(path) for path in immagini],
         caption=caption,
         meta={"day": day.isoformat(), "format": leg.format, "leg": leg.leg,
-              "players": leg.players_count, "winner": leg.winner.player if leg.winner else ""},
+              "players": leg.players_count,
+              "winner": leg.winner.player if leg.winner else "",
+              "slide": len(immagini), "slide_tappa": len(pagine_tappa),
+              "slide_classifica": len(pagine_classifica),
+              "slide_tagliate": tagliate},
     )
 
 

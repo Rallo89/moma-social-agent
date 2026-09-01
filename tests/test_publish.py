@@ -159,3 +159,15 @@ def test_backend_media_assente(cfg, tmp_path):
     cfg.data["media"]["backend"] = "none"
     with pytest.raises(ConfigError, match="dry-run"):
         upload(cfg, tmp_path)
+
+
+@responses.activate
+def test_carosello_oltre_il_limite_viene_rifiutato(cfg):
+    """Meglio un errore chiaro prima di caricare 13 immagini per niente."""
+    from moma_social.instagram import MAX_CAROUSEL
+
+    _credentials(cfg)
+    urls = [f"https://a/{i}.png" for i in range(MAX_CAROUSEL + 1)]
+    with pytest.raises(PublishError, match=str(MAX_CAROUSEL)):
+        InstagramClient(cfg).publish_post(urls, "caption")
+    assert not responses.calls          # nessuna chiamata sprecata

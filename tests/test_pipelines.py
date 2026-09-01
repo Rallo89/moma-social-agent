@@ -115,3 +115,75 @@ def test_densita_cresce_con_le_righe():
     assert pipelines._density(9) == "dense-8"
     assert pipelines._density(11) == "dense-10"
     assert pipelines._density(20) == "dense-12"
+
+
+# ── carosello: piu' partecipanti di quanti stiano in una slide ──────────────
+def _tappa_con(cfg, monkeypatch, giocatori: int):
+    """Sostituisce i risultati di tappa con N giocatori inventati."""
+    import datetime as d
+
+    from moma_social.models import LegResults, ResultRow
+
+    leg = LegResults(
+        date=d.date(2026, 3, 13), format="Pauper", leg="Tappa 10",
+        venue="Modena Magic", players_count=giocatori,
+        rows=[ResultRow(rank=i, player=f"Giocatore {i}", points=(giocatori - i) * 3)
+              for i in range(1, giocatori + 1)],
+    )
+    monkeypatch.setattr(pipelines, "fetch_leg_results", lambda *a, **k: leg)
+    return leg
+
+
+def test_sedici_giocatori_restano_due_slide(cfg, monkeypatch):
+    _tappa_con(cfg, monkeypatch, 16)
+    draft = pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
+    assert draft.meta["slide"] == 2
+    assert draft.meta["slide_tappa"] == 1
+
+
+def test_venti_giocatori_diventano_tre_slide(cfg, monkeypatch):
+    """Il 17esimo non deve sparire: serve una seconda slide di risultati."""
+    _tappa_con(cfg, monkeypatch, 20)
+    draft = pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
+    assert draft.meta["slide_tappa"] == 2
+    assert len(draft.images) == 3
+    tutti = [r.player for pagina in (RENDERED[0][1]["rows"], RENDERED[1][1]["rows"])
+             for r in pagina]
+    assert len(tutti) == 20
+    assert tutti[16] == "Giocatore 17"
+
+
+def test_numero_di_pagina_solo_quando_serve(cfg, monkeypatch):
+    _tappa_con(cfg, monkeypatch, 20)
+    pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
+    assert RENDERED[0][1]["subtitle"] == "Tappa 10 · 1/2"
+    assert RENDERED[1][1]["subtitle"] == "Tappa 10 · 2/2"
+    # La classifica sta in una slide sola: niente numerazione.
+    assert RENDERED[2][1]["subtitle"] == "Classifica generale"
+
+
+def test_nomi_dei_file_distinti_fra_le_pagine(cfg, monkeypatch):
+    _tappa_con(cfg, monkeypatch, 20)
+    draft = pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
+    assert len(set(draft.images)) == len(draft.images)
+
+
+def test_carosello_non_supera_il_limite_della_graph_api(cfg, monkeypatch):
+    """200 giocatori sarebbero 13 slide: la Graph API ne accetta 10."""
+    from moma_social.instagram import MAX_CAROUSEL
+
+    _tappa_con(cfg, monkeypatch, 200)
+    draft = pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
+    assert len(draft.images) <= MAX_CAROUSEL
+    assert draft.meta["slide_tagliate"] > 0
+    # La classifica cede spazio per prima, ma non sparisce del tutto.
+    assert draft.meta["slide_classifica"] >= 1
+
+
+def test_ordine_delle_slide_risultati_poi_classifica(cfg, monkeypatch):
+    _tappa_con(cfg, monkeypatch, 20)
+    pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
+    templates = [t for t, _ in RENDERED]
+    attesi = cfg.get("posts.leg_results.image_templates")
+    assert templates[:2] == [attesi[0], attesi[0]]   # due pagine di risultati
+    assert templates[2] == attesi[1]                 # poi la classifica

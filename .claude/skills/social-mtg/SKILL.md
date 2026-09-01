@@ -45,6 +45,18 @@ sbagliato senza rilanciare), la caption in `.caption.txt` e i metadati `.json`.
 **Guarda sempre il PNG** prima di dire che un post e' pronto: la caption puo'
 essere perfetta e la slide illeggibile.
 
+## Caroselli e numero di partecipanti
+
+La grafica della classifica mostra 16 giocatori per slide (due colonne da 8).
+Con piu' partecipanti il post diventa un carosello con piu' slide di risultati,
+numerate nel sottotitolo ("Tappa 10 · 1/2"), seguite dalla classifica.
+
+**Il limite vero e' 10 slide, non 20.** L'app Instagram ne accetta 20 ma la
+Content Publishing API, con cui pubblichiamo, si ferma a 10. Oltre quel numero
+le slide vengono tagliate partendo dalla classifica, che cede spazio ai
+risultati; `meta.slide_tagliate` nel ledger dice quante se ne sono perse.
+Se capita spesso, la strada e' alzare `rows_per_slide`, non il limite.
+
 ## Regole di pubblicazione
 
 - La pubblicazione e' automatica: i workflow GitHub Actions pubblicano da soli
