@@ -1,0 +1,151 @@
+{#
+  Classifica su due colonne, formato quadrato — ricalca il template grafico
+  dell'associazione (titolo torneo, "TAPPA n", 16 righe su due colonne,
+  hashtag a fondo pagina).
+
+  Serve sia per i risultati di tappa sia per la classifica generale: cambiano
+  solo `title`, `subtitle` e le righe.
+
+  ── ALLINEAMENTO ─────────────────────────────────────────────────────────
+  Tutta la geometria e' nelle variabili CSS qui sotto, espresse in percentuale
+  del lato della slide. Per far combaciare il testo con lo sfondo grafico si
+  toccano solo quei numeri: nessuna regola piu' in basso va modificata.
+
+  Quando `background` punta a un'immagine esistente, le decorazioni disegnate
+  in CSS (banda scura, strisce delle righe, footer) spariscono: le fornisce
+  gia' la grafica. Senza sfondo vengono disegnate, cosi' la slide e'
+  presentabile anche prima che il file arrivi.
+#}
+{% set bg = background|asset %}
+{% set per_col = (rows|length + 1) // 2 %}
+{% set colonne = [rows[:per_col], rows[per_col:]] %}
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<style>
+  /* Geometria in pixel, calcolata dal lato della slide.
+     Non si usano percentuali: `font-size: 7%` sarebbe il 7% del corpo del
+     genitore, non della slide, e `calc(6% * 1080 / 100)` non e' valido. */
+  :root {
+    --pad-x:      {{ (width * 0.028) | round | int }}px;
+    --title-top:  {{ (width * 0.055) | round | int }}px;
+    --title-size: {{ (width * 0.072) | round | int }}px;
+    --sub-gap:    {{ (width * 0.014) | round | int }}px;
+    --sub-size:   {{ (width * 0.029) | round | int }}px;
+    --grid-top:   {{ (width * 0.285) | round | int }}px;
+    --row-h:      {{ (width * 0.064) | round | int }}px;
+    --row-gap:    {{ (width * 0.0075) | round | int }}px;
+    --col-gap:    {{ (width * 0.016) | round | int }}px;
+    --pos-w:      {{ (width * 0.044) | round | int }}px;
+    --name-size:  {{ (width * 0.025) | round | int }}px;
+    --pts-size:   {{ (width * 0.026) | round | int }}px;
+    --foot-size:  {{ (width * 0.019) | round | int }}px;
+    --foot-bot:   {{ (width * 0.020) | round | int }}px;
+
+    --dark:   {{ brand.primary }};
+    --lime:   {{ brand.accent }};
+    --white:  {{ brand.text }};
+    --strip:  rgba(12, 12, 12, .88);
+    --posbox: rgba(0, 0, 0, .55);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: {{ width }}px; height: {{ height }}px; overflow: hidden;
+    font-family: {{ brand.font_family }};
+    color: var(--white); background: var(--dark);
+    -webkit-font-smoothing: antialiased;
+  }
+  .slide { position: relative; width: {{ width }}px; height: {{ height }}px; }
+
+  .bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
+  {% if not bg %}
+  /* Approssimazione della grafica, usata solo finche' manca lo sfondo vero. */
+  .bg {
+    background:
+      linear-gradient(200deg, rgba(28,28,28,.97) 0 24%, rgba(120,140,150,.35) 24% 30%,
+                      rgba(18,18,18,.86) 30% 100%),
+      radial-gradient(60% 45% at 45% 55%, #2b4a63 0%, #16202b 70%);
+  }
+  .footer-bar { position: absolute; left: 0; right: 0; bottom: 0;
+                height: {{ (width * 0.065) | round | int }}px; background: var(--dark); }
+  {% endif %}
+
+  .layer { position: relative; height: 100%; }
+
+  .head { position: absolute; top: var(--title-top); left: 0; right: 0; text-align: center; }
+  .title {
+    font-size: var(--title-size); line-height: .95; font-weight: 900;
+    letter-spacing: -.01em; text-transform: uppercase; color: var(--lime);
+  }
+  .subtitle {
+    margin-top: var(--sub-gap); font-size: var(--sub-size); font-weight: 800;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--white);
+  }
+
+  .grid {
+    position: absolute; top: var(--grid-top);
+    left: var(--pad-x); right: var(--pad-x);
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0 var(--col-gap);
+  }
+  .col { display: flex; flex-direction: column; gap: var(--row-gap); }
+
+  .row {
+    display: flex; align-items: center; height: var(--row-h);
+    {% if not bg %}background: var(--strip);{% endif %}
+  }
+  .pos {
+    flex: 0 0 var(--pos-w); align-self: stretch;
+    display: flex; align-items: center; justify-content: center;
+    font-size: var(--pts-size); font-weight: 900; color: var(--lime);
+    {% if not bg %}background: var(--posbox);{% endif %}
+  }
+  .name {
+    flex: 1 1 auto; min-width: 0;
+    padding: 0 {{ (width * 0.018) | round | int }}px;
+    font-size: var(--name-size); font-weight: 800; text-transform: uppercase;
+    /* Un nome lungo si restringe invece di spingere via i punti. */
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .pts {
+    flex: 0 0 auto; padding-right: {{ (width * 0.025) | round | int }}px;
+    font-size: var(--pts-size); font-weight: 900; text-align: right;
+  }
+
+  .foot {
+    position: absolute; left: 0; right: 0; bottom: var(--foot-bot);
+    text-align: center; font-size: var(--foot-size); font-weight: 800;
+    letter-spacing: .06em; color: var(--lime);
+  }
+</style>
+</head>
+<body>
+  <div class="slide">
+    <div class="bg"{% if bg %} style="background-image:url('{{ bg }}')"{% endif %}></div>
+    {% if not bg %}<div class="footer-bar"></div>{% endif %}
+    <div class="layer">
+      <div class="head">
+        <div class="title">{{ title }}</div>
+        {% if subtitle %}<div class="subtitle">{{ subtitle }}</div>{% endif %}
+      </div>
+
+      <div class="grid">
+        {% for colonna in colonne %}
+        <div class="col">
+          {% for r in colonna %}
+          <div class="row">
+            <div class="pos">{{ r.rank }}</div>
+            <div class="name">{{ r.player }}</div>
+            <div class="pts">{{ r.points }}</div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if hashtag %}<div class="foot">{{ hashtag }}</div>{% endif %}
+    </div>
+  </div>
+</body>
+</html>

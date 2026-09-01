@@ -103,12 +103,17 @@ apri l'indirizzo stampato altrove e completa da li'.
 
 ## 5. Dire quale design corrisponde a quale sfondo
 
-Il **design ID** e' la parte dopo `/design/` nell'URL di Canva:
+Il **design ID** e' il segmento **subito dopo `/design/`**. Attenzione: l'URL ne
+contiene due, e serve solo il primo.
 
 ```
-https://www.canva.com/design/DAFxxxxxxxx/edit
-                             ^^^^^^^^^^^^
+https://www.canva.com/design/DAF5kNaAdDU/sNtVNbJOh1j7RmAGeIgfUA/edit
+                             ^^^^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^
+                             design ID   token del link, NON serve
 ```
+
+Il secondo segmento e' il token di accesso del link condiviso: non va in
+configurazione (ed e' bene non diffonderlo).
 
 In `config/config.toml`, un blocco per sfondo:
 
@@ -140,6 +145,16 @@ Poi vanno collegati alle slide, nelle sezioni `[posts.*]`:
 [posts.weekly_calendar]
 background = "templates/images/assets/sfondo_calendario.png"
 ```
+
+> **Punta il sync al design PULITO, non a quello con i placeholder.**
+> Un template di lavorazione contiene i segnaposto come testo (`{{NOME}}`,
+> `{p}`, `{{pt}}`): esportato diventa uno sfondo con quelle scritte impresse.
+> Lo sfondo va ricavato da un **duplicato del design senza i livelli di testo**,
+> ed e' l'ID di quel duplicato che va in `[[canva.assets]]`.
+>
+> Se in `target` lasci il design di lavorazione, il primo `canva-sync` che
+> qualcuno lancia sovrascrive lo sfondo pulito con quello pieno di segnaposto.
+> Il comando sta facendo il suo mestiere: e' puntato al design sbagliato.
 
 ## 6. Usarlo
 

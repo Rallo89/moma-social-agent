@@ -69,6 +69,10 @@ Setup dell'integrazione: `docs/CANVA.md`. Nota che su Canva "Private" significa
 *riservata a un team Enterprise*: per un uso come il nostro si crea
 un'integrazione **Public** e la si lascia in draft, senza inviarla in revisione.
 
+**Il design puntato da `[[canva.assets]]` dev'essere quello pulito**, senza i
+livelli di testo segnaposto: altrimenti il sync sovrascrive lo sfondo buono
+con l'export che ha `{{NOME}}` e `{p}` impressi nella grafica.
+
 Errori tipici:
 
 | Messaggio | Cosa significa |
