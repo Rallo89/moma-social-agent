@@ -168,6 +168,10 @@ export_quality = "regular"                  # "pro" richiede un piano a pagament
 # design_id = "DAFyyyyyyyy"
 # target    = "templates/images/assets/sfondo_formato.png"
 
+[[canva.assets]]
+design_id = "DAHT8FDdlJs"
+target    = "templates/images/assets/sfondo_classifica.png"
+
 [publish]
 # Registro versionato delle pubblicazioni: garantisce l'idempotenza fra run
 # diversi (un workflow rilanciato non produce un doppione).
