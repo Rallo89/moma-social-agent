@@ -88,3 +88,26 @@ def test_filtro_asset_e_totale(cfg):
     assert _asset_data_uri(cfg.root, "") == ""
     assert _asset_data_uri(cfg.root, "non/esiste.png") == ""
     assert _asset_data_uri(cfg.root, "templates/images") == ""   # e' una cartella
+
+
+def test_dimensione_globale_di_default(cfg):
+    from moma_social.render import post_size
+
+    assert post_size(cfg, "weekly_calendar") == (1080, 1350)
+
+
+def test_dimensione_specifica_del_post(cfg):
+    """Un template quadrato convive con gli altri in 4:5."""
+    from moma_social.render import post_size
+
+    cfg.data["posts"]["leg_results_standings"]["width"] = 1080
+    cfg.data["posts"]["leg_results_standings"]["height"] = 1080
+    assert post_size(cfg, "leg_results_standings") == (1080, 1080)
+    assert post_size(cfg, "weekly_calendar") == (1080, 1350)
+
+
+def test_png_rispetta_la_dimensione_del_post(cfg, contesto_calendario):
+    path = render(cfg, "weekly_calendar.html.j2", contesto_calendario,
+                  "test-quadrato", size=(1080, 1080))
+    scale = cfg.get("render.scale")
+    assert _size(path) == (1080 * scale, 1080 * scale)

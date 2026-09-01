@@ -13,7 +13,7 @@ from .captions import render_caption
 from .config import Config
 from .errors import NoDataError
 from .models import PostDraft
-from .render import render
+from .render import post_size, render
 from .repos import (
     events_by_day,
     fetch_events,
@@ -66,6 +66,7 @@ def weekly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
             "density": _density(len(events) + len(days)),
         },
         _stamp(cfg, "calendario", start),
+        size=post_size(cfg, "weekly_calendar"),
     )
     caption = render_caption(
         cfg, "weekly_calendar",
@@ -128,6 +129,7 @@ def format_spotlight(cfg: Config, day: dt.date | None = None,
             "density": _density(len(events) * 2),
         },
         _stamp(cfg, "formato", day, fmt.lower().replace(" ", "-")),
+        size=post_size(cfg, "format_spotlight"),
     )
     caption = render_caption(
         cfg, "format_spotlight",
@@ -161,6 +163,7 @@ def leg_results(cfg: Config, day: dt.date | None = None, fmt: str = "") -> PostD
         cfg, templates[0],
         {"leg": leg, "rows": rows, "background": background, "density": _density(len(rows))},
         _stamp(cfg, "risultati", day, leg.format.lower().replace(" ", "-")),
+        size=post_size(cfg, "leg_results"),
     )
     slide_standings = render(
         cfg, templates[1],
@@ -168,6 +171,7 @@ def leg_results(cfg: Config, day: dt.date | None = None, fmt: str = "") -> PostD
          "background": _background(cfg, "leg_results_standings") or background,
          "density": _density(len(standings_rows))},
         _stamp(cfg, "classifica", day, leg.format.lower().replace(" ", "-")),
+        size=post_size(cfg, "leg_results_standings"),
     )
 
     caption = render_caption(

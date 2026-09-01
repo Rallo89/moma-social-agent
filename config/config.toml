@@ -24,6 +24,9 @@ font_family   = "Inter, 'Helvetica Neue', Arial, sans-serif"
 logo          = "templates/images/assets/logo.png"   # opzionale
 
 [render]
+# Dimensione predefinita delle slide. Ogni post puo' sovrascriverla con
+# `width` e `height` nella propria sezione [posts.*]: i template grafici non
+# hanno tutti lo stesso formato, e il feed Instagram accetta sia 1:1 sia 4:5.
 width         = 1080      # formato feed Instagram 4:5
 height        = 1350
 scale         = 2         # deviceScaleFactor: esporta a 2160x2700

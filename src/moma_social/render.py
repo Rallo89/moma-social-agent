@@ -64,6 +64,18 @@ def image_env(cfg: Config) -> Environment:
     return env
 
 
+def post_size(cfg: Config, kind: str = "") -> tuple[int, int]:
+    """Dimensione della slide: quella del post se indicata, altrimenti globale.
+
+    Serve perche' i template grafici non hanno tutti lo stesso formato: il
+    feed Instagram accetta 1:1 e 4:5, e un'associazione puo' avere il
+    calendario in verticale e la classifica in quadrato.
+    """
+    width = cfg.get(f"posts.{kind}.width") or cfg.get("render.width", 1080)
+    height = cfg.get(f"posts.{kind}.height") or cfg.get("render.height", 1350)
+    return int(width), int(height)
+
+
 def build_html(cfg: Config, template: str, context: dict) -> str:
     env = image_env(cfg)
     # Undefined e' strict: ogni variabile usata dal layout base deve esistere
@@ -103,10 +115,10 @@ def _find_chromium(configured: str = "") -> str:
     )
 
 
-def _shot_chromium(cfg: Config, html: str, out_path: Path) -> Path:
+def _shot_chromium(cfg: Config, html: str, out_path: Path,
+                   size: tuple[int, int]) -> Path:
     binary = _find_chromium(cfg.get("render.chromium_path", ""))
-    width = cfg.get("render.width", 1080)
-    height = cfg.get("render.height", 1350)
+    width, height = size
     scale = cfg.get("render.scale", 2)
 
     # In headless la finestra riserva spazio alla UI del browser: il viewport
@@ -136,13 +148,13 @@ def _shot_chromium(cfg: Config, html: str, out_path: Path) -> Path:
     return crop_top_left(out_path, width * scale, height * scale)
 
 
-def _shot_playwright(cfg: Config, html: str, out_path: Path) -> Path:
+def _shot_playwright(cfg: Config, html: str, out_path: Path,
+                     size: tuple[int, int]) -> Path:
     try:
         from playwright.sync_api import sync_playwright
     except ImportError as exc:  # pragma: no cover
         raise RenderError("backend 'playwright' scelto ma pacchetto non installato") from exc
-    width = cfg.get("render.width", 1080)
-    height = cfg.get("render.height", 1350)
+    width, height = size
     with sync_playwright() as pw:
         browser = pw.chromium.launch(args=["--no-sandbox"])
         page = browser.new_page(
@@ -156,8 +168,11 @@ def _shot_playwright(cfg: Config, html: str, out_path: Path) -> Path:
     return out_path
 
 
-def render(cfg: Config, template: str, context: dict, out_name: str) -> Path:
+def render(cfg: Config, template: str, context: dict, out_name: str,
+           size: tuple[int, int] | None = None) -> Path:
     """Renderizza un template immagine e restituisce il path del PNG."""
+    size = size or (cfg.get("render.width", 1080), cfg.get("render.height", 1350))
+    context = {**context, "width": size[0], "height": size[1]}
     html = build_html(cfg, template, context)
     out_dir = cfg.resolve_path(cfg.get("render.output_dir", "out"))
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -169,5 +184,5 @@ def render(cfg: Config, template: str, context: dict, out_name: str) -> Path:
 
     backend = cfg.get("render.backend", "chromium")
     if backend == "playwright":
-        return _shot_playwright(cfg, html, out_path)
-    return _shot_chromium(cfg, html, out_path)
+        return _shot_playwright(cfg, html, out_path, size)
+    return _shot_chromium(cfg, html, out_path, size)

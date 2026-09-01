@@ -19,7 +19,7 @@ RENDERED: list[tuple[str, dict]] = []
 def fake_render(monkeypatch, tmp_path):
     RENDERED.clear()
 
-    def _render(cfg, template, context, out_name):
+    def _render(cfg, template, context, out_name, size=None):
         RENDERED.append((template, context))
         path = tmp_path / f"{out_name}.png"
         path.write_bytes(b"png")
