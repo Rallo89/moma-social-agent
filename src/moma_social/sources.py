@@ -209,3 +209,35 @@ def load_rows(spec: dict, base_dir: Path, **params) -> list[dict]:
         rows = _fetch_file(path if path.is_absolute() else base_dir / path, spec)
 
     return apply_map(rows, spec.get("map", {}))
+
+
+def describe_postgrest(base_url: str, headers: dict | None = None) -> dict[str, list[str]]:
+    """Tabelle e colonne esposte da un endpoint PostgREST (Supabase).
+
+    La radice di PostgREST restituisce la descrizione OpenAPI dello schema:
+    e' il modo di scoprire come si chiamano davvero le colonne senza
+    trascriverle a mano dalla dashboard.
+    """
+    url = base_url.rstrip("/") + "/"
+    try:
+        response = requests.get(url, headers=headers or None, timeout=TIMEOUT)
+    except requests.RequestException as exc:
+        raise SourceError(f"Endpoint non raggiungibile ({url}): {exc}") from exc
+    if response.status_code >= 400:
+        raise SourceError(
+            f"L'endpoint ha risposto {response.status_code}: {response.text[:300]}"
+        )
+    try:
+        spec = response.json()
+    except ValueError as exc:
+        raise SourceError(
+            f"La radice non ha restituito una descrizione OpenAPI: {response.text[:200]}"
+        ) from exc
+
+    definizioni = spec.get("definitions") or spec.get("components", {}).get("schemas", {})
+    if not definizioni:
+        raise SourceError("Nessuna tabella descritta dall'endpoint")
+    return {
+        tabella: sorted((corpo.get("properties") or {}).keys())
+        for tabella, corpo in sorted(definizioni.items())
+    }

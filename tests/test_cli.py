@@ -1,6 +1,7 @@
 import datetime as dt
 
 import pytest
+import responses
 
 from moma_social import cli
 from moma_social.errors import NoDataError
@@ -79,3 +80,23 @@ def test_doctor_distingue_warning_da_errori(cfg, capsys):
     out = capsys.readouterr().out
     assert "⚠️" in out          # settimana corrente senza eventi di esempio
     assert "❌" in out          # credenziali assenti
+
+
+@responses.activate
+def test_schema_elenca_tabelle_e_colonne(monkeypatch, capsys):
+    """La radice PostgREST descrive lo schema: e' li' che stanno i nomi veri."""
+    monkeypatch.setenv("SUPABASE_KEY", "CHIAVE")
+    responses.get("https://abc.supabase.co/rest/v1/", json={"definitions": {
+        "eventi": {"properties": {"data": {}, "titolo": {}, "formato": {}}},
+        "risultati": {"properties": {"posizione": {}, "giocatore": {}}},
+    }})
+    cli.main(["schema", "--url", "https://abc.supabase.co/rest/v1/"])
+    out = capsys.readouterr().out
+    assert "eventi" in out and "titolo" in out
+    assert "risultati" in out and "giocatore" in out
+    assert "2 tabelle" in out
+
+
+def test_schema_senza_chiave(capsys):
+    assert cli.main(["schema", "--url", "https://abc.supabase.co/rest/v1/",
+                     "--key", ""]) == cli.EXIT_ERROR

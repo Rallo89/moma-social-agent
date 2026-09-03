@@ -195,6 +195,36 @@ def cmd_canva_sync(args) -> int:
     return EXIT_OK
 
 
+def cmd_schema(args) -> int:
+    """Elenca tabelle e colonne di un endpoint PostgREST (Supabase).
+
+    Serve a scrivere la sezione [sources.*.map] senza copiare i nomi delle
+    colonne a mano dalla dashboard.
+    """
+    import os
+
+    from .sources import describe_postgrest
+
+    cfg = config.load(args.config)
+    url = args.url or cfg.get("sources.results.url", "").split("/rest/v1")[0] + "/rest/v1/"
+    chiave = args.key or os.environ.get("SUPABASE_KEY", "")
+    if not url.strip("/"):
+        raise ConfigError("Indica l'endpoint con --url, es. https://<ref>.supabase.co/rest/v1/")
+    if not chiave:
+        raise ConfigError("Chiave mancante: valorizza SUPABASE_KEY nel .env o usa --key")
+
+    tabelle = describe_postgrest(
+        url, {"apikey": chiave, "Authorization": f"Bearer {chiave}"}
+    )
+    for tabella, colonne in tabelle.items():
+        print(f"\n{tabella}")
+        for colonna in colonne:
+            print(f"  · {colonna}")
+    print(f"\n{len(tabelle)} tabelle. Usa questi nomi in [sources.*.map] "
+          f"(vedi docs/SUPABASE.md).")
+    return EXIT_OK
+
+
 def cmd_agenda(args) -> int:
     """Cosa c'e' in programma: utile per decidere a mano cosa postare."""
     cfg = config.load(args.config)
@@ -268,6 +298,12 @@ def build_parser() -> argparse.ArgumentParser:
                    help="sincronizza un solo sfondo (nome file, path o design_id)")
     p.add_argument("--check", action="store_true",
                    help="mostra cosa cambierebbe senza scrivere nulla")
+
+    p = sub.add_parser("schema",
+                       help="elenca tabelle e colonne di un endpoint Supabase/PostgREST")
+    p.set_defaults(func=cmd_schema)
+    p.add_argument("--url", default="", help="https://<ref>.supabase.co/rest/v1/")
+    p.add_argument("--key", default="", help="chiave anon (default: $SUPABASE_KEY)")
 
     p = sub.add_parser("agenda", help="elenca gli eventi della settimana")
     p.set_defaults(func=cmd_agenda)

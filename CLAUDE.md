@@ -26,6 +26,7 @@ Le **skill** in `.claude/skills/` sono la documentazione operativa:
 ```bash
 ./.venv/bin/momasocial doctor                 # diagnosi completa
 ./.venv/bin/momasocial agenda                 # eventi della settimana
+./.venv/bin/momasocial schema                 # tabelle e colonne su Supabase
 ./.venv/bin/momasocial weekly  --no-publish   # anteprima calendario
 ./.venv/bin/momasocial format  --no-publish   # anteprima formato del giorno
 ./.venv/bin/momasocial results --no-publish   # anteprima carosello risultati

@@ -59,7 +59,19 @@ Ripeti per le tabelle dei risultati e delle classifiche. Nessuna policy di
 Se preferisci non esporre le tabelle cosi' come sono, crea delle **viste**
 con le sole colonne che servono ai post e dai la policy a quelle.
 
-## 3. La configurazione
+## 3. Scoprire i nomi delle colonne
+
+Invece di trascriverli dalla dashboard:
+
+```bash
+momasocial schema --url https://<ref>.supabase.co/rest/v1/
+```
+
+Legge la descrizione OpenAPI che PostgREST pubblica sulla propria radice e
+stampa tabelle e colonne, gia' pronte per la sezione `map`. La chiave viene
+da `SUPABASE_KEY`, oppure si passa con `--key`.
+
+## 4. La configurazione
 
 I filtri PostgREST stanno **nell'URL**. La sintassi e' `colonna=operatore.valore`:
 
@@ -90,7 +102,7 @@ riapplica sempre il filtro sui dati ricevuti: anche un `?select=*` senza
 condizioni produce post corretti. Se una tabella cresce molto conviene
 comunque filtrare e aggiungere `limit=`, per non scaricare tutto ogni volta.
 
-## 4. Verificare
+## 5. Verificare
 
 ```bash
 momasocial doctor            # prova le tre sorgenti e dice cosa e' arrivato
@@ -103,7 +115,7 @@ Poi genera un post senza pubblicarlo:
 momasocial results --date 2026-03-13 --no-publish
 ```
 
-## 5. In produzione
+## 6. In produzione
 
 Aggiungi `SUPABASE_KEY` ai GitHub Secrets del repository e referenziala nei
 workflow, come gli altri segreti.
