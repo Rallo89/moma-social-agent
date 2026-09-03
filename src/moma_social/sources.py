@@ -116,9 +116,17 @@ def _fetch_http(url: str, spec: dict, params: dict) -> list[dict]:
     try:
         response = requests.get(url, params=query or None, headers=headers or None,
                                 timeout=TIMEOUT)
-        response.raise_for_status()
     except requests.RequestException as exc:
         raise SourceError(f"Sorgente non raggiungibile ({url}): {exc}") from exc
+
+    if response.status_code >= 400:
+        # Un 401 non e' "irraggiungibile": e' una chiave sbagliata, e il corpo
+        # della risposta di solito lo dice. Va riportato, altrimenti si perde
+        # l'unica informazione utile.
+        raise SourceError(
+            f"La sorgente ha risposto {response.status_code} ({url}): "
+            f"{response.text[:300]}"
+        )
 
     kind = _detect_kind(url, spec.get("kind", "auto"),
                         response.headers.get("content-type", ""))

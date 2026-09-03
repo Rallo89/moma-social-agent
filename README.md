@@ -31,8 +31,8 @@ DB eventi/risultati ──► adapter sorgenti ──► modelli ──► templ
                                                     Instagram Graph API
 ```
 
-- **Sorgenti dati**: un solo adapter legge HTTP JSON, CSV, Google Sheets, SQL
-  o file locali. Lo schema del vostro DB si dichiara in `config/config.toml`,
+- **Sorgenti dati**: un solo adapter legge Supabase (PostgREST), HTTP JSON,
+  CSV, Google Sheets, SQL o file locali. Lo schema del vostro DB si dichiara in `config/config.toml`,
   senza toccare il codice.
 - **Immagini**: le slide sono HTML+CSS renderizzate da Chromium headless a
   1080x1350 (4:5, il verticale del feed) con `scale = 2`. Il template grafico

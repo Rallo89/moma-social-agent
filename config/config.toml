@@ -48,8 +48,27 @@ chromium_path = ""
 # se la sorgente non li supporta il filtro viene comunque riapplicato in locale).
 # ─────────────────────────────────────────────────────────────────────────────
 
+# ── SUPABASE ────────────────────────────────────────────────────────────────
+# Supabase espone le tabelle via PostgREST: un endpoint REST che restituisce
+# JSON, quindi si configura come una qualunque API. Da preferire alla
+# connessione Postgres diretta, che risolve solo in IPv6 e quindi NON
+# funziona dai runner di GitHub Actions (vedi docs/SUPABASE.md).
+#
+# [sources.results]
+# url = "https://<ref>.supabase.co/rest/v1/risultati?select=*&data=eq.{date}&order=posizione.asc"
+#
+# [sources.results.headers]
+# apikey        = "${SUPABASE_KEY}"
+# Authorization = "Bearer ${SUPABASE_KEY}"
+#
+# [sources.results.map]
+# date = "data"
+# rank = "posizione"
+# ────────────────────────────────────────────────────────────────────────────
+
 [sources.events]
 # Esempi:
+#   url = "https://<ref>.supabase.co/rest/v1/eventi?select=*"        # Supabase
 #   url = "https://api.esempio.it/eventi?from={date_from}&to={date_to}"
 #   url = "https://docs.google.com/spreadsheets/d/<ID>/edit#gid=0"   # -> CSV export
 #   url = "postgresql+psycopg://user:pw@host/db"

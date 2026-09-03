@@ -43,6 +43,7 @@ Formati riconosciuti automaticamente:
 
 | Sorgente | Cosa mettere in `url` |
 |---|---|
+| **Supabase** | l'endpoint PostgREST + le chiavi negli header: vedi `docs/SUPABASE.md` |
 | API REST JSON | l'endpoint, con i placeholder che servono |
 | CSV pubblicato | il link diretto al `.csv` |
 | Google Sheets | il link normale del foglio: viene convertito in export CSV |
@@ -57,6 +58,18 @@ non serve — e non va fatto — costruire SQL a mano con i valori dentro.
 **Il filtro viene sempre riapplicato in memoria.** Se l'endpoint ignora i
 parametri e restituisce tutto, i post restano comunque corretti. Non serve
 quindi che la sorgente supporti i filtri: e' un'ottimizzazione, non un requisito.
+
+## Supabase
+
+E' il caso del progetto: le tabelle si leggono via PostgREST, quindi come una
+normale API JSON. Guida completa in `docs/SUPABASE.md`. Tre cose da ricordare:
+
+- **chiave `anon`, mai `service_role`**: la seconda scavalca RLS e puo' scrivere
+- **serve una policy RLS di lettura** per `anon` su ogni tabella, altrimenti la
+  risposta e' `[]` anche se i dati ci sono
+- **niente connessione Postgres diretta**: `db.<ref>.supabase.co` risolve solo
+  in IPv6 e i runner di GitHub Actions sono IPv4, quindi i post schedulati
+  fallirebbero pur funzionando in locale
 
 ## Segreti
 
