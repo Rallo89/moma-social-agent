@@ -67,46 +67,48 @@ chromium_path = ""
 # ────────────────────────────────────────────────────────────────────────────
 
 [sources.events]
-# Esempi:
-#   url = "https://<ref>.supabase.co/rest/v1/eventi?select=*"        # Supabase
-#   url = "https://api.esempio.it/eventi?from={date_from}&to={date_to}"
-#   url = "https://docs.google.com/spreadsheets/d/<ID>/edit#gid=0"   # -> CSV export
-#   url = "postgresql+psycopg://user:pw@host/db"
-#   url = "data/samples/events.json"
-url    = "data/samples/events.json"
-kind   = "auto"
-root   = ""            # JSON: chiave che contiene la lista (es. "data" o "results")
-# query = "SELECT * FROM eventi WHERE data BETWEEN '{date_from}' AND '{date_to}'"
+# Vista v_social_eventi sul Supabase dell'associazione: espone i soli tornei di
+# Modena Magic, senza dati personali. L'URL del progetto non e' un segreto (e'
+# pubblico per progettazione); la chiave sta in SUPABASE_KEY.
+url  = "https://wxvxtodrnrefbechawgz.supabase.co/rest/v1/v_social_eventi?select=*&data=gte.{date_from}&data=lte.{date_to}&order=data.asc"
+kind = "json"
+
+[sources.events.headers]
+apikey        = "${SUPABASE_KEY}"
+Authorization = "Bearer ${SUPABASE_KEY}"
 
 [sources.events.map]
-date          = "date"
-title         = "title"
-format        = "format"
-start_time    = "start_time"
-venue         = "venue"
-city          = "city"
-entry_fee     = "entry_fee"
-prize         = "prize"
-signup_url    = "signup_url"
-notes         = "notes"
+date      = "data"
+title     = "titolo"
+format    = "formato"
+venue     = "sede"
+entry_fee = "quota"
+notes     = "note"
+# Non presenti nel database: ora di inizio, premi, link iscrizioni. Se verranno
+# aggiunti a `tournaments`, basta esporli nella vista e mapparli qui.
 
 [sources.results]
-url    = "data/samples/results.json"
-kind   = "auto"
-root   = ""
+url  = "https://wxvxtodrnrefbechawgz.supabase.co/rest/v1/v_social_risultati?select=*&data=eq.{date}&order=posizione.asc"
+kind = "json"
+
+[sources.results.headers]
+apikey        = "${SUPABASE_KEY}"
+Authorization = "Bearer ${SUPABASE_KEY}"
 
 [sources.results.map]
-date          = "date"
-format        = "format"
-leg           = "leg"
-rank          = "rank"
-player        = "player"
-deck          = "deck"
+date          = "data"
+format        = "formato"
+leg           = "torneo"
+rank          = "posizione"
+player        = "giocatore"
+points        = "punti"
 record        = "record"
-points        = "points"
-players_count = "players_count"
-venue         = "venue"
+deck          = "mazzo"
+players_count = "iscritti"
 
+# La classifica di lega e' calcolata a runtime dalla webapp: non esiste ancora
+# una vista da interrogare. Finche' manca, questa sorgente resta sui dati di
+# esempio e il carosello dei risultati non va pubblicato.
 [sources.standings]
 url    = "data/samples/standings.json"
 kind   = "auto"

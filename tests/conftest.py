@@ -12,11 +12,22 @@ from moma_social import config  # noqa: E402
 
 @pytest.fixture
 def cfg(tmp_path, monkeypatch):
-    """Config reale del repo, ma con output e ledger dentro tmp_path."""
+    """Config reale del repo, ma isolata: niente rete, niente file del progetto.
+
+    Le sorgenti puntano ai dati di esempio invece che al Supabase reale: i test
+    devono girare identici in CI, offline e senza credenziali. I nomi dei campi
+    nei file di esempio coincidono gia' con quelli del modello, quindi non
+    serve nessuna mappatura.
+    """
     monkeypatch.setattr(config, "project_root", lambda: ROOT)
     loaded = config.load()
     loaded.data["render"]["output_dir"] = str(tmp_path / "out")
     loaded.data["publish"]["ledger"] = str(tmp_path / "published.jsonl")
+    for nome in ("events", "results", "standings"):
+        loaded.data["sources"][nome] = {
+            "url": f"data/samples/{nome}.json",
+            "kind": "auto",
+        }
     return loaded
 
 
