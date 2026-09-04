@@ -41,6 +41,24 @@ class Event:
         return self.title or self.format or "Evento"
 
 
+def format_record(wins, losses, draws) -> str:
+    """Comporre il record e' presentazione, non dato: sta qui, non nel database.
+
+    I pareggi compaiono solo se ci sono: "3-0-1" quando c'e' un pari, "3-0"
+    quando non ce n'e', invece di un "3-0-0" che nessuno scrive.
+    """
+    def numero(valore):
+        try:
+            return int(float(str(valore).strip()))
+        except (TypeError, ValueError):
+            return None
+
+    v, s, p = numero(wins), numero(losses), numero(draws)
+    if v is None or s is None:
+        return ""
+    return f"{v}-{s}-{p}" if p else f"{v}-{s}"
+
+
 @dataclass
 class ResultRow:
     rank: int
@@ -48,6 +66,9 @@ class ResultRow:
     deck: str = ""
     record: str = ""
     points: float | int | str = ""
+    wins: int | str = ""
+    losses: int | str = ""
+    draws: int | str = ""
     extra: dict = field(default_factory=dict)
 
 

@@ -14,7 +14,12 @@ campi, e la sezione `[sources.*.map]` della config fa da traduttore:
 `city`, `entry_fee`, `prize`, `signup_url`, `notes`
 
 **Risultati di tappa** — `date`, `format`, `leg`, `rank`, `player`, `deck`,
-`record`, `points`, `players_count`, `venue`
+`points`, `players_count`, `venue`, piu' il record: o `record` gia' formattato,
+oppure `wins` / `losses` / `draws` separati, da cui l'agente compone "3-0-1".
+
+Meglio i tre numeri: se la sorgente espone solo `record` gia' composto, un
+pareggio dimenticato a monte non e' piu' recuperabile. E' successo davvero,
+alla prima tappa reale.
 
 **Classifica** — `format`, `season`, `rank`, `player`, `points`,
 `events_played`, `delta` (variazione di posizione: numero, anche negativo)

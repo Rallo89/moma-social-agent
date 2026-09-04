@@ -102,6 +102,21 @@ riapplica sempre il filtro sui dati ricevuti: anche un `?select=*` senza
 condizioni produce post corretti. Se una tabella cresce molto conviene
 comunque filtrare e aggiungere `limit=`, per non scaricare tutto ogni volta.
 
+## 4-bis. Il record va esposto come tre numeri
+
+`tournament_players` ha `win`, `lost` e `draw` separati. Vanno esposti tutti e
+tre nella vista, **non concatenati**:
+
+```sql
+tp.win  as vinte,
+tp.lost as perse,
+tp.draw as pari,
+```
+
+La stringa "3-0-1" la compone l'agente, che mostra i pareggi solo quando ci
+sono. Concatenandoli nella vista si perde un'informazione che poi non e' piu'
+recuperabile — un 3-0-1 esce come "3-0".
+
 ## 5. Verificare
 
 ```bash

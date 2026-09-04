@@ -76,3 +76,47 @@ def test_classifica_ordinata(cfg):
 def test_classifica_formato_inesistente(cfg):
     with pytest.raises(NoDataError):
         fetch_standings(cfg, "Vintage")
+
+
+# ── record: i pareggi non si perdono ────────────────────────────────────────
+def test_record_composto_dai_tre_numeri(cfg, monkeypatch, tmp_path):
+    """Un 3-0-1 non deve diventare 3-0: e' il bug visto sul primo post reale."""
+    import json
+
+    sorgente = tmp_path / "risultati.json"
+    sorgente.write_text(json.dumps([
+        {"date": "2026-09-03", "format": "Modern", "rank": 1,
+         "player": "Tianguang Liu", "wins": 3, "losses": 0, "draws": 1},
+        {"date": "2026-09-03", "format": "Modern", "rank": 2,
+         "player": "Altro Giocatore", "wins": 3, "losses": 1, "draws": 0},
+    ]), encoding="utf-8")
+    cfg.data["sources"]["results"] = {"url": str(sorgente), "kind": "json"}
+
+    leg = fetch_leg_results(cfg, dt.date(2026, 9, 3))
+    assert leg.rows[0].record == "3-0-1"
+    assert leg.rows[1].record == "3-1"       # zero pareggi: non si scrive "3-1-0"
+
+
+def test_record_gia_pronto_ha_la_precedenza(cfg, monkeypatch, tmp_path):
+    """Una sorgente che espone la stringa gia' fatta non va sovrascritta."""
+    import json
+
+    sorgente = tmp_path / "risultati.json"
+    sorgente.write_text(json.dumps([
+        {"date": "2026-09-03", "format": "Modern", "rank": 1, "player": "X",
+         "record": "5-0", "wins": 3, "losses": 0, "draws": 1},
+    ]), encoding="utf-8")
+    cfg.data["sources"]["results"] = {"url": str(sorgente), "kind": "json"}
+
+    assert fetch_leg_results(cfg, dt.date(2026, 9, 3)).rows[0].record == "5-0"
+
+
+@pytest.mark.parametrize(
+    "vinte,perse,pari,atteso",
+    [(3, 0, 1, "3-0-1"), (3, 0, 0, "3-0"), (4, 1, None, "4-1"),
+     (0, 3, 2, "0-3-2"), ("", "", "", ""), (None, 2, 0, "")],
+)
+def test_formattazione_record(vinte, perse, pari, atteso):
+    from moma_social.models import format_record
+
+    assert format_record(vinte, perse, pari) == atteso

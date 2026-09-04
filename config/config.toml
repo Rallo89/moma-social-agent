@@ -102,7 +102,12 @@ leg           = "torneo"
 rank          = "posizione"
 player        = "giocatore"
 points        = "punti"
-record        = "record"
+# La vista espone i tre numeri separati: il record ("3-0-1") lo compone
+# l'agente, cosi' i pareggi non si perdono e il formato resta una scelta
+# di presentazione.
+wins          = "vinte"
+losses        = "perse"
+draws         = "pari"
 deck          = "mazzo"
 players_count = "iscritti"
 

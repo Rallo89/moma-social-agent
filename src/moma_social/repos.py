@@ -12,7 +12,7 @@ from pathlib import Path
 
 from .config import Config
 from .errors import NoDataError
-from .models import Event, LegResults, ResultRow, StandingRow, Standings
+from .models import Event, LegResults, ResultRow, StandingRow, Standings, format_record
 from .sources import load_rows
 from .timeutil import parse_date
 
@@ -130,8 +130,15 @@ def fetch_leg_results(cfg: Config, day: dt.date, fmt: str = "") -> LegResults:
                 rank=_as_int(row.get("rank"), default=index + 1),
                 player=_clean(row.get("player")),
                 deck=_clean(row.get("deck")),
-                record=_clean(row.get("record")),
+                # Se la sorgente espone i tre numeri, la stringa la componiamo
+                # noi; un `record` gia' pronto ha comunque la precedenza.
+                record=_clean(row.get("record")) or format_record(
+                    row.get("wins"), row.get("losses"), row.get("draws")
+                ),
                 points=_clean(row.get("points")),
+                wins=_clean(row.get("wins")),
+                losses=_clean(row.get("losses")),
+                draws=_clean(row.get("draws")),
                 extra=row.get("_extra", {}),
             )
             for index, row in enumerate(selected)
