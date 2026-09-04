@@ -57,6 +57,16 @@ le slide vengono tagliate partendo dalla classifica, che cede spazio ai
 risultati; `meta.slide_tagliate` nel ledger dice quante se ne sono perse.
 Se capita spesso, la strada e' alzare `rows_per_slide`, non il limite.
 
+## La classifica e' facoltativa
+
+Se la classifica generale non e' disponibile — formato senza lega, sorgente non
+ancora collegata, o `--no-standings` — il post esce con le sole slide dei
+risultati invece di non uscire affatto. La caption si adatta da sola.
+
+Vale anche per la riga "prossima tappa": e' una rifinitura, e se la sorgente
+eventi non risponde degrada in una frase generica senza far fallire un post
+che ha gia' tutti i dati che gli servono.
+
 ## Regole di pubblicazione
 
 - La pubblicazione e' automatica: i workflow GitHub Actions pubblicano da soli

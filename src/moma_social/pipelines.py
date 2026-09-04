@@ -11,8 +11,8 @@ import datetime as dt
 
 from .captions import render_caption
 from .config import Config
-from .errors import NoDataError
-from .models import PostDraft
+from .errors import MtgSocialError, NoDataError
+from .models import PostDraft, Standings
 from .render import post_size, render
 from .repos import (
     events_by_day,
@@ -153,11 +153,24 @@ def format_spotlight(cfg: Config, day: dt.date | None = None,
 
 
 # ── 3. Risultati di tappa + classifica (giovedi e venerdi 03:00) ────────────
-def leg_results(cfg: Config, day: dt.date | None = None, fmt: str = "") -> PostDraft:
-    """Carosello a 2 slide sui risultati della tappa di `day` (default: ieri)."""
+def leg_results(cfg: Config, day: dt.date | None = None, fmt: str = "",
+                senza_classifica: bool = False) -> PostDraft:
+    """Carosello sui risultati della tappa di `day` (default: ieri).
+
+    La classifica generale e' facoltativa: se manca — formato senza lega,
+    sorgente non ancora collegata, o `senza_classifica` — il post esce con le
+    sole slide dei risultati invece di non uscire affatto.
+    """
     day = day or resolve_date("yesterday", cfg.timezone)
     leg = fetch_leg_results(cfg, day, fmt)
-    standings = fetch_standings(cfg, leg.format)
+
+    if senza_classifica:
+        standings = Standings(format=leg.format)
+    else:
+        try:
+            standings = fetch_standings(cfg, leg.format)
+        except NoDataError:
+            standings = Standings(format=leg.format)
 
     # top_n = 0 significa "tutti": con piu' partecipanti di quanti ne stiano in
     # una slide il post diventa un carosello, non un elenco troncato in silenzio.
@@ -172,11 +185,11 @@ def leg_results(cfg: Config, day: dt.date | None = None, fmt: str = "") -> PostD
     max_slide = min(cfg.get("posts.leg_results.max_carousel_slides", 10), 10)
 
     pagine_tappa = _pagine(rows, per_slide)
-    pagine_classifica = _pagine(standings_rows, per_slide)
+    pagine_classifica = _pagine(standings_rows, per_slide) if standings_rows else []
     tagliate = 0
     if len(pagine_tappa) + len(pagine_classifica) > max_slide:
         # I risultati sono la notizia: la classifica cede spazio per prima.
-        spazio_classifica = max(1, max_slide - len(pagine_tappa))
+        spazio_classifica = max(1, max_slide - len(pagine_tappa)) if pagine_classifica else 0
         tagliate = len(pagine_classifica) - spazio_classifica
         pagine_classifica = pagine_classifica[:spazio_classifica]
         if len(pagine_tappa) + len(pagine_classifica) > max_slide:
@@ -239,11 +252,16 @@ def leg_results(cfg: Config, day: dt.date | None = None, fmt: str = "") -> PostD
 
 
 def _next_event_label(cfg: Config, after: dt.date, fmt: str) -> str:
-    """Prossimo appuntamento dello stesso formato, per chiudere la caption."""
+    """Prossimo appuntamento dello stesso formato, per chiudere la caption.
+
+    E' una rifinitura, non un requisito: qualunque problema nel recuperarla —
+    sorgente irraggiungibile compresa — deve degradare in una frase generica,
+    non far fallire un post che ha gia' tutti i dati che gli servono.
+    """
     try:
         upcoming = fetch_events(cfg, after + dt.timedelta(days=1),
                                 after + dt.timedelta(days=28))
-    except NoDataError:
+    except MtgSocialError:
         return "in arrivo, resta sintonizzato"
     for event in upcoming:
         if same_format(event.format, fmt):

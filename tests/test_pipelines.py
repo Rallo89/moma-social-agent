@@ -187,3 +187,39 @@ def test_ordine_delle_slide_risultati_poi_classifica(cfg, monkeypatch):
     attesi = cfg.get("posts.leg_results.image_templates")
     assert templates[:2] == [attesi[0], attesi[0]]   # due pagine di risultati
     assert templates[2] == attesi[1]                 # poi la classifica
+
+
+# ── la classifica e' facoltativa ────────────────────────────────────────────
+def test_senza_classifica_esce_solo_la_tappa(cfg, monkeypatch):
+    _tappa_con(cfg, monkeypatch, 16)
+    draft = pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper",
+                                  senza_classifica=True)
+    assert draft.meta["slide_classifica"] == 0
+    assert len(draft.images) == 1
+    assert "CLASSIFICA GENERALE" not in draft.caption
+
+
+def test_classifica_assente_non_blocca_il_post(cfg, monkeypatch):
+    """Un formato senza lega deve comunque avere il suo post di risultati."""
+    _tappa_con(cfg, monkeypatch, 16)
+    monkeypatch.setattr(
+        pipelines, "fetch_standings",
+        lambda *a, **k: (_ for _ in ()).throw(NoDataError("nessuna classifica")),
+    )
+    draft = pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
+    assert draft.meta["slide_classifica"] == 0
+    assert len(draft.images) == 1
+
+
+def test_sorgente_giu_non_blocca_la_caption(cfg, monkeypatch):
+    """La 'prossima tappa' e' una rifinitura: se la sorgente e' giu', si degrada."""
+    from moma_social.errors import SourceError
+
+    _tappa_con(cfg, monkeypatch, 16)
+    monkeypatch.setattr(
+        pipelines, "fetch_events",
+        lambda *a, **k: (_ for _ in ()).throw(SourceError("endpoint irraggiungibile")),
+    )
+    draft = pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper",
+                                  senza_classifica=True)
+    assert "in arrivo" in draft.caption

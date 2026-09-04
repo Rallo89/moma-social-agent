@@ -50,6 +50,8 @@ def cmd_post(args) -> int:
     kwargs = {}
     if args.kind != "weekly_calendar" and args.format:
         kwargs["fmt"] = args.format
+    if args.kind == "leg_results" and getattr(args, "no_standings", False):
+        kwargs["senza_classifica"] = True
 
     try:
         draft = pipeline(cfg, day, **kwargs)
@@ -276,6 +278,9 @@ def build_parser() -> argparse.ArgumentParser:
                        help="genera i file e basta, senza toccare il ledger")
         p.add_argument("--force", action="store_true",
                        help="pubblica anche se il dedupe dice gia' fatto")
+        if kind == "leg_results":
+            p.add_argument("--no-standings", action="store_true",
+                           help="solo le slide dei risultati, senza classifica")
 
     p = sub.add_parser("gate", help="verifica che sia l'ora locale giusta (per i cron)")
     p.set_defaults(func=cmd_gate)

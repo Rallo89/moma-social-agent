@@ -15,11 +15,15 @@ Vince {{ leg.winner.player }}{% if leg.winner.deck %} con {{ leg.winner.deck }}{
 {{ loop.index }}. {{ r.player }}{% if r.deck %} — {{ r.deck }}{% endif +%}
 {% endfor %}
 
+{% if standings_rows %}
 📈 CLASSIFICA GENERALE {% if standings.season %}{{ standings.season }}{% endif +%}
 {% for r in standings_rows[:5] %}
 {{ r.rank }}. {{ r.player }} — {{ r.points }} pt {{ r.trend }}
 {% endfor %}
 
 ➡️ Scorri per la classifica completa. Prossima tappa: {{ next_event_label }}
+{% else %}
+➡️ Prossima tappa: {{ next_event_label }}
+{% endif %}
 
 {{ hashtags }}
