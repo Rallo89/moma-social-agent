@@ -16,6 +16,7 @@ import mimetypes
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -26,9 +27,42 @@ from .errors import RenderError
 from .pngutil import crop_top_left
 from .timeutil import fmt_date, weekday_it
 
-CHROMIUM_CANDIDATES = (
-    "chromium", "chromium-browser", "google-chrome", "google-chrome-stable", "chrome",
+# Nomi cercati nel PATH. msedge c'e' sempre su Windows ed e' Chromium:
+# per fare uno screenshot va bene quanto Chrome.
+CHROMIUM_NAMES = (
+    "chromium", "chromium-browser", "google-chrome", "google-chrome-stable",
+    "chrome", "msedge", "microsoft-edge",
 )
+
+
+def _installed_browsers() -> list[Path]:
+    """Percorsi tipici dei browser, per sistema operativo.
+
+    Su Windows e macOS i browser non stanno nel PATH: senza questa lista
+    l'agente sarebbe inutilizzabile fuori da Linux, dove invece funziona.
+    """
+    if sys.platform == "win32":
+        radici = [
+            os.environ.get("ProgramFiles", r"C:\Program Files"),
+            os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)"),
+            os.environ.get("LOCALAPPDATA", ""),
+        ]
+        relativi = [
+            r"Google\Chrome\Application\chrome.exe",
+            r"Chromium\Application\chrome.exe",
+            r"Microsoft\Edge\Application\msedge.exe",
+        ]
+        return [Path(radice) / rel
+                for radice in radici if radice
+                for rel in relativi]
+    if sys.platform == "darwin":
+        return [
+            Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
+            Path("/Applications/Chromium.app/Contents/MacOS/Chromium"),
+            Path("/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"),
+        ]
+    return [Path("/usr/bin/chromium"), Path("/usr/bin/chromium-browser"),
+            Path("/usr/bin/google-chrome")]
 
 
 # ── Jinja ───────────────────────────────────────────────────────────────────
@@ -94,15 +128,22 @@ def build_html(cfg: Config, template: str, context: dict) -> str:
 
 # ── Screenshot ──────────────────────────────────────────────────────────────
 def _find_chromium(configured: str = "") -> str:
+    """Percorso di un browser Chromium: configurato, nel PATH, o installato."""
     if configured:
         if Path(configured).exists():
             return configured
         raise RenderError(f"chromium_path configurato ma inesistente: {configured}")
-    for name in CHROMIUM_CANDIDATES:
+
+    for name in CHROMIUM_NAMES:
         found = shutil.which(name)
         if found:
             return found
-    # Browser installati da Playwright (anche quello di Claude Code on the web)
+
+    for candidato in _installed_browsers():
+        if candidato.is_file():
+            return str(candidato)
+
+    # Browser installati da Playwright (anche quello di Claude Code sul web)
     pw_root = Path(os.environ.get("PLAYWRIGHT_BROWSERS_PATH", "")
                    or Path.home() / ".cache/ms-playwright")
     if pw_root.exists():
@@ -111,8 +152,13 @@ def _find_chromium(configured: str = "") -> str:
         mac_glob = "chromium*/chrome-mac/Chromium.app/Contents/MacOS/Chromium"
         for candidate in sorted(pw_root.glob(mac_glob)):
             return str(candidate)
+        for candidate in sorted(pw_root.glob("chromium*/chrome-win/chrome.exe")):
+            return str(candidate)
+
     raise RenderError(
-        "Nessun Chromium trovato. Installa chromium oppure imposta render.chromium_path."
+        "Nessun browser Chromium trovato. Installa Google Chrome (su Windows va "
+        "bene anche Microsoft Edge, gia' presente), oppure indica l'eseguibile "
+        "in render.chromium_path dentro config/config.toml."
     )
 
 
@@ -134,7 +180,7 @@ def _shot_chromium(cfg: Config, html: str, out_path: Path,
             binary, "--headless", "--disable-gpu", "--no-sandbox",
             "--hide-scrollbars", "--force-color-profile=srgb",
             "--font-render-hinting=none", "--disable-dev-shm-usage",
-            f"--user-data-dir={tmp}/profile",
+            f"--user-data-dir={Path(tmp) / 'profile'}",
             f"--window-size={width},{height + margin}",
             f"--force-device-scale-factor={scale}",
             "--virtual-time-budget=4000",

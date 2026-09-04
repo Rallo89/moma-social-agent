@@ -43,6 +43,16 @@ mezzo, non spinge fuori il footer.
 Lo sfondo viene inlinato come data URI: il PNG finale non dipende da file
 esterni e non puo' "rompersi" in produzione per un path sbagliato.
 
+## Il browser che renderizza
+
+Serve un Chromium. Viene cercato in quest'ordine: `render.chromium_path` in
+config, poi nel PATH, poi nelle posizioni standard del sistema operativo, poi
+fra i browser installati da Playwright.
+
+Su Windows Chrome non e' nel PATH ma sta in `Program Files`, e **Microsoft Edge
+va bene lo stesso**: e' Chromium, e per fare uno screenshot non cambia nulla.
+Su macOS si guarda in `/Applications`.
+
 ## Recuperare gli sfondi da Canva
 
 Se i template vivono su Canva, `momasocial canva-sync` li riesporta e li

@@ -4,6 +4,7 @@ una slide esce tagliata. `pytest -m "not slow"` per saltarlo.
 
 import datetime as dt
 import struct
+from pathlib import Path
 
 import pytest
 
@@ -169,3 +170,53 @@ def test_font_del_brand_inlinato_nella_slide(cfg):
     assert "src: url('data:" in html
     # League Gothic ha un peso solo: il falso grassetto va disattivato.
     assert "font-synthesis: none" in html
+
+
+# ── ricerca del browser sui vari sistemi operativi ─────────────────────────
+def test_su_windows_cerca_anche_edge(monkeypatch):
+    """Su Windows Chrome non e' nel PATH, ed Edge c'e' sempre: e' Chromium."""
+    import sys as _sys
+
+    from moma_social.render import _installed_browsers
+
+    monkeypatch.setattr(_sys, "platform", "win32")
+    monkeypatch.setenv("ProgramFiles", r"C:\Program Files")
+    monkeypatch.setenv("ProgramFiles(x86)", r"C:\Program Files (x86)")
+    percorsi = [str(p) for p in _installed_browsers()]
+    assert any("msedge.exe" in p for p in percorsi)
+    assert any("chrome.exe" in p for p in percorsi)
+
+
+def test_su_macos_cerca_nelle_applicazioni(monkeypatch):
+    import sys as _sys
+
+    from moma_social.render import _installed_browsers
+
+    monkeypatch.setattr(_sys, "platform", "darwin")
+    percorsi = [str(p) for p in _installed_browsers()]
+    assert any("/Applications/Google Chrome.app" in p for p in percorsi)
+
+
+def test_browser_configurato_ma_inesistente(cfg):
+    from moma_social.errors import RenderError
+    from moma_social.render import _find_chromium
+
+    with pytest.raises(RenderError, match="chromium_path"):
+        _find_chromium("/percorso/che/non/esiste")
+
+
+def test_messaggio_se_nessun_browser(monkeypatch):
+    """Il messaggio deve dire cosa installare, non solo che manca qualcosa."""
+    import shutil as _shutil
+
+    from moma_social.errors import RenderError
+    from moma_social.render import _find_chromium
+
+    monkeypatch.setattr(_shutil, "which", lambda _: None)
+    monkeypatch.setattr("moma_social.render._installed_browsers", list)
+    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", "/non/esiste")
+    monkeypatch.setattr(Path, "home", staticmethod(lambda: Path("/non/esiste")))
+    with pytest.raises(RenderError) as errore:
+        _find_chromium()
+    assert "Edge" in str(errore.value)
+    assert "render.chromium_path" in str(errore.value)
