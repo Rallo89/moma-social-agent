@@ -5,6 +5,11 @@ dice se ha funzionato: non passare alla successiva finche' non passa.
 
 ---
 
+> **Windows:** il progetto dichiara `tzdata` fra le dipendenze perche' Windows
+> non ha un database dei fusi orari di sistema. Se hai installato il progetto
+> prima di questa correzione, aggiorna con `pip install -e .` oppure
+> `pip install tzdata`, altrimenti ogni comando fallisce su `Europe/Rome`.
+
 ## 1. Le sorgenti dati
 
 Serve un URL per ognuna delle tre sorgenti (possono essere lo stesso endpoint

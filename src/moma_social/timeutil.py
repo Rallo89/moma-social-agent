@@ -8,11 +8,11 @@ from __future__ import annotations
 
 import datetime as dt
 import re
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from dateutil import parser as _dateparser
 
-from .errors import MtgSocialError
+from .errors import ConfigError, MtgSocialError
 
 WEEKDAYS_IT = [
     "Lunedi", "Martedi", "Mercoledi", "Giovedi", "Venerdi", "Sabato", "Domenica",
@@ -28,7 +28,22 @@ WEEKDAY_NAMES = {
 
 
 def tz(name: str = "Europe/Rome") -> ZoneInfo:
-    return ZoneInfo(name)
+    """Fuso orario per nome IANA.
+
+    Traduce l'errore di zoneinfo in un messaggio che dice cosa fare: la causa
+    quasi sempre non e' un nome sbagliato ma Windows, che non ha un database
+    dei fusi orari di sistema e ha bisogno del pacchetto `tzdata`.
+    """
+    try:
+        return ZoneInfo(name)
+    except ZoneInfoNotFoundError as exc:
+        raise ConfigError(
+            f"Fuso orario '{name}' non trovato. "
+            "Su Windows serve il pacchetto tzdata: `pip install tzdata` "
+            "(oppure reinstalla il progetto con `pip install -e .`). "
+            "Altrimenti controlla org.timezone in config/config.toml: "
+            "deve essere un nome IANA, es. Europe/Rome."
+        ) from exc
 
 
 def now(timezone: str = "Europe/Rome") -> dt.datetime:

@@ -61,3 +61,21 @@ def test_weekday_it():
 
 def test_resolve_yesterday():
     assert resolve_date("yesterday") == dt.date.today() - dt.timedelta(days=1)
+
+
+def test_fuso_orario_sconosciuto_spiega_cosa_fare():
+    """Su Windows manca tzdata: il messaggio deve dirlo, non dare un traceback."""
+    from moma_social.errors import ConfigError
+    from moma_social.timeutil import tz
+
+    with pytest.raises(ConfigError) as errore:
+        tz("Non/Esiste")
+    messaggio = str(errore.value)
+    assert "tzdata" in messaggio
+    assert "org.timezone" in messaggio
+
+
+def test_fuso_orario_valido():
+    from moma_social.timeutil import tz
+
+    assert tz("Europe/Rome").key == "Europe/Rome"

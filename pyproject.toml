@@ -12,6 +12,9 @@ dependencies = [
   "requests>=2.31",
   "python-dateutil>=2.9",
   "PyYAML>=6.0",
+  # Windows non ha un database dei fusi orari di sistema: senza questo
+  # ZoneInfo("Europe/Rome") solleva ZoneInfoNotFoundError.
+  "tzdata; sys_platform == 'win32'",
 ]
 
 [project.optional-dependencies]
