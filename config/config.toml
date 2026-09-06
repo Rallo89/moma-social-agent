@@ -115,22 +115,31 @@ players_count = "iscritti"
 # una vista da interrogare. Finche' manca, questa sorgente resta sui dati di
 # esempio e il carosello dei risultati non va pubblicato.
 [sources.standings]
-url    = "data/samples/standings.json"
-kind   = "auto"
-root   = ""
+# Vista v_social_classifica: traduzione in SQL di computeLeagueStandings della
+# webapp (vedi supabase/v_social_classifica.sql). E' una SECONDA implementazione
+# della stessa regola: se il punteggio cambia nell'app e non nella vista,
+# l'agente pubblica numeri che smentiscono l'app senza che nulla lo segnali.
+# Va confrontata con la classifica dell'app prima di ogni cambio di regole.
+#
+# Se piu' leghe condividono lo stesso formato, qui servira' un filtro
+# aggiuntivo su stato_lega o lega_id: la vista li espone apposta.
+url  = "https://wxvxtodrnrefbechawgz.supabase.co/rest/v1/v_social_classifica?select=*&formato=eq.{format}&order=posizione.asc"
+kind = "json"
+
+[sources.standings.headers]
+apikey        = "${SUPABASE_KEY}"
+Authorization = "Bearer ${SUPABASE_KEY}"
 
 [sources.standings.map]
-format        = "format"
-season        = "season"
-rank          = "rank"
-player        = "player"
-points        = "points"
-events_played = "events_played"
-delta         = "delta"          # variazione posizione vs tappa precedente
+format        = "formato"
+season        = "lega"
+rank          = "posizione"
+player        = "giocatore"
+points        = "punti"
+events_played = "tappe"
+# `delta` non e' calcolabile: la webapp non conserva lo storico delle posizioni,
+# quindi le frecce di tendenza restano vuote.
 
-# ─────────────────────────────────────────────────────────────────────────────
-# INSTAGRAM — Graph API (account Business/Creator collegato a una Pagina FB)
-# ─────────────────────────────────────────────────────────────────────────────
 [instagram]
 enabled        = true
 ig_user_id     = "${IG_USER_ID}"

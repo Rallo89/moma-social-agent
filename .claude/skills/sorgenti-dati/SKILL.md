@@ -76,6 +76,21 @@ normale API JSON. Guida completa in `docs/SUPABASE.md`. Tre cose da ricordare:
   in IPv6 e i runner di GitHub Actions sono IPv4, quindi i post schedulati
   fallirebbero pur funzionando in locale
 
+## La classifica di lega e' una traduzione, non una lettura
+
+`v_social_classifica` (in `supabase/v_social_classifica.sql`) riproduce in SQL
+`computeLeagueStandings` della webapp. E' una **seconda implementazione della
+stessa regola**: se il punteggio cambia nell'app e non nella vista, l'agente
+pubblica numeri che smentiscono l'app, e nulla lo segnala.
+
+Prima di toccare qualsiasi cosa che riguardi i punteggi, confronta la vista con
+la classifica mostrata dall'app. In fondo al file SQL c'e' una query
+diagnostica che scompone il totale nei cinque addendi: quando una posizione non
+coincide dice subito quale componente e' sbagliato.
+
+L'obiettivo dichiarato e' eliminare la duplicazione facendo leggere anche alla
+webapp questa vista.
+
 ## Segreti
 
 I token non si scrivono in `config/config.toml` (che e' versionato): si usa
