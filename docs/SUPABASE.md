@@ -117,6 +117,15 @@ La stringa "3-0-1" la compone l'agente, che mostra i pareggi solo quando ci
 sono. Concatenandoli nella vista si perde un'informazione che poi non e' piu'
 recuperabile — un 3-0-1 esce come "3-0".
 
+## 4-ter. La vista risultati deve esporre la lega
+
+`v_social_risultati` espone anche `t.league_id as lega_id`. Serve a scegliere
+quale classifica accostare ai risultati: piu' leghe condividono lo stesso
+formato — di norma una per stagione — e senza la lega arriverebbero mescolate,
+producendo una classifica con due primi posti.
+
+Il file pronto e' in `supabase/v_social_risultati.sql`.
+
 ## 5. Verificare
 
 ```bash

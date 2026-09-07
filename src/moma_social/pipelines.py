@@ -168,7 +168,7 @@ def leg_results(cfg: Config, day: dt.date | None = None, fmt: str = "",
         standings = Standings(format=leg.format)
     else:
         try:
-            standings = fetch_standings(cfg, leg.format)
+            standings = fetch_standings(cfg, leg.format, league=leg.league)
         except NoDataError:
             standings = Standings(format=leg.format)
 

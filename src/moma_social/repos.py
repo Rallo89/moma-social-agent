@@ -124,6 +124,7 @@ def fetch_leg_results(cfg: Config, day: dt.date, fmt: str = "") -> LegResults:
         format=_clean(head.get("format")) or fmt,
         leg=_clean(head.get("leg")),
         venue=_clean(head.get("venue")),
+        league=_clean(head.get("league")),
         players_count=_as_int(head.get("players_count"), default="") or len(selected),
         rows=[
             ResultRow(
@@ -149,13 +150,20 @@ def fetch_leg_results(cfg: Config, day: dt.date, fmt: str = "") -> LegResults:
 
 
 # ── Classifica generale ─────────────────────────────────────────────────────
-def fetch_standings(cfg: Config, fmt: str, season: str = "") -> Standings:
+def fetch_standings(cfg: Config, fmt: str, season: str = "",
+                    league: str = "") -> Standings:
+    """Classifica di un formato, ristretta a una lega quando si sa quale.
+
+    Piu' leghe possono condividere lo stesso formato — di norma una per
+    stagione — e senza la lega arriverebbero mescolate.
+    """
     season = season or cfg.get("org.season", "")
     rows = load_rows(
         cfg.section("sources.standings"),
         Path(cfg.root),
         format=fmt,
         season=season,
+        league=league,
         date="",
         date_from="",
         date_to="",
@@ -164,6 +172,7 @@ def fetch_standings(cfg: Config, fmt: str, season: str = "") -> Standings:
         row for row in rows
         if (not row.get("format") or same_format(row.get("format"), fmt))
         and (not season or not row.get("season") or _clean(row.get("season")) == season)
+        and (not league or not row.get("league") or _clean(row.get("league")) == league)
     ]
     if not selected:
         raise NoDataError(f"Nessuna classifica disponibile per il formato '{fmt}'")
@@ -171,6 +180,7 @@ def fetch_standings(cfg: Config, fmt: str, season: str = "") -> Standings:
     standings = Standings(
         format=fmt,
         season=season or _clean(selected[0].get("season")),
+        league=league or _clean(selected[0].get("league")),
         rows=[
             StandingRow(
                 rank=_as_int(row.get("rank"), default=index + 1),
@@ -192,7 +202,9 @@ def fetch_standings(cfg: Config, fmt: str, season: str = "") -> Standings:
                        if sum(1 for x in standings.rows if x.rank == r.rank) > 1})
     if ripetute:
         raise SourceError(
-            f"La classifica di '{fmt}' contiene posizioni ripetute "
+            f"La classifica di '{fmt}'"
+            + (f" (lega {league})" if league else "")
+            + " contiene posizioni ripetute "
             f"({', '.join(map(str, ripetute[:5]))}...): con ogni probabilita' "
             "piu' leghe condividono questo formato e le righe sono arrivate "
             "insieme. Restringi la sorgente a una sola lega, per esempio "

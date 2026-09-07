@@ -151,3 +151,38 @@ def test_classifica_di_una_sola_lega_passa(cfg, tmp_path):
     cfg.data["sources"]["standings"] = {"url": str(sorgente), "kind": "json"}
 
     assert [r.rank for r in fetch_standings(cfg, "Modern").rows] == [1, 2]
+
+
+def test_classifica_ristretta_alla_lega_della_tappa(cfg, tmp_path):
+    """Una lega per stagione, stesso formato: senza filtro arriverebbero insieme."""
+    import json
+
+    sorgente = tmp_path / "classifica.json"
+    sorgente.write_text(json.dumps([
+        {"format": "Modern", "league": "lega-2026", "rank": 1,
+         "player": "Campione in carica", "points": 90},
+        {"format": "Modern", "league": "lega-2026", "rank": 2,
+         "player": "Inseguitore", "points": 80},
+        {"format": "Modern", "league": "lega-2025", "rank": 1,
+         "player": "Campione vecchia stagione", "points": 120},
+    ]), encoding="utf-8")
+    cfg.data["sources"]["standings"] = {"url": str(sorgente), "kind": "json"}
+
+    corrente = fetch_standings(cfg, "Modern", league="lega-2026")
+    assert [r.player for r in corrente.rows] == ["Campione in carica", "Inseguitore"]
+
+    passata = fetch_standings(cfg, "Modern", league="lega-2025")
+    assert [r.player for r in passata.rows] == ["Campione vecchia stagione"]
+
+
+def test_lega_della_tappa_letta_dai_risultati(cfg, tmp_path):
+    import json
+
+    sorgente = tmp_path / "risultati.json"
+    sorgente.write_text(json.dumps([
+        {"date": "2026-09-03", "format": "Modern", "league": "lega-2026",
+         "rank": 1, "player": "X", "points": 12},
+    ]), encoding="utf-8")
+    cfg.data["sources"]["results"] = {"url": str(sorgente), "kind": "json"}
+
+    assert fetch_leg_results(cfg, dt.date(2026, 9, 3)).league == "lega-2026"

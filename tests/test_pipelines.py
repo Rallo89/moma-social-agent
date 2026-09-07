@@ -223,3 +223,26 @@ def test_sorgente_giu_non_blocca_la_caption(cfg, monkeypatch):
     draft = pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper",
                                   senza_classifica=True)
     assert "in arrivo" in draft.caption
+
+
+def test_la_classifica_segue_la_lega_della_tappa(cfg, monkeypatch):
+    """Non basta il formato: serve la lega, o si prende quella sbagliata."""
+    import datetime as d
+
+    from moma_social.models import LegResults, ResultRow
+
+    leg = LegResults(date=d.date(2026, 9, 3), format="Modern", leg="Tappa 5",
+                     league="lega-2026",
+                     rows=[ResultRow(rank=1, player="X", points=12)])
+    monkeypatch.setattr(pipelines, "fetch_leg_results", lambda *a, **k: leg)
+
+    chiamata = {}
+
+    def _standings(cfg_, fmt, **kw):
+        chiamata.update(fmt=fmt, **kw)
+        from moma_social.models import Standings
+        return Standings(format=fmt)
+
+    monkeypatch.setattr(pipelines, "fetch_standings", _standings)
+    pipelines.leg_results(cfg, d.date(2026, 9, 3), fmt="Modern")
+    assert chiamata["league"] == "lega-2026"

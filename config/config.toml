@@ -105,6 +105,7 @@ points        = "punti"
 # La vista espone i tre numeri separati: il record ("3-0-1") lo compone
 # l'agente, cosi' i pareggi non si perdono e il formato resta una scelta
 # di presentazione.
+league        = "lega_id"     # a quale lega appartiene la tappa
 wins          = "vinte"
 losses        = "perse"
 draws         = "pari"
@@ -137,6 +138,7 @@ Authorization = "Bearer ${SUPABASE_KEY}"
 [sources.standings.map]
 format        = "formato"
 season        = "lega"
+league        = "lega_id"     # filtra la classifica sulla lega della tappa
 rank          = "posizione"
 player        = "giocatore"
 points        = "punti"

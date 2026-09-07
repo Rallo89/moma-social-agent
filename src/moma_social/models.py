@@ -81,6 +81,9 @@ class LegResults:
     leg: str = ""
     venue: str = ""
     players_count: int | str = ""
+    # La lega di appartenenza: identifica quale classifica aggiornare quando
+    # piu' leghe condividono lo stesso formato (tipicamente una per stagione).
+    league: str = ""
     rows: list[ResultRow] = field(default_factory=list)
 
     @property
@@ -119,6 +122,7 @@ class StandingRow:
 class Standings:
     format: str
     season: str = ""
+    league: str = ""
     rows: list[StandingRow] = field(default_factory=list)
 
 
