@@ -120,3 +120,34 @@ def test_formattazione_record(vinte, perse, pari, atteso):
     from moma_social.models import format_record
 
     assert format_record(vinte, perse, pari) == atteso
+
+
+def test_classifiche_di_due_leghe_mescolate_vengono_rifiutate(cfg, tmp_path):
+    """Due primi posti nello stesso post: meglio un errore che una bugia."""
+    import json
+
+    from moma_social.errors import SourceError
+
+    sorgente = tmp_path / "classifica.json"
+    sorgente.write_text(json.dumps([
+        {"format": "Modern", "rank": 1, "player": "Lega A vincitore", "points": 90},
+        {"format": "Modern", "rank": 1, "player": "Lega B vincitore", "points": 70},
+        {"format": "Modern", "rank": 2, "player": "Secondo A", "points": 80},
+    ]), encoding="utf-8")
+    cfg.data["sources"]["standings"] = {"url": str(sorgente), "kind": "json"}
+
+    with pytest.raises(SourceError, match="posizioni ripetute"):
+        fetch_standings(cfg, "Modern")
+
+
+def test_classifica_di_una_sola_lega_passa(cfg, tmp_path):
+    import json
+
+    sorgente = tmp_path / "classifica.json"
+    sorgente.write_text(json.dumps([
+        {"format": "Modern", "rank": 1, "player": "Primo", "points": 90},
+        {"format": "Modern", "rank": 2, "player": "Secondo", "points": 80},
+    ]), encoding="utf-8")
+    cfg.data["sources"]["standings"] = {"url": str(sorgente), "kind": "json"}
+
+    assert [r.rank for r in fetch_standings(cfg, "Modern").rows] == [1, 2]

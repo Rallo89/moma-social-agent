@@ -11,7 +11,7 @@ import datetime as dt
 from pathlib import Path
 
 from .config import Config
-from .errors import NoDataError
+from .errors import NoDataError, SourceError
 from .models import Event, LegResults, ResultRow, StandingRow, Standings, format_record
 from .sources import load_rows
 from .timeutil import parse_date
@@ -184,4 +184,19 @@ def fetch_standings(cfg: Config, fmt: str, season: str = "") -> Standings:
         ],
     )
     standings.rows.sort(key=lambda r: r.rank)
+
+    # Due righe con la stessa posizione significano due classifiche diverse
+    # finite insieme: quasi sempre piu' leghe attive sullo stesso formato.
+    # Pubblicarle mescolate darebbe un post con due primi posti.
+    ripetute = sorted({r.rank for r in standings.rows
+                       if sum(1 for x in standings.rows if x.rank == r.rank) > 1})
+    if ripetute:
+        raise SourceError(
+            f"La classifica di '{fmt}' contiene posizioni ripetute "
+            f"({', '.join(map(str, ripetute[:5]))}...): con ogni probabilita' "
+            "piu' leghe condividono questo formato e le righe sono arrivate "
+            "insieme. Restringi la sorgente a una sola lega, per esempio "
+            "aggiungendo &lega_id=eq.<id> o &stato_lega=eq.<stato> all'URL in "
+            "[sources.standings]."
+        )
     return standings
