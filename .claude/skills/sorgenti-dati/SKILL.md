@@ -84,9 +84,9 @@ stessa regola**: se il punteggio cambia nell'app e non nella vista, l'agente
 pubblica numeri che smentiscono l'app, e nulla lo segnala.
 
 Prima di toccare qualsiasi cosa che riguardi i punteggi, confronta la vista con
-la classifica mostrata dall'app. In fondo al file SQL c'e' una query
-diagnostica che scompone il totale nei cinque addendi: quando una posizione non
-coincide dice subito quale componente e' sbagliato.
+la classifica mostrata dall'app. La procedura di confronto sta in `docs/VERIFICA-CLASSIFICA.md`, con la query
+che sceglie la lega piu' significativa da verificare e quella che scompone il
+totale nei cinque addendi quando un numero non coincide.
 
 L'obiettivo dichiarato e' eliminare la duplicazione facendo leggere anche alla
 webapp questa vista.
