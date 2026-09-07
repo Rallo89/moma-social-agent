@@ -123,7 +123,11 @@ players_count = "iscritti"
 #
 # Se piu' leghe condividono lo stesso formato, qui servira' un filtro
 # aggiuntivo su stato_lega o lega_id: la vista li espone apposta.
-url  = "https://wxvxtodrnrefbechawgz.supabase.co/rest/v1/v_social_classifica?select=*&formato=eq.{format}&order=posizione.asc"
+# Nessun filtro sul formato nell'URL: PostgREST distingue maiuscole e
+# minuscole, mentre il confronto interno tollera differenze di grafia. Un
+# filtro server-side piu' severo del nostro scarta righe che avremmo accettato,
+# e lo fa in silenzio. La classifica e' piccola: si scarica e si filtra qui.
+url  = "https://wxvxtodrnrefbechawgz.supabase.co/rest/v1/v_social_classifica?select=*&order=posizione.asc"
 kind = "json"
 
 [sources.standings.headers]

@@ -8,6 +8,7 @@ lo stesso codice.
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import json
 import os
 import sys
@@ -125,14 +126,20 @@ def cmd_doctor(args) -> int:
     check("Config caricata", lambda: cfg.path)
     check("Chromium", lambda: _find_chromium(cfg.get("render.chromium_path", "")))
 
-    start, end = week_bounds(resolve_date("today", cfg.timezone))
+    oggi = resolve_date("today", cfg.timezone)
+    start, end = week_bounds(oggi)
     check(f"Sorgente eventi ({fmt_range(start, end)})",
           lambda: f"{len(fetch_events(cfg, start, end))} eventi")
-    yesterday = resolve_date("yesterday", cfg.timezone)
-    check(f"Sorgente risultati ({yesterday})",
-          lambda: f"{len(fetch_leg_results(cfg, yesterday).rows)} righe")
-    check("Sorgente classifiche",
-          lambda: f"{len(fetch_standings(cfg, args.format or 'Modern').rows)} righe")
+
+    # Sondare "ieri" segnala un problema anche quando semplicemente non si e'
+    # giocato: si cerca invece l'ultima giornata di gioco realmente passata.
+    giorno, motivo = _ultima_giornata(cfg, oggi)
+    check(f"Sorgente risultati ({giorno}, {motivo})",
+          lambda: f"{len(fetch_leg_results(cfg, giorno).rows)} righe")
+
+    formato = args.format or _formato_da_provare(cfg, oggi)
+    check(f"Sorgente classifiche (formato '{formato}')",
+          lambda: f"{len(fetch_standings(cfg, formato).rows)} righe")
 
     backend = cfg.get("media.backend", "none")
     check(f"Hosting immagini ({backend})", lambda: _check_media(cfg, backend))
@@ -146,6 +153,33 @@ def cmd_doctor(args) -> int:
         print(f"{icons[state]} {label.ljust(width)}  {detail}")
     print(f"\n{len(checks) - failed}/{len(checks)} controlli superati")
     return EXIT_OK if failed == 0 else EXIT_ERROR
+
+
+def _ultima_giornata(cfg, oggi):
+    """Ultimo giorno con un evento in calendario, per sondare i risultati."""
+    from .repos import fetch_events
+
+    try:
+        passati = [e.date for e in fetch_events(cfg, oggi - dt.timedelta(days=60), oggi)
+                   if e.date < oggi]
+    except MtgSocialError:
+        passati = []
+    if passati:
+        return max(passati), "ultima giornata in calendario"
+    return resolve_date("yesterday", cfg.timezone), "ieri, nessun evento recente in calendario"
+
+
+def _formato_da_provare(cfg, oggi) -> str:
+    """Un formato che esiste davvero in calendario, invece di indovinarlo."""
+    from .repos import fetch_events, formats_on
+
+    try:
+        eventi = fetch_events(cfg, oggi - dt.timedelta(days=60),
+                              oggi + dt.timedelta(days=30))
+    except MtgSocialError:
+        return "Modern"
+    formati = formats_on(eventi)
+    return formati[0] if formati else "Modern"
 
 
 def _check_media(cfg, backend: str) -> str:

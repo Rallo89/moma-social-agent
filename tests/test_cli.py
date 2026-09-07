@@ -100,3 +100,34 @@ def test_schema_elenca_tabelle_e_colonne(monkeypatch, capsys):
 def test_schema_senza_chiave(capsys):
     assert cli.main(["schema", "--url", "https://abc.supabase.co/rest/v1/",
                      "--key", ""]) == cli.EXIT_ERROR
+
+
+def test_doctor_sonda_lultima_giornata_non_ieri(cfg, capsys):
+    """Sondare 'ieri' segnalerebbe un guasto ogni giorno in cui non si gioca."""
+    import datetime as d
+
+    from moma_social.cli import _ultima_giornata
+
+    giorno, motivo = _ultima_giornata(cfg, d.date(2026, 3, 16))
+    assert giorno == d.date(2026, 3, 15)          # domenica, ultimo evento in calendario
+    assert "calendario" in motivo
+
+
+def test_doctor_sceglie_un_formato_esistente(cfg):
+    """Meglio provare un formato che c'e' davvero che indovinarne uno."""
+    import datetime as d
+
+    from moma_social.cli import _formato_da_provare
+
+    assert _formato_da_provare(cfg, d.date(2026, 3, 16)) in (
+        "Commander", "Modern", "Pioneer", "Limited", "Pauper",
+    )
+
+
+def test_doctor_senza_eventi_ripiega_su_ieri(cfg):
+    import datetime as d
+
+    from moma_social.cli import _ultima_giornata
+
+    giorno, motivo = _ultima_giornata(cfg, d.date(2030, 1, 10))
+    assert "ieri" in motivo
