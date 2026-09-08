@@ -57,6 +57,20 @@ le slide vengono tagliate partendo dalla classifica, che cede spazio ai
 risultati; `meta.slide_tagliate` nel ledger dice quante se ne sono perse.
 Se capita spesso, la strada e' alzare `rows_per_slide`, non il limite.
 
+## Rigenerare una settimana intera
+
+```bash
+momasocial results --date 2026-09-03 --settimana --no-publish
+```
+
+Produce un post per ogni giornata di gioco della settimana che contiene quella
+data, saltando in silenzio i giorni senza tappe. Serve a recuperare un
+arretrato o a rivedere tutto dopo aver corretto qualcosa.
+
+Una giornata che fallisce non ferma le altre: viene annotata, il comando
+prosegue e il riepilogo finale dichiara quante ne sono andate perse (uscendo
+con codice d'errore). Le giornate fallite non contano fra i post prodotti.
+
 ## La classifica e' facoltativa
 
 Se la classifica generale non e' disponibile — formato senza lega, sorgente non

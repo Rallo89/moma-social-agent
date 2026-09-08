@@ -131,3 +131,42 @@ def test_doctor_senza_eventi_ripiega_su_ieri(cfg):
 
     giorno, motivo = _ultima_giornata(cfg, d.date(2030, 1, 10))
     assert "ieri" in motivo
+
+
+def test_settimana_genera_un_post_per_giornata(cfg, capsys):
+    """Nei dati di esempio si gioca il 11 e il 12 marzo: due post, non sette."""
+    assert cli.main(["results", "--date", "2026-03-11", "--settimana",
+                     "--no-publish", "--no-standings"]) == cli.EXIT_OK
+    out = capsys.readouterr().out
+    assert "Settimana 9 - 15 marzo" in out
+    assert "3 post su 7 giornate" in out      # 11, 12 e 13 marzo
+    assert "4 senza tappe" in out
+
+
+def test_settimana_senza_tappe(cfg, capsys):
+    assert cli.main(["results", "--date", "2030-01-08", "--settimana",
+                     "--no-publish"]) == cli.EXIT_NO_DATA
+    assert "0 post su 7 giornate" in capsys.readouterr().out
+
+
+def test_settimana_prosegue_dopo_una_giornata_fallita(cfg, monkeypatch, capsys):
+    """Una sorgente giu' un giorno non deve far perdere gli altri sei."""
+    import datetime as d
+
+    from moma_social import pipelines
+    from moma_social.errors import SourceError
+
+    vero = pipelines.leg_results
+
+    def _a_volte_rotta(cfg_, day=None, **kw):
+        if day == d.date(2026, 3, 12):
+            raise SourceError("endpoint irraggiungibile")
+        return vero(cfg_, day, **kw)
+
+    monkeypatch.setitem(cli.PIPELINES, "leg_results", _a_volte_rotta)
+    esito = cli.main(["results", "--date", "2026-03-11", "--settimana",
+                      "--no-publish", "--no-standings"])
+    catturato = capsys.readouterr()
+    assert esito == cli.EXIT_ERROR                    # la giornata persa si dichiara
+    assert "2 post su 7 giornate" in catturato.out    # le altre sono uscite
+    assert "1 giornate fallite" in catturato.err

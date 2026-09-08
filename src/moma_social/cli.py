@@ -43,6 +43,76 @@ def _summary(text: str) -> None:
 
 
 # ── comandi ─────────────────────────────────────────────────────────────────
+def _genera(cfg, pipeline, day, kwargs, args) -> tuple[str, str]:
+    """Genera un post e, se richiesto, lo pubblica. Restituisce (esito, nota)."""
+    try:
+        draft = pipeline(cfg, day, **kwargs)
+    except NoDataError as exc:
+        return "no-data", str(exc)
+
+    print(f"Immagini: {', '.join(draft.images)}")
+    print("-" * 60)
+    print(draft.caption)
+    print("-" * 60)
+
+    if args.no_publish:
+        return "drafted", f"{len(draft.images)} slide"
+
+    result = publish_draft(cfg, draft, dry_run=args.dry_run, force=args.force)
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    return result["status"], result.get("reason") or result.get("permalink", "")
+
+
+def _post_di_una_settimana(cfg, pipeline, kwargs, args, day) -> int:
+    """Un post per ogni giornata di gioco della settimana.
+
+    Serve a rigenerare un arretrato, o a rivedere una settimana intera dopo
+    aver corretto qualcosa, senza lanciare il comando giorno per giorno.
+    """
+    inizio, fine = week_bounds(day or resolve_date("today", cfg.timezone))
+    print(f"Settimana {fmt_range(inizio, fine)}\n")
+
+    esiti = []
+    for scarto in range((fine - inizio).days + 1):
+        giorno = inizio + dt.timedelta(days=scarto)
+        try:
+            esito, nota = _genera(cfg, pipeline, giorno, kwargs, args)
+        except MtgSocialError as exc:
+            # Un giorno che fallisce non deve far perdere gli altri sei: si
+            # annota e si prosegue, poi il riepilogo lo dichiara.
+            esito, nota = "error", str(exc)
+            print(f"[errore] {giorno.isoformat()}: {exc}", file=sys.stderr)
+        esiti.append((giorno, esito, nota))
+        if esito != "no-data":
+            print()
+
+    icone = {"drafted": "[gen]", "published": "[pub]", "dry-run": "[test]",
+             "skipped": "[skip]", "error": "[err]"}
+    # Una giornata fallita non e' un post prodotto: compare nell'elenco, non
+    # nel conteggio.
+    mostrati = [(g, e, n) for g, e, n in esiti if e != "no-data"]
+    prodotti = [riga for riga in mostrati if riga[1] != "error"]
+    print("-" * 60)
+    for giorno, esito, nota in mostrati:
+        print(f"{icone.get(esito, '     ')} {giorno.isoformat()}  {esito}"
+              + (f"  {nota}" if nota else ""))
+    print(f"\n{len(prodotti)} post su {len(esiti)} giornate "
+          f"({len(esiti) - len(prodotti)} senza tappe)")
+
+    falliti = [g for g, e, _ in esiti if e == "error"]
+    if falliti:
+        print(f"{len(falliti)} giornate fallite: "
+              f"{', '.join(g.isoformat() for g in falliti)}", file=sys.stderr)
+
+    _github_output(status="week", prodotti=str(len(prodotti)),
+                   falliti=str(len(falliti)))
+    _summary(f"Settimana {fmt_range(inizio, fine)}: {len(prodotti)} post generati"
+             + (f", {len(falliti)} falliti" if falliti else ""))
+    if falliti:
+        return EXIT_ERROR
+    return EXIT_OK if prodotti else EXIT_NO_DATA
+
+
 def cmd_post(args) -> int:
     cfg = config.load(args.config)
     pipeline = PIPELINES[args.kind]
@@ -54,33 +124,18 @@ def cmd_post(args) -> int:
     if args.kind == "leg_results" and getattr(args, "no_standings", False):
         kwargs["senza_classifica"] = True
 
-    try:
-        draft = pipeline(cfg, day, **kwargs)
-    except NoDataError as exc:
-        print(f"[skip] {exc}", file=sys.stderr)
-        _github_output(status="no-data", reason=str(exc))
-        _summary(f"⏭️ **{args.kind}** saltato: {exc}")
+    if getattr(args, "settimana", False):
+        return _post_di_una_settimana(cfg, pipeline, kwargs, args, day)
+
+    esito, nota = _genera(cfg, pipeline, day, kwargs, args)
+    if esito == "no-data":
+        print(f"[skip] {nota}", file=sys.stderr)
+        _github_output(status="no-data", reason=nota)
+        _summary(f"Saltato **{args.kind}**: {nota}")
         return EXIT_NO_DATA
 
-    print(f"Immagini: {', '.join(draft.images)}")
-    print("─" * 60)
-    print(draft.caption)
-    print("─" * 60)
-
-    if args.no_publish:
-        _github_output(status="drafted", images=";".join(draft.images))
-        _summary(f"📝 **{args.kind}** generato (nessuna pubblicazione richiesta)")
-        return EXIT_OK
-
-    result = publish_draft(cfg, draft, dry_run=args.dry_run, force=args.force)
-    print(json.dumps(result, ensure_ascii=False, indent=2))
-    _github_output(status=result["status"], post_id=result.get("post_id", ""))
-    icon = {"published": "✅", "dry-run": "🧪", "skipped": "⏭️"}.get(result["status"], "⚠️")
-    _summary(
-        f"{icon} **{args.kind}** — {result['status']}"
-        + (f" · [post]({result['permalink']})" if result.get("permalink") else "")
-        + (f" · {result['reason']}" if result.get("reason") else "")
-    )
+    _github_output(status=esito)
+    _summary(f"**{args.kind}** - {esito}" + (f" - {nota}" if nota else ""))
     return EXIT_OK
 
 
@@ -312,6 +367,8 @@ def build_parser() -> argparse.ArgumentParser:
                        help="genera i file e basta, senza toccare il ledger")
         p.add_argument("--force", action="store_true",
                        help="pubblica anche se il dedupe dice gia' fatto")
+        p.add_argument("--settimana", action="store_true",
+                       help="un post per ogni giornata di gioco della settimana di --date")
         if kind == "leg_results":
             p.add_argument("--no-standings", action="store_true",
                            help="solo le slide dei risultati, senza classifica")
