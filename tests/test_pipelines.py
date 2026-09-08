@@ -267,3 +267,32 @@ def test_tappa_senza_lega_non_prende_una_classifica_a_caso(cfg, monkeypatch):
     draft = pipelines.leg_results(cfg, d.date(2026, 9, 3), fmt="Premodern")
     assert draft.meta["slide_classifica"] == 0
     assert len(draft.images) == 1
+
+
+def test_una_sera_con_due_tornei_produce_due_post(cfg, tmp_path):
+    """Il caso reale del 2 settembre: Pauper e Premodern la stessa sera."""
+    import json
+
+    righe = [
+        {"date": "2026-09-02", "leg": "Lega Pauper Fall 1a tappa",
+         "format": "Pauper", "league": "lega-pauper", "rank": posizione,
+         "player": nome, "points": str(10 - posizione)}
+        for posizione, nome in enumerate(["Anna", "Carla"], start=1)
+    ] + [
+        {"date": "2026-09-02", "leg": "Premodern Fall tappa 1",
+         "format": "Premodern", "league": "lega-premodern", "rank": posizione,
+         "player": nome, "points": str(10 - posizione)}
+        for posizione, nome in enumerate(["Bruno", "Dario"], start=1)
+    ]
+    path = tmp_path / "risultati.json"
+    path.write_text(json.dumps(righe), encoding="utf-8")
+    cfg.data["sources"]["results"] = {"url": str(path), "kind": "json"}
+
+    bozze = pipelines.drafts(cfg, "leg_results", dt.date(2026, 9, 2),
+                             senza_classifica=True)
+    assert [b.meta["format"] for b in bozze] == ["Pauper", "Premodern"]
+    assert [b.meta["winner"] for b in bozze] == ["Anna", "Bruno"]
+    # Chiavi di deduplica distinte, altrimenti il secondo post sarebbe scartato
+    # come doppione del primo.
+    from moma_social.publish import dedupe_key
+    assert len({dedupe_key(b) for b in bozze}) == 2

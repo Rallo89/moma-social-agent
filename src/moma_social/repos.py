@@ -95,7 +95,14 @@ def formats_on(events: list[Event]) -> list[str]:
 
 
 # ── Risultati di tappa ──────────────────────────────────────────────────────
-def fetch_leg_results(cfg: Config, day: dt.date, fmt: str = "") -> LegResults:
+def fetch_leg_results_all(cfg: Config, day: dt.date,
+                          fmt: str = "") -> list[LegResults]:
+    """Tutte le tappe giocate in un giorno, una per torneo.
+
+    In una stessa serata possono convivere piu' tornei (Pauper e Premodern,
+    per dire): sono classifiche distinte, con posizioni che ripartono da 1.
+    Fonderle in un elenco solo produrrebbe un post con due vincitori.
+    """
     rows = load_rows(
         cfg.section("sources.results"),
         Path(cfg.root),
@@ -118,6 +125,24 @@ def fetch_leg_results(cfg: Config, day: dt.date, fmt: str = "") -> LegResults:
         label = f" ({fmt})" if fmt else ""
         raise NoDataError(f"Nessun risultato per la tappa del {day.isoformat()}{label}")
 
+    # La chiave del torneo e' il suo nome; dove la sorgente non lo espone,
+    # formato e lega insieme bastano a tenere separate due serate diverse.
+    gruppi: dict[tuple[str, str, str], list[dict]] = {}
+    for row in selected:
+        chiave = (_clean(row.get("leg")),
+                  _norm_format(row.get("format")),
+                  _clean(row.get("league")))
+        gruppi.setdefault(chiave, []).append(row)
+
+    return [_tappa(day, righe, fmt) for righe in gruppi.values()]
+
+
+def fetch_leg_results(cfg: Config, day: dt.date, fmt: str = "") -> LegResults:
+    """La prima tappa del giorno. Per averle tutte: `fetch_leg_results_all`."""
+    return fetch_leg_results_all(cfg, day, fmt)[0]
+
+
+def _tappa(day: dt.date, selected: list[dict], fmt: str) -> LegResults:
     head = selected[0]
     results = LegResults(
         date=day,

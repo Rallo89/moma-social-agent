@@ -3,7 +3,7 @@ import datetime as dt
 import pytest
 import responses
 
-from moma_social import cli
+from moma_social import cli, pipelines
 from moma_social.errors import NoDataError
 
 
@@ -30,7 +30,7 @@ def test_agenda_settimana_vuota(capsys):
 
 
 def test_no_data_esce_con_78(monkeypatch, capsys):
-    monkeypatch.setitem(cli.PIPELINES, "weekly_calendar",
+    monkeypatch.setitem(pipelines.PIPELINES, "weekly_calendar",
                         lambda *a, **k: (_ for _ in ()).throw(NoDataError("niente")))
     assert cli.main(["weekly"]) == cli.EXIT_NO_DATA
     assert "[skip]" in capsys.readouterr().err
@@ -65,7 +65,7 @@ def test_gate_scrive_github_output(monkeypatch, tmp_path, capsys):
 
 def test_errore_di_configurazione_esce_con_1(monkeypatch, capsys):
     from moma_social.errors import ConfigError
-    monkeypatch.setitem(cli.PIPELINES, "weekly_calendar",
+    monkeypatch.setitem(pipelines.PIPELINES, "weekly_calendar",
                         lambda *a, **k: (_ for _ in ()).throw(ConfigError("manca X")))
     assert cli.main(["weekly"]) == cli.EXIT_ERROR
     assert "manca X" in capsys.readouterr().err
@@ -156,17 +156,16 @@ def test_settimana_prosegue_dopo_una_giornata_fallita(cfg, monkeypatch, capsys):
     """Una sorgente giu' un giorno non deve far perdere gli altri sei."""
     import datetime as d
 
-    from moma_social import pipelines
     from moma_social.errors import SourceError
 
-    vero = pipelines.leg_results
+    vero = pipelines.leg_results_batch
 
     def _a_volte_rotta(cfg_, day=None, **kw):
         if day == d.date(2026, 3, 12):
             raise SourceError("endpoint irraggiungibile")
         return vero(cfg_, day, **kw)
 
-    monkeypatch.setitem(cli.PIPELINES, "leg_results", _a_volte_rotta)
+    monkeypatch.setitem(pipelines.PIPELINES_MULTI, "leg_results", _a_volte_rotta)
     esito = cli.main(["results", "--date", "2026-03-11", "--settimana",
                       "--no-publish", "--no-standings"])
     catturato = capsys.readouterr()

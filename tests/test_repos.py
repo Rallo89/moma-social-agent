@@ -6,6 +6,7 @@ from moma_social.errors import NoDataError
 from moma_social.repos import (
     fetch_events,
     fetch_leg_results,
+    fetch_leg_results_all,
     fetch_standings,
     formats_on,
     same_format,
@@ -186,3 +187,43 @@ def test_lega_della_tappa_letta_dai_risultati(cfg, tmp_path):
     cfg.data["sources"]["results"] = {"url": str(sorgente), "kind": "json"}
 
     assert fetch_leg_results(cfg, dt.date(2026, 9, 3)).league == "lega-2026"
+
+
+def _sorgente(cfg, tmp_path, righe):
+    """Sostituisce la sorgente dei risultati con righe scritte al volo."""
+    import json
+    path = tmp_path / "risultati.json"
+    path.write_text(json.dumps(righe), encoding="utf-8")
+    cfg.data["sources"]["results"] = {"url": str(path), "kind": "json"}
+    return cfg
+
+
+def _riga(torneo, formato, lega, posizione, giocatore):
+    return {"date": "2026-09-02", "leg": torneo, "format": formato,
+            "league": lega, "rank": posizione, "player": giocatore,
+            "points": str(10 - posizione)}
+
+
+def test_due_tornei_nella_stessa_sera_restano_separati(cfg, tmp_path):
+    """Pauper e Premodern il 2 settembre: due gare, due vincitori, due post."""
+    _sorgente(cfg, tmp_path, [
+        _riga("Lega Pauper Fall 1a tappa", "Pauper", "lega-pauper", 1, "Anna"),
+        _riga("Premodern Fall tappa 1", "Premodern", "lega-premodern", 1, "Bruno"),
+        _riga("Lega Pauper Fall 1a tappa", "Pauper", "lega-pauper", 2, "Carla"),
+        _riga("Premodern Fall tappa 1", "Premodern", "lega-premodern", 2, "Dario"),
+    ])
+    tappe = fetch_leg_results_all(cfg, dt.date(2026, 9, 2))
+    assert [t.format for t in tappe] == ["Pauper", "Premodern"]
+    assert [t.winner.player for t in tappe] == ["Anna", "Bruno"]
+    assert all(len(t.rows) == 2 for t in tappe)
+    # Ognuna porta la propria lega: la classifica generale non si incrocia.
+    assert [t.league for t in tappe] == ["lega-pauper", "lega-premodern"]
+
+
+def test_filtro_per_formato_isola_un_torneo(cfg, tmp_path):
+    _sorgente(cfg, tmp_path, [
+        _riga("Lega Pauper Fall 1a tappa", "Pauper", "lega-pauper", 1, "Anna"),
+        _riga("Premodern Fall tappa 1", "Premodern", "lega-premodern", 1, "Bruno"),
+    ])
+    tappe = fetch_leg_results_all(cfg, dt.date(2026, 9, 2), "premodern")
+    assert [t.winner.player for t in tappe] == ["Bruno"]

@@ -16,7 +16,7 @@ from pathlib import Path
 
 from . import __version__, config
 from .errors import ConfigError, MtgSocialError, NoDataError
-from .pipelines import PIPELINES
+from .pipelines import drafts
 from .publish import publish_draft
 from .timeutil import fmt_range, now, resolve_date, week_bounds
 
@@ -43,27 +43,40 @@ def _summary(text: str) -> None:
 
 
 # ── comandi ─────────────────────────────────────────────────────────────────
-def _genera(cfg, pipeline, day, kwargs, args) -> tuple[str, str]:
-    """Genera un post e, se richiesto, lo pubblica. Restituisce (esito, nota)."""
+def _genera(cfg, kind, day, kwargs, args) -> list[tuple[str, str]]:
+    """Genera i post di una giornata e, se richiesto, li pubblica.
+
+    Restituisce un (esito, nota) per post: una serata con due tornei ne
+    produce due.
+    """
     try:
-        draft = pipeline(cfg, day, **kwargs)
+        bozze = drafts(cfg, kind, day, **kwargs)
     except NoDataError as exc:
-        return "no-data", str(exc)
+        return [("no-data", str(exc))]
 
-    print(f"Immagini: {', '.join(draft.images)}")
-    print("-" * 60)
-    print(draft.caption)
-    print("-" * 60)
+    esiti = []
+    for draft in bozze:
+        etichetta = draft.meta.get("leg") or draft.meta.get("format", "")
+        if len(bozze) > 1 and etichetta:
+            print(f"» {etichetta}")
+        print(f"Immagini: {', '.join(draft.images)}")
+        print("-" * 60)
+        print(draft.caption)
+        print("-" * 60)
 
-    if args.no_publish:
-        return "drafted", f"{len(draft.images)} slide"
+        if args.no_publish:
+            esiti.append(("drafted", f"{len(draft.images)} slide"
+                          + (f" · {etichetta}" if etichetta else "")))
+            continue
 
-    result = publish_draft(cfg, draft, dry_run=args.dry_run, force=args.force)
-    print(json.dumps(result, ensure_ascii=False, indent=2))
-    return result["status"], result.get("reason") or result.get("permalink", "")
+        result = publish_draft(cfg, draft, dry_run=args.dry_run, force=args.force)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        esiti.append((result["status"],
+                      result.get("reason") or result.get("permalink", "")))
+    return esiti
 
 
-def _post_di_una_settimana(cfg, pipeline, kwargs, args, day) -> int:
+def _post_di_una_settimana(cfg, kind, kwargs, args, day) -> int:
     """Un post per ogni giornata di gioco della settimana.
 
     Serve a rigenerare un arretrato, o a rivedere una settimana intera dopo
@@ -72,18 +85,19 @@ def _post_di_una_settimana(cfg, pipeline, kwargs, args, day) -> int:
     inizio, fine = week_bounds(day or resolve_date("today", cfg.timezone))
     print(f"Settimana {fmt_range(inizio, fine)}\n")
 
+    giornate = (fine - inizio).days + 1
     esiti = []
-    for scarto in range((fine - inizio).days + 1):
+    for scarto in range(giornate):
         giorno = inizio + dt.timedelta(days=scarto)
         try:
-            esito, nota = _genera(cfg, pipeline, giorno, kwargs, args)
+            risultati = _genera(cfg, kind, giorno, kwargs, args)
         except MtgSocialError as exc:
             # Un giorno che fallisce non deve far perdere gli altri sei: si
             # annota e si prosegue, poi il riepilogo lo dichiara.
-            esito, nota = "error", str(exc)
+            risultati = [("error", str(exc))]
             print(f"[errore] {giorno.isoformat()}: {exc}", file=sys.stderr)
-        esiti.append((giorno, esito, nota))
-        if esito != "no-data":
+        esiti.extend((giorno, esito, nota) for esito, nota in risultati)
+        if any(esito != "no-data" for esito, _ in risultati):
             print()
 
     icone = {"drafted": "[gen]", "published": "[pub]", "dry-run": "[test]",
@@ -100,7 +114,7 @@ def _post_di_una_settimana(cfg, pipeline, kwargs, args, day) -> int:
     # separate, altrimenti una sorgente giu' si traveste da settimana tranquilla.
     senza = [riga for riga in esiti if riga[1] == "no-data"]
     falliti = [g for g, e, _ in esiti if e == "error"]
-    print(f"\n{len(prodotti)} post su {len(esiti)} giornate "
+    print(f"\n{len(prodotti)} post su {giornate} giornate "
           f"({len(senza)} senza tappe"
           + (f", {len(falliti)} fallit{'a' if len(falliti) == 1 else 'e'}"
              if falliti else "") + ")")
@@ -120,7 +134,6 @@ def _post_di_una_settimana(cfg, pipeline, kwargs, args, day) -> int:
 
 def cmd_post(args) -> int:
     cfg = config.load(args.config)
-    pipeline = PIPELINES[args.kind]
     day = resolve_date(args.date, cfg.timezone) if args.date else None
 
     kwargs = {}
@@ -130,17 +143,20 @@ def cmd_post(args) -> int:
         kwargs["senza_classifica"] = True
 
     if getattr(args, "settimana", False):
-        return _post_di_una_settimana(cfg, pipeline, kwargs, args, day)
+        return _post_di_una_settimana(cfg, args.kind, kwargs, args, day)
 
-    esito, nota = _genera(cfg, pipeline, day, kwargs, args)
-    if esito == "no-data":
+    risultati = _genera(cfg, args.kind, day, kwargs, args)
+    if all(esito == "no-data" for esito, _ in risultati):
+        nota = risultati[0][1]
         print(f"[skip] {nota}", file=sys.stderr)
         _github_output(status="no-data", reason=nota)
         _summary(f"Saltato **{args.kind}**: {nota}")
         return EXIT_NO_DATA
 
-    _github_output(status=esito)
-    _summary(f"**{args.kind}** - {esito}" + (f" - {nota}" if nota else ""))
+    esiti = ", ".join(esito for esito, _ in risultati)
+    _github_output(status=esiti, post=str(len(risultati)))
+    for esito, nota in risultati:
+        _summary(f"**{args.kind}** - {esito}" + (f" - {nota}" if nota else ""))
     return EXIT_OK
 
 

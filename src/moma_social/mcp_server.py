@@ -24,7 +24,7 @@ except ImportError:  # pragma: no cover - SDK 1.x
 
 from . import config
 from .errors import MtgSocialError
-from .pipelines import PIPELINES
+from .pipelines import PIPELINES, drafts
 from .publish import ledger_path, publish_draft
 from .repos import events_by_day, fetch_events, fetch_leg_results, fetch_standings
 from .timeutil import fmt_range, resolve_date, week_bounds
@@ -105,12 +105,14 @@ def genera_post(tipo: str, data: str = "", formato: str = "") -> str:
         return f"Tipo sconosciuto: {tipo}. Validi: {', '.join(PIPELINES)}"
     cfg = _cfg()
     kwargs = {} if tipo == "weekly_calendar" else {"fmt": formato}
-    draft = PIPELINES[tipo](cfg, _day(data) if data else None, **kwargs)
+    # Una serata con due tornei sono due post: si restituiscono entrambi.
+    bozze = drafts(cfg, tipo, _day(data) if data else None, **kwargs)
     from .publish import save_draft_files
-    meta_path = save_draft_files(cfg, draft)
     return json.dumps(
-        {"tipo": draft.kind, "immagini": draft.images, "carosello": draft.is_carousel,
-         "caption": draft.caption, "meta": draft.meta, "anteprima": str(meta_path)},
+        [{"tipo": draft.kind, "immagini": draft.images,
+          "carosello": draft.is_carousel, "caption": draft.caption,
+          "meta": draft.meta, "anteprima": str(save_draft_files(cfg, draft))}
+         for draft in bozze],
         ensure_ascii=False, indent=2,
     )
 
@@ -126,9 +128,9 @@ def pubblica_post(tipo: str, data: str = "", formato: str = "",
         return f"Tipo sconosciuto: {tipo}. Validi: {', '.join(PIPELINES)}"
     cfg = _cfg()
     kwargs = {} if tipo == "weekly_calendar" else {"fmt": formato}
-    draft = PIPELINES[tipo](cfg, _day(data) if data else None, **kwargs)
-    result = publish_draft(cfg, draft, dry_run=not conferma)
-    return json.dumps(result, ensure_ascii=False, indent=2)
+    bozze = drafts(cfg, tipo, _day(data) if data else None, **kwargs)
+    return json.dumps([publish_draft(cfg, draft, dry_run=not conferma)
+                       for draft in bozze], ensure_ascii=False, indent=2)
 
 
 @mcp.tool()

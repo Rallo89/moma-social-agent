@@ -18,6 +18,7 @@ from .repos import (
     events_by_day,
     fetch_events,
     fetch_leg_results,
+    fetch_leg_results_all,
     fetch_standings,
     formats_on,
     same_format,
@@ -155,15 +156,35 @@ def format_spotlight(cfg: Config, day: dt.date | None = None,
 # ── 3. Risultati di tappa + classifica (giovedi e venerdi 03:00) ────────────
 def leg_results(cfg: Config, day: dt.date | None = None, fmt: str = "",
                 senza_classifica: bool = False) -> PostDraft:
-    """Carosello sui risultati della tappa di `day` (default: ieri).
+    """Carosello sulla prima tappa di `day` (default: ieri).
+
+    Quando la serata ha ospitato piu' tornei servono piu' post: li produce
+    tutti `leg_results_batch`.
+    """
+    day = day or resolve_date("yesterday", cfg.timezone)
+    return _post_di_tappa(cfg, day, fetch_leg_results(cfg, day, fmt),
+                          senza_classifica)
+
+
+def leg_results_batch(cfg: Config, day: dt.date | None = None, fmt: str = "",
+                      senza_classifica: bool = False) -> list[PostDraft]:
+    """Un post per ogni torneo giocato quel giorno.
+
+    Pauper e Premodern nella stessa serata sono due gare distinte, con due
+    vincitori e due classifiche: meritano due post, non uno che li fonde.
+    """
+    day = day or resolve_date("yesterday", cfg.timezone)
+    return [_post_di_tappa(cfg, day, leg, senza_classifica)
+            for leg in fetch_leg_results_all(cfg, day, fmt)]
+
+
+def _post_di_tappa(cfg: Config, day: dt.date, leg, senza_classifica: bool) -> PostDraft:
+    """Carosello risultati + classifica generale di una singola tappa.
 
     La classifica generale e' facoltativa: se manca — formato senza lega,
     sorgente non ancora collegata, o `senza_classifica` — il post esce con le
     sole slide dei risultati invece di non uscire affatto.
     """
-    day = day or resolve_date("yesterday", cfg.timezone)
-    leg = fetch_leg_results(cfg, day, fmt)
-
     if senza_classifica:
         standings = Standings(format=leg.format)
     elif not leg.league:
@@ -279,3 +300,16 @@ PIPELINES = {
     "format_spotlight": format_spotlight,
     "leg_results": leg_results,
 }
+
+# Alcune giornate valgono piu' di un post: qui le pipeline che lo sanno fare.
+PIPELINES_MULTI = {
+    "leg_results": leg_results_batch,
+}
+
+
+def drafts(cfg: Config, kind: str, day: dt.date | None = None,
+           **kwargs) -> list[PostDraft]:
+    """Tutte le bozze che quel giorno richiede per quel tipo di post."""
+    if kind in PIPELINES_MULTI:
+        return PIPELINES_MULTI[kind](cfg, day, **kwargs)
+    return [PIPELINES[kind](cfg, day, **kwargs)]
