@@ -56,7 +56,7 @@ def test_fmt_range_a_cavallo_di_mese():
 
 
 def test_weekday_it():
-    assert weekday_it(dt.date(2026, 3, 11)) == "Mercoledi"
+    assert weekday_it(dt.date(2026, 3, 11)) == "Mercoledì"
 
 
 def test_resolve_yesterday():

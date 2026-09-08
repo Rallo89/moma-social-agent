@@ -23,7 +23,13 @@ from .repos import (
     formats_on,
     same_format,
 )
-from .timeutil import fmt_range, resolve_date, week_bounds
+from .timeutil import (
+    fmt_date,
+    fmt_range,
+    resolve_date,
+    week_bounds,
+    weekday_it,
+)
 
 
 def _density(count: int) -> str:
@@ -53,6 +59,62 @@ def _background(cfg: Config, kind: str) -> str:
     return cfg.get(f"posts.{kind}.background", "") or ""
 
 
+# ── La card evento, condivisa dal calendario e dal formato del giorno ───────
+def _testo_evento(cfg: Config, chiave: str, event, day: dt.date, fmt: str,
+                  default: str = "") -> str:
+    """Un campo della card, composto dal modello scritto in configurazione.
+
+    I dati che il database non espone — ora, link iscrizioni, cadenza — vivono
+    in config invece che nel codice: cambiarli non richiede una release.
+    """
+    modello = cfg.get(f"content.evento.{chiave}", default)
+    if not modello:
+        return ""
+    # "Torneo settimanale" e' vero per le leghe, non per una Prerelease: la
+    # cadenza si dichiara per formato, con un valore generico di ripiego.
+    cadenza = (cfg.get(f"content.evento.cadenza.{fmt.lower()}", "")
+               or cfg.get("content.evento.cadenza.default", ""))
+    return modello.format(
+        cadenza=cadenza,
+        format=fmt,
+        formato=fmt,
+        weekday=weekday_it(day),
+        giorno=fmt_date(day, with_weekday=True),
+        data=fmt_date(day),
+        title=(event.title if event else ""),
+        venue=(event.venue if event else ""),
+        city=(event.city if event else "") or cfg.get("org.city", ""),
+        fee=(event.entry_fee if event else ""),
+        time=(event.start_time if event else ""),
+        org=cfg.get("org.name", ""),
+    ).strip()
+
+
+def _card_evento(cfg: Config, day: dt.date, fmt: str, event=None,
+                 kicker_1: str = "", kicker_2: str = "") -> dict:
+    """Contesto della grafica evento: gli slot del template del grafico."""
+    quando = (f"{fmt_date(day, with_weekday=True)}, {event.start_time}"
+              if event and event.start_time
+              else _testo_evento(cfg, "quando", event, day, fmt,
+                                 "{giorno}"))
+    dove = ((f"{event.venue} — {event.city}" if event and event.venue and event.city
+             else (event.venue if event and event.venue else ""))
+            or _testo_evento(cfg, "dove", event, day, fmt))
+    quota = ((event.entry_fee if event and event.entry_fee else "")
+             or _testo_evento(cfg, "quota", event, day, fmt))
+    titolo = _testo_evento(cfg, "titolo", event, day, fmt, "{weekday} {format}")
+    return {
+        "kicker_1": kicker_1 or _testo_evento(cfg, "kicker_1", event, day, fmt),
+        "kicker_2": kicker_2 or _testo_evento(cfg, "kicker_2", event, day, fmt),
+        "badge": _testo_evento(cfg, "badge", event, day, fmt, "{format}"),
+        "titolo": titolo,
+        "voci": [("Quando", quando), ("Dove", dove), ("Iscrizione", quota)],
+        "link": _testo_evento(cfg, "link", event, day, fmt),
+        "invito": cfg.get("content.evento.invito", "Iscriviti"),
+        "qr_image": cfg.get("content.evento.qr", ""),
+    }
+
+
 # ── 1. Calendario settimanale (lunedi 10:00) ────────────────────────────────
 def weekly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
     day = day or resolve_date("today", cfg.timezone)
@@ -62,20 +124,28 @@ def weekly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
     formats = formats_on(events)
     periodo = fmt_range(start, end)
 
-    image = render(
-        cfg,
-        cfg.require("posts.weekly_calendar.image_template"),
-        {
-            "days": days,
-            "periodo": periodo,
-            "events_count": len(events),
-            "formats": formats,
-            "background": _background(cfg, "weekly_calendar"),
-            "density": _density(len(events) + len(days)),
-        },
-        _stamp(cfg, "calendario", start),
-        size=post_size(cfg, "weekly_calendar"),
-    )
+    # Un evento per slide: e' la card che il grafico ha disegnato, e leggerla
+    # sul feed e' piu' facile di una griglia con sette righe minuscole.
+    template = cfg.require("posts.weekly_calendar.image_template")
+    size = post_size(cfg, "weekly_calendar")
+    kicker = cfg.get("content.evento.kicker_calendario", "Calendario settimanale")
+    massimo = min(cfg.get("posts.weekly_calendar.max_carousel_slides", 10), 10)
+    in_post = events[:massimo]
+    immagini = [
+        render(
+            cfg, template,
+            {**_card_evento(cfg, evento.date, evento.format or "", evento,
+                            kicker_1=kicker,
+                            kicker_2=(f"{indice + 1}/{len(in_post)}"
+                                      if len(in_post) > 1 else periodo)),
+             "background": _background(cfg, "weekly_calendar"),
+             "density": ""},
+            _stamp(cfg, "calendario", start,
+                   f"{indice + 1:02d}-{(evento.format or 'evento').lower().replace(' ', '-')}"),
+            size=size,
+        )
+        for indice, evento in enumerate(in_post)
+    ]
     caption = render_caption(
         cfg, "weekly_calendar",
         {
@@ -89,10 +159,12 @@ def weekly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
     )
     return PostDraft(
         kind="weekly_calendar",
-        images=[str(image)],
+        images=[str(path) for path in immagini],
         caption=caption,
         meta={"week_start": start.isoformat(), "week_end": end.isoformat(),
-              "events": len(events), "formats": formats},
+              "events": len(events), "formats": formats,
+              "slide": len(immagini),
+              "slide_tagliate": len(events) - len(in_post)},
     )
 
 
@@ -129,13 +201,14 @@ def format_spotlight(cfg: Config, day: dt.date | None = None,
     image = render(
         cfg,
         cfg.require("posts.format_spotlight.image_template"),
-        {
-            "day": day, "format": fmt, "events": events, "main": main,
-            "facts": facts, "tagline": tagline,
-            "cta": "Iscrizioni aperte" if main and main.signup_url else "",
-            "background": _background(cfg, "format_spotlight"),
-            "density": _density(len(events) * 2),
-        },
+        {**_card_evento(cfg, day, fmt, main),
+         # Serviti anche al vecchio layout generato dai colori brand, che
+         # resta utilizzabile finche' non tutti i post hanno una card.
+         "day": day, "format": fmt, "events": events, "main": main,
+         "facts": facts, "tagline": tagline,
+         "cta": "Iscrizioni aperte" if main and main.signup_url else "",
+         "background": _background(cfg, "format_spotlight"),
+         "density": _density(len(events) * 2)},
         _stamp(cfg, "formato", day, fmt.lower().replace(" ", "-")),
         size=post_size(cfg, "format_spotlight"),
     )

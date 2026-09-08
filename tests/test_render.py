@@ -31,7 +31,7 @@ def contesto_calendario(cfg):
 def test_html_contiene_i_dati(cfg, contesto_calendario):
     html = build_html(cfg, "weekly_calendar.html.j2", contesto_calendario)
     assert "Serata Commander" in html
-    assert "MERCOLEDI" in html.upper()
+    assert "MERCOLEDÌ" in html.upper()
 
 
 def test_png_ha_la_misura_del_feed(cfg, contesto_calendario):
@@ -94,7 +94,8 @@ def test_filtro_asset_e_totale(cfg):
 def test_dimensione_globale_di_default(cfg):
     from moma_social.render import post_size
 
-    assert post_size(cfg, "weekly_calendar") == (1080, 1350)
+    assert post_size(cfg, "leg_results") == (1080, 1080)   # dichiarata dal post
+    assert post_size(cfg, "inesistente") == (1080, 1350)   # default globale
 
 
 def test_dimensione_specifica_del_post(cfg):
@@ -104,7 +105,7 @@ def test_dimensione_specifica_del_post(cfg):
     cfg.data["posts"]["leg_results_standings"]["width"] = 1080
     cfg.data["posts"]["leg_results_standings"]["height"] = 1080
     assert post_size(cfg, "leg_results_standings") == (1080, 1080)
-    assert post_size(cfg, "weekly_calendar") == (1080, 1350)
+    assert post_size(cfg, "inesistente") == (1080, 1350)
 
 
 def test_png_rispetta_la_dimensione_del_post(cfg, contesto_calendario):

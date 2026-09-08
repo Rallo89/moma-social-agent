@@ -1,0 +1,217 @@
+{#
+  Post evento — traduzione fedele di "Template Evento Dark" (Claude Design).
+
+  Il disegno e' autoriale: colori, corpi, spaziature e asset vengono
+  dall'artboard originale (templates/calendar/) e non si toccano. Qui cambiano
+  solo i testi, che arrivano dalle pipeline.
+
+  L'artboard e' disegnato a 1080x1080. Per qualunque altra dimensione si scala
+  l'intero blocco invece di ricalcolare ogni misura: cosi' le proporzioni
+  restano quelle approvate.
+
+  Slot (stessi nomi del file di istruzioni del grafico):
+    kicker_1 kicker_2 · badge · titolo · quando · dove · quota · link
+#}
+{% set ART = 1080 %}
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<style>
+{% include "_fonts.css.j2" %}
+
+  @page { size: {{ width }}px {{ height }}px; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: {{ width }}px; height: {{ height }}px;
+    overflow: hidden; background: #14171a;
+    -webkit-font-smoothing: antialiased;
+  }
+  .scala {
+    position: absolute; top: 0; left: 0;
+    width: {{ ART }}px; height: {{ ART }}px;
+    transform: scale({{ width / ART }}, {{ height / ART }});
+    transform-origin: top left;
+  }
+  .art {
+    width: {{ ART }}px; height: {{ ART }}px; position: relative; overflow: hidden;
+    background: #14171a; color: #f2f4f0;
+    display: flex; flex-direction: column;
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+  .trama {
+    position: absolute; top: -90px; left: -80px; height: 900px;
+    opacity: .3; transform: rotate(-6deg);
+  }
+  .velo {
+    position: absolute; inset: 0;
+    background: linear-gradient(115deg, rgba(20,23,26,0) 42%, #14171a 62%);
+  }
+
+  .testa {
+    position: relative; padding: 58px 64px 0;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;
+  }
+  .testa img { width: 168px; }
+  .kicker {
+    text-align: right; font-family: 'JetBrains Mono', monospace;
+    font-size: 15px; line-height: 2; letter-spacing: .2em;
+    text-transform: uppercase; color: #8b9490;
+  }
+
+  .corpo {
+    position: relative; flex: 1; padding: 0 64px;
+    display: flex; flex-direction: column; justify-content: center; gap: 30px;
+    min-height: 0;
+  }
+  .badge {
+    align-self: flex-start; background: #a9d227; color: #14171a;
+    font-weight: 700; font-size: 30px; letter-spacing: .2em;
+    text-transform: uppercase; padding: 9px 22px; white-space: nowrap;
+  }
+  .titolo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 190px;
+    line-height: .82; letter-spacing: .005em; text-wrap: balance;
+  }
+  .dati { display: flex; align-items: stretch; gap: 34px; margin-top: 8px; }
+  .filo { width: 3px; background: #a9d227; }
+  .voci { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .voce { display: flex; flex-direction: column; }
+  .voce .etichetta {
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    letter-spacing: .24em; text-transform: uppercase; color: #a9d227;
+  }
+  .voce .valore {
+    font-weight: 600; font-size: 46px; letter-spacing: .03em;
+    text-transform: uppercase; white-space: nowrap;
+  }
+
+  .piede {
+    position: relative; padding: 0 64px 46px;
+    display: flex; align-items: center; justify-content: space-between; gap: 28px;
+  }
+  .iscrizioni { display: flex; align-items: center; gap: 22px; }
+  .qr {
+    width: 128px; height: 128px; background: #f2f4f0;
+    display: grid; place-items: center; overflow: hidden;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.5;
+    text-align: center; color: #14171a; letter-spacing: .06em;
+  }
+  .qr img { width: 128px; height: 128px; }
+  .invito { display: flex; flex-direction: column; gap: 4px; }
+  .invito .titolino {
+    font-weight: 700; font-size: 32px; letter-spacing: .08em;
+    text-transform: uppercase; color: #a9d227;
+  }
+  .invito .link {
+    font-family: 'JetBrains Mono', monospace; font-size: 17px;
+    color: #d5dad6; white-space: nowrap;
+  }
+  .piede img.partner { height: 84px; }
+</style>
+</head>
+<body>
+<div class="scala"><div class="art">
+  {% set trama = "templates/images/assets/triangoli.png"|asset %}
+  {% if trama %}<img class="trama" src="{{ trama }}" alt="">{% endif %}
+  <div class="velo"></div>
+
+  <div class="testa">
+    {% set logo = "templates/images/assets/logo-modena-magic.png"|asset %}
+    {% if logo %}<img src="{{ logo }}" alt="Modena Magic">{% else %}<div></div>{% endif %}
+    <div class="kicker">{{ kicker_1 }}{% if kicker_2 %}<br>{{ kicker_2 }}{% endif %}</div>
+  </div>
+
+  <div class="corpo" id="corpo">
+    {% if badge %}<div class="badge" data-fit="20">{{ badge }}</div>{% endif %}
+    <div class="titolo" data-fit="100" data-fit-altezza="corpo">{{ titolo }}</div>
+    <div class="dati">
+      <div class="filo"></div>
+      <div class="voci">
+        {% for etichetta, valore in voci %}
+        {% if valore %}
+        <div class="voce">
+          <span class="etichetta">{{ etichetta }}</span>
+          <span class="valore" data-fit="30">{{ valore }}</span>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="piede">
+    <div class="iscrizioni">
+      {% set qr = qr_image|default("")|asset %}
+      <div class="qr">{% if qr %}<img src="{{ qr }}" alt="">{% else %}QR<br>iscrizioni{% endif %}</div>
+      <div class="invito">
+        <span class="titolino">{{ invito|default("Iscriviti") }}</span>
+        <span class="link" data-fit="12">{{ link }}</span>
+      </div>
+    </div>
+    {% set partner = "templates/images/assets/unocritico.png"|asset %}
+    {% if partner %}<img class="partner" src="{{ partner }}" alt="Uno Critico">{% endif %}
+  </div>
+</div></div>
+<script>
+/*
+  Rete di sicurezza: rimpicciolisce i testi che il disegno vuole su una riga
+  sola, ma solo se non ci stanno.
+
+  I corpi scritti nel CSS sono quelli approvati e restano tali per i titoli
+  di lunghezza normale: "Giovedì Modern" e "Mercoledì Commander" escono
+  entrambi a 190px, identici all'artboard. Serve per l'eccezione — un nome
+  torneo piu' lungo del previsto — dove una parola tracimerebbe fuori dalla
+  slide senza che nessuno se ne accorga prima della pubblicazione.
+
+  Gira in entrambi i backend, che sono due browser; lo screenshot viene preso
+  dopo, a font caricati.
+*/
+(function () {
+  function larghezzaUtile(el) {
+    var padre = el.parentElement, stile = getComputedStyle(padre);
+    // clientWidth comprende il padding: va tolto, o il confronto e' falsato.
+    return padre.clientWidth
+      - parseFloat(stile.paddingLeft) - parseFloat(stile.paddingRight);
+  }
+  function adatta(el) {
+    var minimo = parseFloat(el.dataset.fit) || 12;
+    var corpo = parseFloat(getComputedStyle(el).fontSize);
+    var utile = larghezzaUtile(el);
+    // Due tracimazioni diverse: una parola piu' larga di un blocco che si
+    // stira, e un blocco a larghezza contenuto piu' largo dello spazio.
+    function deborda() {
+      return el.scrollWidth > el.clientWidth + 1 || el.offsetWidth > utile + 1;
+    }
+    while (corpo > minimo && deborda()) {
+      corpo -= 2;
+      el.style.fontSize = corpo + 'px';
+    }
+  }
+  function adattaAltezza(el) {
+    // Un titolo di tre parole entra in larghezza ma allunga il blocco
+    // centrale finche' scavalca il logo in alto e il piede in basso. Qui si
+    // guarda il contenitore, non il testo.
+    var contenitore = document.getElementById(el.dataset.fitAltezza);
+    if (!contenitore) return;
+    var minimo = parseFloat(el.dataset.fit) || 12;
+    var corpo = parseFloat(getComputedStyle(el).fontSize);
+    while (corpo > minimo
+           && contenitore.scrollHeight > contenitore.clientHeight + 1) {
+      corpo -= 4;
+      el.style.fontSize = corpo + 'px';
+    }
+  }
+  function passa() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-fit]'), adatta);
+    Array.prototype.forEach.call(
+      document.querySelectorAll('[data-fit-altezza]'), adattaAltezza);
+    document.documentElement.setAttribute('data-adattato', '1');
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(passa);
+  else window.addEventListener('load', passa);
+})();
+</script>
+</body>
+</html>

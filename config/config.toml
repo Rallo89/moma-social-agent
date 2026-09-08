@@ -8,6 +8,7 @@
 
 [org]
 name          = "Modena Magic"
+city          = "Modena"
 handle        = "@modenamagic"             # DA CONFERMARE: handle Instagram reale
 site          = "https://esempio.it"       # DA COMPLETARE
 timezone      = "Europe/Rome"              # tutti gli orari nei log/schedule
@@ -186,6 +187,32 @@ standings_subtitle = "Classifica generale"
 hashtag_grafica = "#modenamagic"          # hashtag stampato in fondo alla slide
 hashtags_max    = 20
 caption_max     = 2200          # limite Instagram
+# ── Card evento (grafica "Template Evento Dark") ─────────────────────────────
+# I testi si compongono da questi modelli. Segnaposto disponibili:
+#   {format} {weekday} {giorno} {data} {title} {venue} {city} {fee} {time} {org}
+# I dati che il database non espone ancora — ora di inizio, quota, link
+# iscrizioni — stanno qui: cambiarli non richiede di toccare il codice.
+# Limiti consigliati dal grafico: titolo 22 caratteri, quando 30, dove 28,
+# iscrizione 26, link 34. Oltre, il testo va a capo e rompe il ritmo.
+[content.evento]
+kicker_1          = "Evento settimanale"
+kicker_2          = "{city}"
+kicker_calendario = "Calendario settimanale"   # riga 1 delle slide del lunedi
+badge             = "{format} · {cadenza}"
+titolo            = "{weekday} {format}"
+quando            = "{giorno}, 20:30"          # usata se la sorgente non ha l'ora
+dove              = "Uno Critico — Modena"     # usata se l'evento non ha sede
+quota             = "10 € · include buste"     # usata se l'evento non ha quota
+invito            = "Iscriviti"
+link              = "modenamagic.it/iscrizioni"
+qr                = ""                         # PNG del QR; vuoto = segnaposto
+
+# Cadenza mostrata nel badge, per formato. Una lega e' settimanale, una
+# Prerelease no: dichiararlo qui evita di stampare una frase falsa.
+[content.evento.cadenza]
+default = "Torneo settimanale"
+limited = "Evento speciale"
+
 # Fallback formati per giorno se la sorgente eventi non copre quel giorno
 [content.formats_by_weekday]
 wednesday = ""
@@ -229,15 +256,22 @@ target    = "templates/images/assets/sfondo_classifica.png"
 # diversi (un workflow rilanciato non produce un doppione).
 ledger = "state/published.jsonl"
 
+# Il lunedi esce un carosello: una card per evento della settimana, cosi'
+# ogni appuntamento resta leggibile invece di stare in una riga minuscola.
 [posts.weekly_calendar]
-image_template   = "weekly_calendar.html.j2"
-caption_template = "weekly_calendar.txt.j2"
-hashtags         = ["#tornei", "#calendario"]
+image_template      = "evento.html.j2"
+caption_template    = "weekly_calendar.txt.j2"
+hashtags            = ["#tornei", "#calendario"]
+width               = 1080
+height              = 1080
+max_carousel_slides = 10        # la Graph API non ne accetta di piu'
 
 [posts.format_spotlight]
-image_template   = "format_spotlight.html.j2"
+image_template   = "evento.html.j2"
 caption_template = "format_spotlight.txt.j2"
 hashtags         = ["#torneomagic"]
+width            = 1080
+height           = 1080
 
 [posts.leg_results]
 # Il template grafico dell'associazione e' quadrato e vale per entrambe le

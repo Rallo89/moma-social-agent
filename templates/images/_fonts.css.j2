@@ -1,21 +1,33 @@
 {#
-  Font del brand, inlinato come data URI: la slide resta autonoma e non
-  dipende da font installati sulla macchina che renderizza (il runner di
-  GitHub Actions non ne ha).
+  Font del brand, inlinati come data URI: la slide resta autonoma e non
+  dipende ne' da font installati sulla macchina che renderizza (il runner di
+  GitHub Actions non ne ha) ne' dalla rete. Con i webfont remoti Chromium
+  puo' scattare lo screenshot prima che il font sia arrivato, e la grafica
+  esce con un ripiego di sistema.
 
   League Gothic ha un solo peso. Con font-weight: 700/900 il browser
   costruirebbe un finto grassetto deformando le lettere, quindi la sintesi
   e' disattivata e la gerarchia si fa con corpo e colore.
 
-  Licenza SIL Open Font License 1.1 — vedi fonts/OFL.txt
+  Tutti in licenza SIL Open Font License 1.1 — vedi fonts/OFL-*.txt
 #}
-{% set font_file = "templates/images/fonts/LeagueGothic-Regular.ttf"|asset %}
-{% if font_file %}
+{% macro face(famiglia, file, peso="400", stile="normal") -%}
+{% set percorso = ("templates/images/fonts/" ~ file)|asset %}
+{%- if percorso %}
 @font-face {
-  font-family: 'League Gothic';
-  font-style: normal;
-  font-weight: 400;
-  src: url('{{ font_file }}') format('truetype');
+  font-family: '{{ famiglia }}';
+  font-style: {{ stile }};
+  font-weight: {{ peso }};
+  src: url('{{ percorso }}') format('truetype');
 }
-{% endif %}
+{%- endif %}
+{%- endmacro %}
+
+{{ face("League Gothic", "LeagueGothic-Regular.ttf") }}
+{{ face("Bebas Neue", "BebasNeue-Regular.ttf") }}
+{{ face("Barlow Condensed", "BarlowCondensed-SemiBold.ttf", "600") }}
+{{ face("Barlow Condensed", "BarlowCondensed-Bold.ttf", "700") }}
+{# Variabile: un file solo copre l'intero intervallo di pesi. #}
+{{ face("JetBrains Mono", "JetBrainsMono-VariableFont_wght.ttf", "400 700") }}
+
 * { font-synthesis: none; -webkit-font-synthesis: none; }

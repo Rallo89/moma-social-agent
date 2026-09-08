@@ -24,10 +24,10 @@ def test_caption_calendario(cfg):
         "days": events_by_day(events), "periodo": "9 - 15 marzo",
         "events_count": len(events), "formats": ["Modern"], "signup_url": "",
     })
-    assert "LUNEDI 9 marzo" in text
-    assert "MERCOLEDI 11 marzo" in text
+    assert "LUNEDÌ 9 marzo" in text
+    assert "MERCOLEDÌ 11 marzo" in text
     # Ogni giornata deve restare separata dalla successiva.
-    assert "\n\nMERCOLEDI" in text
+    assert "\n\nMERCOLEDÌ" in text
 
 
 def test_caption_risultati_cita_il_vincitore(cfg):

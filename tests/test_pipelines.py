@@ -29,14 +29,28 @@ def fake_render(monkeypatch, tmp_path):
 
 
 def test_calendario_settimanale(cfg):
+    """Il lunedi esce un carosello: una card per evento della settimana."""
     draft = pipelines.weekly_calendar(cfg, dt.date(2026, 3, 11))
     assert draft.kind == "weekly_calendar"
-    assert not draft.is_carousel
     assert draft.meta["events"] == 5
     assert draft.meta["week_start"] == "2026-03-09"
+    assert len(draft.images) == 5
+    assert draft.is_carousel
     template, context = RENDERED[0]
-    assert template == "weekly_calendar.html.j2"
-    assert len(context["days"]) == 5
+    assert template == "evento.html.j2"
+    # Ogni card porta i suoi slot compilati, non i dati grezzi dell'evento.
+    assert context["kicker_1"] == "Calendario settimanale"
+    assert context["kicker_2"] == "1/5"
+    assert [etichetta for etichetta, _ in context["voci"]] == [
+        "Quando", "Dove", "Iscrizione"]
+
+
+def test_calendario_non_supera_il_limite_della_graph_api(cfg):
+    cfg.data["posts"]["weekly_calendar"]["max_carousel_slides"] = 3
+    draft = pipelines.weekly_calendar(cfg, dt.date(2026, 3, 11))
+    assert len(draft.images) == 3
+    assert draft.meta["slide_tagliate"] == 2
+
 
 
 def test_calendario_senza_eventi(cfg):
@@ -296,3 +310,27 @@ def test_una_sera_con_due_tornei_produce_due_post(cfg, tmp_path):
     # come doppione del primo.
     from moma_social.publish import dedupe_key
     assert len({dedupe_key(b) for b in bozze}) == 2
+
+
+def test_cadenza_del_badge_dipende_dal_formato(cfg):
+    """"Torneo settimanale" e' vero per una lega, non per una Prerelease."""
+    assert "Torneo settimanale" in pipelines._card_evento(
+        cfg, dt.date(2026, 3, 12), "Modern")["badge"]
+    assert "Evento speciale" in pipelines._card_evento(
+        cfg, dt.date(2026, 3, 14), "Limited")["badge"]
+
+
+def test_la_card_usa_i_dati_dell_evento_quando_ci_sono(cfg):
+    """Sede e quota vengono dall'evento; i modelli in config sono il ripiego."""
+    from moma_social.models import Event
+
+    evento = Event(date=dt.date(2026, 3, 12), format="Modern", start_time="21:15",
+                   venue="Circolo Arcano", city="Modena", entry_fee="8 €")
+    voci = dict(pipelines._card_evento(cfg, evento.date, "Modern", evento)["voci"])
+    assert voci["Quando"] == "Giovedì 12 marzo, 21:15"
+    assert voci["Dove"] == "Circolo Arcano — Modena"
+    assert voci["Iscrizione"] == "8 €"
+
+    senza = dict(pipelines._card_evento(cfg, dt.date(2026, 3, 12), "Modern")["voci"])
+    assert senza["Quando"] == "Giovedì 12 marzo, 20:30"     # ora da config
+    assert senza["Dove"] == cfg.get("content.evento.dove")

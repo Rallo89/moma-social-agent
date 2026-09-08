@@ -15,7 +15,8 @@ from dateutil import parser as _dateparser
 from .errors import ConfigError, MtgSocialError
 
 WEEKDAYS_IT = [
-    "Lunedi", "Martedi", "Mercoledi", "Giovedi", "Venerdi", "Sabato", "Domenica",
+    "Lunedì", "Martedì", "Mercoledì", "Giovedì",
+    "Venerdì", "Sabato", "Domenica",
 ]
 MONTHS_IT = [
     "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
