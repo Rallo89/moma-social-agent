@@ -88,7 +88,34 @@ class LegResults:
 
     @property
     def winner(self) -> ResultRow | None:
+        """Primo classificato secondo l'ordine della tappa."""
         return self.rows[0] if self.rows else None
+
+    @property
+    def winners(self) -> list[ResultRow]:
+        """Chi ha chiuso a pari punti in testa.
+
+        La posizione da sola non basta: due giocatori possono finire a pari
+        punteggio e venire separati solo dai tiebreaker. Dichiararne uno solo
+        vincitore sarebbe scorretto verso l'altro.
+        """
+        if not self.rows:
+            return []
+
+        def punteggio(riga):
+            try:
+                return float(str(riga.points).strip())
+            except (TypeError, ValueError):
+                return None
+
+        massimo = punteggio(self.rows[0])
+        if massimo is None:
+            return [self.rows[0]]
+        return [r for r in self.rows if punteggio(r) == massimo]
+
+    @property
+    def ex_aequo(self) -> bool:
+        return len(self.winners) > 1
 
     @property
     def day_label(self) -> str:

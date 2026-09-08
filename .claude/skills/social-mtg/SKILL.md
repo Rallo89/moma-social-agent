@@ -71,11 +71,22 @@ Una giornata che fallisce non ferma le altre: viene annotata, il comando
 prosegue e il riepilogo finale dichiara quante ne sono andate perse (uscendo
 con codice d'errore). Le giornate fallite non contano fra i post prodotti.
 
+## Vincitore e pari merito
+
+La caption non dichiara vincitore chi e' primo in classifica, ma guarda i
+**punti**: due giocatori possono chiudere a pari punteggio ed essere separati
+solo dai tiebreaker. In quel caso il testo annuncia un primo posto condiviso e
+li nomina entrambi. Le slide restano nell'ordine dato dalla tappa.
+
 ## La classifica e' facoltativa
 
-Se la classifica generale non e' disponibile — formato senza lega, sorgente non
-ancora collegata, o `--no-standings` — il post esce con le sole slide dei
-risultati invece di non uscire affatto. La caption si adatta da sola.
+Se la classifica generale non e' disponibile — torneo non collegato a nessuna
+lega, sorgente non ancora collegata, o `--no-standings` — il post esce con le
+sole slide dei risultati invece di non uscire affatto. La caption si adatta.
+
+Un torneo **senza lega** non ha "una" classifica da accostargli: la sorgente
+non viene nemmeno interrogata, perche' fra piu' classifiche dello stesso
+formato ne verrebbe scelta una a caso.
 
 Vale anche per la riga "prossima tappa": e' una rifinitura, e se la sorgente
 eventi non risponde degrada in una frase generica senza far fallire un post

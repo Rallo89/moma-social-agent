@@ -3,7 +3,9 @@
    standings_rows (top N classifica), hashtags. Filtri: |data, |giorno #}
 🏆 {{ leg.format|upper }} · {{ leg.leg or "Risultati di tappa" }} — {{ leg.date|data }}
 
-{% if leg.winner %}
+{% if leg.ex_aequo %}
+🥇 Primo posto a pari punti: {{ leg.winners | map(attribute="player") | join(" e ") }} — {{ leg.winner.points }} punti a testa.
+{% elif leg.winner %}
 Vince {{ leg.winner.player }}{% if leg.winner.deck %} con {{ leg.winner.deck }}{% endif %}{% if leg.winner.record %} ({{ leg.winner.record }}){% endif %}! 🥇
 {% endif %}
 {% if leg.players_count %}

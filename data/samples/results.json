@@ -9,7 +9,8 @@
   "player": "Marco Bianchi",
   "deck": "Boros Energy",
   "record": "5-0",
-  "points": 15
+  "points": 15,
+  "league": "lega-modern-2026"
  },
  {
   "date": "2026-03-11",
@@ -21,7 +22,8 @@
   "player": "Giulia Rossi",
   "deck": "Izzet Murktide",
   "record": "5-0",
-  "points": 15
+  "points": 15,
+  "league": "lega-modern-2026"
  },
  {
   "date": "2026-03-11",
@@ -33,7 +35,8 @@
   "player": "Luca Ferrari",
   "deck": "Amulet Titan",
   "record": "4-1",
-  "points": 12
+  "points": 12,
+  "league": "lega-modern-2026"
  },
  {
   "date": "2026-03-11",
@@ -45,7 +48,8 @@
   "player": "Sara Conti",
   "deck": "Living End",
   "record": "4-1",
-  "points": 12
+  "points": 12,
+  "league": "lega-modern-2026"
  },
  {
   "date": "2026-03-11",
@@ -57,7 +61,8 @@
   "player": "Davide Greco",
   "deck": "Yawgmoth",
   "record": "4-1",
-  "points": 12
+  "points": 12,
+  "league": "lega-modern-2026"
  },
  {
   "date": "2026-03-11",
@@ -69,7 +74,8 @@
   "player": "Elena Moretti",
   "deck": "Domain Zoo",
   "record": "3-2",
-  "points": 9
+  "points": 9,
+  "league": "lega-modern-2026"
  },
  {
   "date": "2026-03-11",
@@ -81,7 +87,8 @@
   "player": "Paolo Rizzo",
   "deck": "Dimir Frog",
   "record": "3-2",
-  "points": 9
+  "points": 9,
+  "league": "lega-modern-2026"
  },
  {
   "date": "2026-03-11",
@@ -93,7 +100,8 @@
   "player": "Chiara Gallo",
   "deck": "Tron",
   "record": "3-2",
-  "points": 9
+  "points": 9,
+  "league": "lega-modern-2026"
  },
  {
   "date": "2026-03-11",
@@ -105,7 +113,8 @@
   "player": "Andrea Costa",
   "deck": "Boros Energy",
   "record": "2-3",
-  "points": 6
+  "points": 6,
+  "league": "lega-modern-2026"
  },
  {
   "date": "2026-03-11",
@@ -117,7 +126,8 @@
   "player": "Federica Lombardi",
   "deck": "Izzet Murktide",
   "record": "2-3",
-  "points": 6
+  "points": 6,
+  "league": "lega-modern-2026"
  },
  {
   "date": "2026-03-11",
@@ -129,7 +139,8 @@
   "player": "Matteo Barbieri",
   "deck": "Amulet Titan",
   "record": "2-3",
-  "points": 6
+  "points": 6,
+  "league": "lega-modern-2026"
  },
  {
   "date": "2026-03-11",
@@ -141,7 +152,8 @@
   "player": "Ilaria Fontana",
   "deck": "Living End",
   "record": "1-4",
-  "points": 3
+  "points": 3,
+  "league": "lega-modern-2026"
  },
  {
   "date": "2026-03-12",
@@ -153,7 +165,8 @@
   "player": "Marco Bianchi",
   "deck": "Izzet Phoenix",
   "record": "5-0",
-  "points": 15
+  "points": 15,
+  "league": "lega-pioneer-2026"
  },
  {
   "date": "2026-03-12",
@@ -165,7 +178,8 @@
   "player": "Giulia Rossi",
   "deck": "Rakdos Vampires",
   "record": "5-0",
-  "points": 15
+  "points": 15,
+  "league": "lega-pioneer-2026"
  },
  {
   "date": "2026-03-12",
@@ -177,7 +191,8 @@
   "player": "Luca Ferrari",
   "deck": "Amalia Combo",
   "record": "4-1",
-  "points": 12
+  "points": 12,
+  "league": "lega-pioneer-2026"
  },
  {
   "date": "2026-03-12",
@@ -189,7 +204,8 @@
   "player": "Sara Conti",
   "deck": "Boros Convoke",
   "record": "4-1",
-  "points": 12
+  "points": 12,
+  "league": "lega-pioneer-2026"
  },
  {
   "date": "2026-03-12",
@@ -201,7 +217,8 @@
   "player": "Davide Greco",
   "deck": "Azorius Control",
   "record": "4-1",
-  "points": 12
+  "points": 12,
+  "league": "lega-pioneer-2026"
  },
  {
   "date": "2026-03-12",
@@ -213,7 +230,8 @@
   "player": "Elena Moretti",
   "deck": "Lotus Field",
   "record": "3-2",
-  "points": 9
+  "points": 9,
+  "league": "lega-pioneer-2026"
  },
  {
   "date": "2026-03-12",
@@ -225,7 +243,8 @@
   "player": "Paolo Rizzo",
   "deck": "Gruul Vehicles",
   "record": "3-2",
-  "points": 9
+  "points": 9,
+  "league": "lega-pioneer-2026"
  },
  {
   "date": "2026-03-12",
@@ -237,7 +256,8 @@
   "player": "Chiara Gallo",
   "deck": "Mono-Green Devotion",
   "record": "3-2",
-  "points": 9
+  "points": 9,
+  "league": "lega-pioneer-2026"
  },
  {
   "date": "2026-03-12",
@@ -249,7 +269,8 @@
   "player": "Andrea Costa",
   "deck": "Izzet Phoenix",
   "record": "2-3",
-  "points": 6
+  "points": 6,
+  "league": "lega-pioneer-2026"
  },
  {
   "date": "2026-03-12",
@@ -261,7 +282,8 @@
   "player": "Federica Lombardi",
   "deck": "Rakdos Vampires",
   "record": "2-3",
-  "points": 6
+  "points": 6,
+  "league": "lega-pioneer-2026"
  },
  {
   "date": "2026-03-12",
@@ -273,7 +295,8 @@
   "player": "Matteo Barbieri",
   "deck": "Amalia Combo",
   "record": "2-3",
-  "points": 6
+  "points": 6,
+  "league": "lega-pioneer-2026"
  },
  {
   "date": "2026-03-12",
@@ -285,7 +308,8 @@
   "player": "Ilaria Fontana",
   "deck": "Boros Convoke",
   "record": "1-4",
-  "points": 3
+  "points": 3,
+  "league": "lega-pioneer-2026"
  },
  {
   "date": "2026-03-13",
@@ -297,7 +321,8 @@
   "player": "Francesco Ferrari",
   "deck": "Mono Red Kuldotha",
   "record": "4-0",
-  "points": 12
+  "points": 12,
+  "league": "lega-pauper-2026"
  },
  {
   "date": "2026-03-13",
@@ -309,7 +334,8 @@
   "player": "Giacomo Vandelli",
   "deck": "Dimir Terror",
   "record": "3-1",
-  "points": 9
+  "points": 9,
+  "league": "lega-pauper-2026"
  },
  {
   "date": "2026-03-13",
@@ -321,7 +347,8 @@
   "player": "Luca Nobili",
   "deck": "Familiars",
   "record": "3-1",
-  "points": 9
+  "points": 9,
+  "league": "lega-pauper-2026"
  },
  {
   "date": "2026-03-13",
@@ -333,7 +360,8 @@
   "player": "Antonio Fiore",
   "deck": "Boros Synthesizer",
   "record": "3-1",
-  "points": 9
+  "points": 9,
+  "league": "lega-pauper-2026"
  },
  {
   "date": "2026-03-13",
@@ -345,7 +373,8 @@
   "player": "Mattia Miceli",
   "deck": "Affinity",
   "record": "3-1",
-  "points": 9
+  "points": 9,
+  "league": "lega-pauper-2026"
  },
  {
   "date": "2026-03-13",
@@ -357,7 +386,8 @@
   "player": "Saverio Giulio Barbieri",
   "deck": "Gruul Ramp",
   "record": "2-2",
-  "points": 6
+  "points": 6,
+  "league": "lega-pauper-2026"
  },
  {
   "date": "2026-03-13",
@@ -369,7 +399,8 @@
   "player": "Filippo Artioli",
   "deck": "Azorius Ephemerate",
   "record": "2-2",
-  "points": 6
+  "points": 6,
+  "league": "lega-pauper-2026"
  },
  {
   "date": "2026-03-13",
@@ -381,7 +412,8 @@
   "player": "Leonardo Pilo",
   "deck": "Burn",
   "record": "2-2",
-  "points": 6
+  "points": 6,
+  "league": "lega-pauper-2026"
  },
  {
   "date": "2026-03-13",
@@ -393,7 +425,8 @@
   "player": "Vincenzo Pannarale",
   "deck": "Elves",
   "record": "2-2",
-  "points": 6
+  "points": 6,
+  "league": "lega-pauper-2026"
  },
  {
   "date": "2026-03-13",
@@ -405,7 +438,8 @@
   "player": "Francesco Musto",
   "deck": "Tortured Existence",
   "record": "2-2",
-  "points": 6
+  "points": 6,
+  "league": "lega-pauper-2026"
  },
  {
   "date": "2026-03-13",
@@ -417,7 +451,8 @@
   "player": "Emanuele Melotti",
   "deck": "Jeskai Ephemerate",
   "record": "2-2",
-  "points": 6
+  "points": 6,
+  "league": "lega-pauper-2026"
  },
  {
   "date": "2026-03-13",
@@ -429,7 +464,8 @@
   "player": "Giacomo Cavazzuti",
   "deck": "Goblin Combo",
   "record": "1-3",
-  "points": 3
+  "points": 3,
+  "league": "lega-pauper-2026"
  },
  {
   "date": "2026-03-13",
@@ -441,7 +477,8 @@
   "player": "Michael Ghiselli",
   "deck": "Bogles",
   "record": "1-3",
-  "points": 3
+  "points": 3,
+  "league": "lega-pauper-2026"
  },
  {
   "date": "2026-03-13",
@@ -453,7 +490,8 @@
   "player": "Francesco Battilani",
   "deck": "Walls Combo",
   "record": "1-3",
-  "points": 3
+  "points": 3,
+  "league": "lega-pauper-2026"
  },
  {
   "date": "2026-03-13",
@@ -465,7 +503,8 @@
   "player": "Samuel Meazzo",
   "deck": "Broodscale",
   "record": "0-4",
-  "points": 0
+  "points": 0,
+  "league": "lega-pauper-2026"
  },
  {
   "date": "2026-03-13",
@@ -477,6 +516,7 @@
   "player": "Matteo Cassano",
   "deck": "Grixis Affinity",
   "record": "0-4",
-  "points": 0
+  "points": 0,
+  "league": "lega-pauper-2026"
  }
 ]

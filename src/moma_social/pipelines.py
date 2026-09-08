@@ -166,6 +166,11 @@ def leg_results(cfg: Config, day: dt.date | None = None, fmt: str = "",
 
     if senza_classifica:
         standings = Standings(format=leg.format)
+    elif not leg.league:
+        # Torneo non collegato a nessuna lega: non esiste "la" classifica da
+        # accostargli. Meglio il solo post dei risultati che una classifica
+        # scelta a caso fra quelle dello stesso formato.
+        standings = Standings(format=leg.format)
     else:
         try:
             standings = fetch_standings(cfg, leg.format, league=leg.league)

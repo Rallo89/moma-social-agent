@@ -127,6 +127,7 @@ def _tappa_con(cfg, monkeypatch, giocatori: int):
     leg = LegResults(
         date=d.date(2026, 3, 13), format="Pauper", leg="Tappa 10",
         venue="Modena Magic", players_count=giocatori,
+        league="lega-pauper-2026",          # la stessa dei dati di esempio
         rows=[ResultRow(rank=i, player=f"Giocatore {i}", points=(giocatori - i) * 3)
               for i in range(1, giocatori + 1)],
     )
@@ -246,3 +247,23 @@ def test_la_classifica_segue_la_lega_della_tappa(cfg, monkeypatch):
     monkeypatch.setattr(pipelines, "fetch_standings", _standings)
     pipelines.leg_results(cfg, d.date(2026, 9, 3), fmt="Modern")
     assert chiamata["league"] == "lega-2026"
+
+
+def test_tappa_senza_lega_non_prende_una_classifica_a_caso(cfg, monkeypatch):
+    """Senza lega non esiste 'la' classifica: meglio il solo post dei risultati."""
+    import datetime as d
+
+    from moma_social.models import LegResults, ResultRow
+
+    leg = LegResults(date=d.date(2026, 9, 3), format="Premodern", leg="Tappa 3",
+                     league="",   # torneo non collegato a nessuna lega
+                     rows=[ResultRow(rank=1, player="X", points=12)])
+    monkeypatch.setattr(pipelines, "fetch_leg_results", lambda *a, **k: leg)
+
+    def _non_deve_essere_chiamata(*a, **k):
+        raise AssertionError("senza lega non si deve interrogare la classifica")
+
+    monkeypatch.setattr(pipelines, "fetch_standings", _non_deve_essere_chiamata)
+    draft = pipelines.leg_results(cfg, d.date(2026, 9, 3), fmt="Premodern")
+    assert draft.meta["slide_classifica"] == 0
+    assert len(draft.images) == 1

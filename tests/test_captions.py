@@ -51,3 +51,42 @@ def test_caption_troncata_al_limite(cfg):
     assert len(text) <= 120
     # Il taglio avviene su righe intere, non a meta' parola.
     assert not text.endswith("-")
+
+
+def test_caption_dichiara_il_pari_merito(cfg):
+    """Due giocatori a pari punti: dichiararne uno solo vincitore e' scorretto."""
+    import datetime as d
+
+    from moma_social.models import LegResults, ResultRow, Standings
+
+    leg = LegResults(
+        date=d.date(2026, 9, 3), format="Modern", leg="Tappa 5", players_count=12,
+        rows=[ResultRow(rank=1, player="Tianguang Liu", points=10, record="3-0-1"),
+              ResultRow(rank=2, player="Marco Bianchi", points=10, record="3-0-1"),
+              ResultRow(rank=3, player="Luca Nobili", points=9)],
+    )
+    testo = render_caption(cfg, "leg_results", {
+        "leg": leg, "rows": leg.rows, "standings": Standings(format="Modern"),
+        "standings_rows": [], "next_event_label": "mercoledi",
+    })
+    assert "pari punti" in testo
+    assert "Tianguang Liu e Marco Bianchi" in testo
+    assert "Vince Tianguang Liu" not in testo
+
+
+def test_caption_vincitore_unico(cfg):
+    import datetime as d
+
+    from moma_social.models import LegResults, ResultRow, Standings
+
+    leg = LegResults(
+        date=d.date(2026, 9, 3), format="Modern", leg="Tappa 5",
+        rows=[ResultRow(rank=1, player="Primo", points=12, deck="Boros", record="4-0"),
+              ResultRow(rank=2, player="Secondo", points=9)],
+    )
+    testo = render_caption(cfg, "leg_results", {
+        "leg": leg, "rows": leg.rows, "standings": Standings(format="Modern"),
+        "standings_rows": [], "next_event_label": "mercoledi",
+    })
+    assert "Vince Primo con Boros (4-0)" in testo
+    assert "pari punti" not in testo

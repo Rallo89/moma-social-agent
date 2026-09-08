@@ -6,7 +6,8 @@
   "player": "Chiara Gallo",
   "points": 57,
   "events_played": 2,
-  "delta": 1
+  "delta": 1,
+  "league": "lega-modern-2026"
  },
  {
   "format": "Modern",
@@ -15,7 +16,8 @@
   "player": "Ilaria Fontana",
   "points": 55,
   "events_played": 3,
-  "delta": 1
+  "delta": 1,
+  "league": "lega-modern-2026"
  },
  {
   "format": "Modern",
@@ -24,7 +26,8 @@
   "player": "Sara Conti",
   "points": 49,
   "events_played": 2,
-  "delta": 3
+  "delta": 3,
+  "league": "lega-modern-2026"
  },
  {
   "format": "Modern",
@@ -33,7 +36,8 @@
   "player": "Matteo Barbieri",
   "points": 44,
   "events_played": 4,
-  "delta": 1
+  "delta": 1,
+  "league": "lega-modern-2026"
  },
  {
   "format": "Modern",
@@ -42,7 +46,8 @@
   "player": "Andrea Costa",
   "points": 41,
   "events_played": 4,
-  "delta": 2
+  "delta": 2,
+  "league": "lega-modern-2026"
  },
  {
   "format": "Modern",
@@ -51,7 +56,8 @@
   "player": "Davide Greco",
   "points": 39,
   "events_played": 2,
-  "delta": 0
+  "delta": 0,
+  "league": "lega-modern-2026"
  },
  {
   "format": "Modern",
@@ -60,7 +66,8 @@
   "player": "Federica Lombardi",
   "points": 32,
   "events_played": 4,
-  "delta": 0
+  "delta": 0,
+  "league": "lega-modern-2026"
  },
  {
   "format": "Modern",
@@ -69,7 +76,8 @@
   "player": "Giulia Rossi",
   "points": 30,
   "events_played": 3,
-  "delta": 0
+  "delta": 0,
+  "league": "lega-modern-2026"
  },
  {
   "format": "Modern",
@@ -78,7 +86,8 @@
   "player": "Marco Bianchi",
   "points": 24,
   "events_played": 4,
-  "delta": -1
+  "delta": -1,
+  "league": "lega-modern-2026"
  },
  {
   "format": "Modern",
@@ -87,7 +96,8 @@
   "player": "Paolo Rizzo",
   "points": 21,
   "events_played": 2,
-  "delta": 0
+  "delta": 0,
+  "league": "lega-modern-2026"
  },
  {
   "format": "Modern",
@@ -96,7 +106,8 @@
   "player": "Luca Ferrari",
   "points": 18,
   "events_played": 2,
-  "delta": 1
+  "delta": 1,
+  "league": "lega-modern-2026"
  },
  {
   "format": "Modern",
@@ -105,7 +116,8 @@
   "player": "Elena Moretti",
   "points": 12,
   "events_played": 4,
-  "delta": 0
+  "delta": 0,
+  "league": "lega-modern-2026"
  },
  {
   "format": "Pioneer",
@@ -114,7 +126,8 @@
   "player": "Ilaria Fontana",
   "points": 57,
   "events_played": 4,
-  "delta": 0
+  "delta": 0,
+  "league": "lega-pioneer-2026"
  },
  {
   "format": "Pioneer",
@@ -123,7 +136,8 @@
   "player": "Marco Bianchi",
   "points": 52,
   "events_played": 4,
-  "delta": -1
+  "delta": -1,
+  "league": "lega-pioneer-2026"
  },
  {
   "format": "Pioneer",
@@ -132,7 +146,8 @@
   "player": "Giulia Rossi",
   "points": 51,
   "events_played": 3,
-  "delta": -3
+  "delta": -3,
+  "league": "lega-pioneer-2026"
  },
  {
   "format": "Pioneer",
@@ -141,7 +156,8 @@
   "player": "Luca Ferrari",
   "points": 46,
   "events_played": 4,
-  "delta": 1
+  "delta": 1,
+  "league": "lega-pioneer-2026"
  },
  {
   "format": "Pioneer",
@@ -150,7 +166,8 @@
   "player": "Federica Lombardi",
   "points": 40,
   "events_played": 4,
-  "delta": 3
+  "delta": 3,
+  "league": "lega-pioneer-2026"
  },
  {
   "format": "Pioneer",
@@ -159,7 +176,8 @@
   "player": "Davide Greco",
   "points": 37,
   "events_played": 3,
-  "delta": 0
+  "delta": 0,
+  "league": "lega-pioneer-2026"
  },
  {
   "format": "Pioneer",
@@ -168,7 +186,8 @@
   "player": "Sara Conti",
   "points": 35,
   "events_played": 3,
-  "delta": 2
+  "delta": 2,
+  "league": "lega-pioneer-2026"
  },
  {
   "format": "Pioneer",
@@ -177,7 +196,8 @@
   "player": "Elena Moretti",
   "points": 28,
   "events_played": 4,
-  "delta": -2
+  "delta": -2,
+  "league": "lega-pioneer-2026"
  },
  {
   "format": "Pioneer",
@@ -186,7 +206,8 @@
   "player": "Paolo Rizzo",
   "points": 26,
   "events_played": 4,
-  "delta": -2
+  "delta": -2,
+  "league": "lega-pioneer-2026"
  },
  {
   "format": "Pioneer",
@@ -195,7 +216,8 @@
   "player": "Andrea Costa",
   "points": 23,
   "events_played": 4,
-  "delta": -3
+  "delta": -3,
+  "league": "lega-pioneer-2026"
  },
  {
   "format": "Pioneer",
@@ -204,7 +226,8 @@
   "player": "Matteo Barbieri",
   "points": 16,
   "events_played": 2,
-  "delta": -1
+  "delta": -1,
+  "league": "lega-pioneer-2026"
  },
  {
   "format": "Pioneer",
@@ -213,7 +236,8 @@
   "player": "Chiara Gallo",
   "points": 15,
   "events_played": 4,
-  "delta": 1
+  "delta": 1,
+  "league": "lega-pioneer-2026"
  },
  {
   "format": "Pauper",
@@ -222,7 +246,8 @@
   "player": "Francesco Battilani",
   "points": 81,
   "events_played": 9,
-  "delta": 0
+  "delta": 0,
+  "league": "lega-pauper-2026"
  },
  {
   "format": "Pauper",
@@ -231,7 +256,8 @@
   "player": "Leonardo Pilo",
   "points": 76,
   "events_played": 9,
-  "delta": 1
+  "delta": 1,
+  "league": "lega-pauper-2026"
  },
  {
   "format": "Pauper",
@@ -240,7 +266,8 @@
   "player": "Antonio Fiore",
   "points": 72,
   "events_played": 8,
-  "delta": 1
+  "delta": 1,
+  "league": "lega-pauper-2026"
  },
  {
   "format": "Pauper",
@@ -249,7 +276,8 @@
   "player": "Emanuele Melotti",
   "points": 69,
   "events_played": 7,
-  "delta": -3
+  "delta": -3,
+  "league": "lega-pauper-2026"
  },
  {
   "format": "Pauper",
@@ -258,7 +286,8 @@
   "player": "Francesco Musto",
   "points": 65,
   "events_played": 6,
-  "delta": 3
+  "delta": 3,
+  "league": "lega-pauper-2026"
  },
  {
   "format": "Pauper",
@@ -267,7 +296,8 @@
   "player": "Giacomo Vandelli",
   "points": 59,
   "events_played": 7,
-  "delta": 0
+  "delta": 0,
+  "league": "lega-pauper-2026"
  },
  {
   "format": "Pauper",
@@ -276,7 +306,8 @@
   "player": "Vincenzo Pannarale",
   "points": 56,
   "events_played": 10,
-  "delta": -1
+  "delta": -1,
+  "league": "lega-pauper-2026"
  },
  {
   "format": "Pauper",
@@ -285,7 +316,8 @@
   "player": "Francesco Ferrari",
   "points": 51,
   "events_played": 8,
-  "delta": -3
+  "delta": -3,
+  "league": "lega-pauper-2026"
  },
  {
   "format": "Pauper",
@@ -294,7 +326,8 @@
   "player": "Luca Nobili",
   "points": 49,
   "events_played": 9,
-  "delta": 2
+  "delta": 2,
+  "league": "lega-pauper-2026"
  },
  {
   "format": "Pauper",
@@ -303,7 +336,8 @@
   "player": "Matteo Cassano",
   "points": 44,
   "events_played": 10,
-  "delta": 1
+  "delta": 1,
+  "league": "lega-pauper-2026"
  },
  {
   "format": "Pauper",
@@ -312,7 +346,8 @@
   "player": "Filippo Artioli",
   "points": 39,
   "events_played": 9,
-  "delta": 0
+  "delta": 0,
+  "league": "lega-pauper-2026"
  },
  {
   "format": "Pauper",
@@ -321,7 +356,8 @@
   "player": "Mattia Miceli",
   "points": 34,
   "events_played": 6,
-  "delta": -3
+  "delta": -3,
+  "league": "lega-pauper-2026"
  },
  {
   "format": "Pauper",
@@ -330,7 +366,8 @@
   "player": "Saverio Giulio Barbieri",
   "points": 32,
   "events_played": 10,
-  "delta": 2
+  "delta": 2,
+  "league": "lega-pauper-2026"
  },
  {
   "format": "Pauper",
@@ -339,7 +376,8 @@
   "player": "Samuel Meazzo",
   "points": 26,
   "events_played": 7,
-  "delta": -2
+  "delta": -2,
+  "league": "lega-pauper-2026"
  },
  {
   "format": "Pauper",
@@ -348,7 +386,8 @@
   "player": "Giacomo Cavazzuti",
   "points": 24,
   "events_played": 10,
-  "delta": 1
+  "delta": 1,
+  "league": "lega-pauper-2026"
  },
  {
   "format": "Pauper",
@@ -357,6 +396,7 @@
   "player": "Michael Ghiselli",
   "points": 18,
   "events_played": 6,
-  "delta": -3
+  "delta": -3,
+  "league": "lega-pauper-2026"
  }
 ]
