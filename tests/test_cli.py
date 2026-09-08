@@ -141,6 +141,9 @@ def test_settimana_genera_un_post_per_giornata(cfg, capsys):
     assert "Settimana 9 - 15 marzo" in out
     assert "3 post su 7 giornate" in out      # 11, 12 e 13 marzo
     assert "4 senza tappe" in out
+    # Le giornate vuote dichiarano il perche': senza motivo non si distingue
+    # "non si e' giocato" da "si e' giocato ma la vista non ha righe".
+    assert "Nessun risultato per la tappa del 2026-03-09" in out
 
 
 def test_settimana_senza_tappe(cfg, capsys):
@@ -168,5 +171,6 @@ def test_settimana_prosegue_dopo_una_giornata_fallita(cfg, monkeypatch, capsys):
                       "--no-publish", "--no-standings"])
     catturato = capsys.readouterr()
     assert esito == cli.EXIT_ERROR                    # la giornata persa si dichiara
-    assert "2 post su 7 giornate" in catturato.out    # le altre sono uscite
+    # Il fallimento si conta a parte: non deve travestirsi da giorno di riposo.
+    assert "2 post su 7 giornate (4 senza tappe, 1 fallita)" in catturato.out
     assert "1 giornate fallite" in catturato.err

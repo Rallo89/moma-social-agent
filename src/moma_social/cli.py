@@ -87,19 +87,24 @@ def _post_di_una_settimana(cfg, pipeline, kwargs, args, day) -> int:
             print()
 
     icone = {"drafted": "[gen]", "published": "[pub]", "dry-run": "[test]",
-             "skipped": "[skip]", "error": "[err]"}
-    # Una giornata fallita non e' un post prodotto: compare nell'elenco, non
-    # nel conteggio.
-    mostrati = [(g, e, n) for g, e, n in esiti if e != "no-data"]
-    prodotti = [riga for riga in mostrati if riga[1] != "error"]
+             "skipped": "[skip]", "error": "[err]", "no-data": "[   ]"}
+    # Ogni giornata compare nell'elenco con il suo perche': un giorno senza
+    # post e' un'informazione, non silenzio. Solo i post davvero prodotti
+    # entrano nel conteggio.
+    prodotti = [riga for riga in esiti if riga[1] not in ("no-data", "error")]
     print("-" * 60)
-    for giorno, esito, nota in mostrati:
+    for giorno, esito, nota in esiti:
         print(f"{icone.get(esito, '     ')} {giorno.isoformat()}  {esito}"
               + (f"  {nota}" if nota else ""))
-    print(f"\n{len(prodotti)} post su {len(esiti)} giornate "
-          f"({len(esiti) - len(prodotti)} senza tappe)")
-
+    # Un giorno fallito non e' un giorno senza tappe: le due cose si contano
+    # separate, altrimenti una sorgente giu' si traveste da settimana tranquilla.
+    senza = [riga for riga in esiti if riga[1] == "no-data"]
     falliti = [g for g, e, _ in esiti if e == "error"]
+    print(f"\n{len(prodotti)} post su {len(esiti)} giornate "
+          f"({len(senza)} senza tappe"
+          + (f", {len(falliti)} fallit{'a' if len(falliti) == 1 else 'e'}"
+             if falliti else "") + ")")
+
     if falliti:
         print(f"{len(falliti)} giornate fallite: "
               f"{', '.join(g.isoformat() for g in falliti)}", file=sys.stderr)
