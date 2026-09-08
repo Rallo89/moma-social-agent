@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #0d0f10; }
+  a { color: #a9d227; text-decoration: none; }
+  a:hover { color: #ffffff; }
+</style>
+</helmet>
+
+<div style="width: 1080px; height: 1080px; position: relative; overflow: hidden; background: #14171a; color: #f2f4f0; display: flex; flex-direction: column; font-family: 'Barlow Condensed', sans-serif;">
+  <img src="assets/triangoli.png" alt="" style="position: absolute; top: -90px; left: -80px; height: 900px; opacity: 0.3; transform: rotate(-6deg);">
+  <div style="position: absolute; top: 0; right: 0; width: 100%; height: 100%; background: linear-gradient(115deg, rgba(20,23,26,0) 42%, #14171a 62%);"></div>
+
+  <div style="position: relative; padding: 58px 64px 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;">
+    <img src="assets/logo-modena-magic.png" alt="Modena Magic" style="width: 168px;">
+    <div data-slot="KICKER" style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 15px; line-height: 2; letter-spacing: 0.2em; text-transform: uppercase; color: #8b9490;">{{KICKER_RIGA_1}}<br>{{KICKER_RIGA_2}}</div>
+  </div>
+
+  <div style="position: relative; flex: 1; padding: 0 64px; display: flex; flex-direction: column; justify-content: center; gap: 30px;">
+    <div data-slot="FORMATO" style="align-self: flex-start; background: #a9d227; color: #14171a; font-weight: 700; font-size: 30px; letter-spacing: 0.2em; text-transform: uppercase; padding: 9px 22px;">{{FORMATO}}</div>
+    <div data-slot="TITOLO" style="font-family: 'Bebas Neue', sans-serif; font-size: 190px; line-height: 0.82; letter-spacing: 0.005em; text-wrap: balance;">{{TITOLO}}</div>
+    <div style="display: flex; align-items: stretch; gap: 34px; margin-top: 8px;">
+      <div style="width: 3px; background: #a9d227;"></div>
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div style="display: flex; flex-direction: column;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: 0.24em; text-transform: uppercase; color: #a9d227;">Quando</span>
+          <span data-slot="QUANDO" style="font-weight: 600; font-size: 46px; letter-spacing: 0.03em; text-transform: uppercase;">{{QUANDO}}</span>
+        </div>
+        <div style="display: flex; flex-direction: column;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: 0.24em; text-transform: uppercase; color: #a9d227;">Dove</span>
+          <span data-slot="DOVE" style="font-weight: 600; font-size: 46px; letter-spacing: 0.03em; text-transform: uppercase;">{{DOVE}}</span>
+        </div>
+        <div style="display: flex; flex-direction: column;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: 0.24em; text-transform: uppercase; color: #a9d227;">Iscrizione</span>
+          <span data-slot="QUOTA" style="font-weight: 600; font-size: 46px; letter-spacing: 0.03em; text-transform: uppercase;">{{QUOTA}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="position: relative; padding: 0 64px 46px; display: flex; align-items: center; justify-content: space-between; gap: 28px;">
+    <div style="display: flex; align-items: center; gap: 22px;">
+      <div data-slot="QR" style="width: 128px; height: 128px; background: #f2f4f0; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.5; text-align: center; color: #14171a; letter-spacing: 0.06em;">QR<br>iscrizioni</div>
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <span style="font-weight: 700; font-size: 32px; letter-spacing: 0.08em; text-transform: uppercase; color: #a9d227;">Iscriviti</span>
+        <span data-slot="LINK" style="font-family: 'JetBrains Mono', monospace; font-size: 17px; color: #d5dad6;">{{LINK}}</span>
+      </div>
+    </div>
+    <img src="assets/unocritico.png" alt="Uno Critico" style="height: 84px;">
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1080,&quot;height&quot;:1080}}"></script>
+</body>
+</html>

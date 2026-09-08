@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600;700&family=Anton&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #0d0f10; }
+  a { color: #a9d227; text-decoration: none; }
+  a:hover { color: #ffffff; }
+</style>
+</helmet>
+
+<section style="padding: 64px; display: flex; flex-direction: column; gap: 40px; font-family: 'Space Grotesk', sans-serif;">
+  <div style="display: flex; flex-direction: column; gap: 8px; color: #f2f4f0;">
+    <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: #a9d227;">Turno 1 — due direzioni</div>
+    <div style="font-size: 15px; color: #8b9490; max-width: 620px;">Ogni direzione include il template classifica e il template evento, 1080×1080. Scrivimi <a href="#1a">1a</a> o <a href="#1b">1b</a> per continuare su una delle due.</div>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 56px;">
+
+    <div id="1a" style="display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; background: #a9d227; color: #0d0f10; padding: 4px 9px; border-radius: 3px;">1a</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #8b9490;">Evoluzione — notturno, condensato</span>
+      </div>
+      <div style="display: flex; gap: 24px;">
+
+        <div style="width: 1080px; height: 1080px; position: relative; overflow: hidden; background: #14171a; color: #f2f4f0; display: flex; flex-direction: column;">
+          <img src="assets/triangoli.png" alt="" style="position: absolute; top: -60px; right: -70px; height: 780px; opacity: 0.32; transform: rotate(8deg);">
+          <img src="assets/triangoli.png" alt="" style="position: absolute; bottom: -180px; left: -120px; height: 620px; opacity: 0.14; transform: rotate(-165deg);">
+          <div style="position: absolute; top: 0; left: 0; width: 14px; height: 100%; background: #a9d227;"></div>
+
+          <div style="position: relative; padding: 62px 64px 0 92px; display: flex; justify-content: space-between; align-items: flex-start; gap: 32px;">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 20px; letter-spacing: 0.3em; text-transform: uppercase; color: #a9d227;">Classifica</div>
+              <div style="font-family: 'Bebas Neue', sans-serif; font-size: 104px; line-height: 0.86; letter-spacing: 0.01em;">Torneo Modern</div>
+              <div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 34px; letter-spacing: 0.12em; text-transform: uppercase; color: #b6bfba;">Modern Fall — Tappa 1</div>
+            </div>
+            <img src="assets/logo-modena-magic.png" alt="Modena Magic" style="width: 186px; flex: none;">
+          </div>
+
+          <div style="position: relative; margin: 46px 64px 0 92px; height: 3px; background: #a9d227;"></div>
+
+          <div style="position: relative; flex: 1; padding: 34px 64px 0 92px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 56px; align-content: start;">
+            <div style="display: flex; flex-direction: column;">
+              <sc-for list="{{ colA }}" as="g" hint-placeholder-count="8">
+                <div style="display: grid; grid-template-columns: 62px 1fr auto; align-items: baseline; gap: 16px; padding: 13px 0; border-bottom: 1px solid rgba(242,244,240,0.12);">
+                  <div style="font-family: 'Bebas Neue', sans-serif; font-size: 42px; color: #a9d227; line-height: 1;">{{ g.pos }}</div>
+                  <div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 34px; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1.05;">{{ g.nome }}</div>
+                  <div style="font-family: 'Bebas Neue', sans-serif; font-size: 38px; line-height: 1;">{{ g.punti }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display: flex; flex-direction: column;">
+              <sc-for list="{{ colB }}" as="g" hint-placeholder-count="8">
+                <div style="display: grid; grid-template-columns: 62px 1fr auto; align-items: baseline; gap: 16px; padding: 13px 0; border-bottom: 1px solid rgba(242,244,240,0.12);">
+                  <div style="font-family: 'Bebas Neue', sans-serif; font-size: 42px; color: #a9d227; line-height: 1;">{{ g.pos }}</div>
+                  <div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 34px; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1.05;">{{ g.nome }}</div>
+                  <div style="font-family: 'Bebas Neue', sans-serif; font-size: 38px; line-height: 1;">{{ g.punti }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="position: relative; padding: 0 64px 44px 92px; display: flex; align-items: center; justify-content: space-between; gap: 24px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 22px; letter-spacing: 0.22em; color: #a9d227;">#modenamagic</div>
+            <div style="display: flex; align-items: center; gap: 18px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; letter-spacing: 0.2em; text-transform: uppercase; color: #a0a9a4;">Casa del gioco</span>
+              <img src="assets/unocritico.png" alt="Uno Critico" style="height: 76px;">
+            </div>
+          </div>
+        </div>
+
+        <div style="width: 1080px; height: 1080px; position: relative; overflow: hidden; background: #14171a; color: #f2f4f0; display: flex; flex-direction: column;">
+          <img src="assets/triangoli.png" alt="" style="position: absolute; top: -90px; left: -80px; height: 900px; opacity: 0.3; transform: rotate(-6deg);">
+          <div style="position: absolute; top: 0; right: 0; width: 100%; height: 100%; background: linear-gradient(115deg, rgba(20,23,26,0) 42%, #14171a 62%);"></div>
+
+          <div style="position: relative; padding: 58px 64px 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;">
+            <img src="assets/logo-modena-magic.png" alt="Modena Magic" style="width: 168px;">
+            <div style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 15px; line-height: 2; letter-spacing: 0.2em; text-transform: uppercase; color: #8b9490;">Evento settimanale<br>Modena</div>
+          </div>
+
+          <div style="position: relative; flex: 1; padding: 0 64px; display: flex; flex-direction: column; justify-content: center; gap: 30px;">
+            <div style="align-self: flex-start; background: #a9d227; color: #14171a; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 30px; letter-spacing: 0.2em; text-transform: uppercase; padding: 9px 22px;">{{ formato }}</div>
+            <div style="font-family: 'Bebas Neue', sans-serif; font-size: 190px; line-height: 0.82; letter-spacing: 0.005em; text-wrap: balance;">{{ titoloEvento }}</div>
+            <div style="display: flex; align-items: stretch; gap: 34px; margin-top: 8px;">
+              <div style="width: 3px; background: #a9d227;"></div>
+              <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div style="display: flex; flex-direction: column;">
+                  <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: 0.24em; text-transform: uppercase; color: #a9d227;">Quando</span>
+                  <span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 46px; letter-spacing: 0.03em; text-transform: uppercase;">{{ quando }}</span>
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                  <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: 0.24em; text-transform: uppercase; color: #a9d227;">Dove</span>
+                  <span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 46px; letter-spacing: 0.03em; text-transform: uppercase;">{{ dove }}</span>
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                  <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: 0.24em; text-transform: uppercase; color: #a9d227;">Iscrizione</span>
+                  <span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 46px; letter-spacing: 0.03em; text-transform: uppercase;">{{ quota }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="position: relative; padding: 0 64px 46px; display: flex; align-items: center; justify-content: space-between; gap: 28px;">
+            <div style="display: flex; align-items: center; gap: 22px;">
+              <div style="width: 128px; height: 128px; background: #f2f4f0; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.5; text-align: center; color: #14171a; letter-spacing: 0.06em;">QR<br>iscrizioni</div>
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 32px; letter-spacing: 0.08em; text-transform: uppercase; color: #a9d227;">Iscriviti</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 17px; color: #d5dad6;">{{ link }}</span>
+              </div>
+            </div>
+            <img src="assets/unocritico.png" alt="Uno Critico" style="height: 84px;">
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div id="1b" style="display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; background: #a9d227; color: #0d0f10; padding: 4px 9px; border-radius: 3px;">1b</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #8b9490;">Rinfrescata — chiaro, editoriale, blocchi verdi</span>
+      </div>
+      <div style="display: flex; gap: 24px;">
+
+        <div style="width: 1080px; height: 1080px; position: relative; overflow: hidden; background: #f1f3ee; color: #14171a; display: flex; flex-direction: column;">
+          <img src="assets/triangoli.png" alt="" style="position: absolute; bottom: -120px; right: -90px; height: 760px; opacity: 0.5;">
+
+          <div style="position: relative; background: #14171a; color: #f2f4f0; padding: 46px 56px; display: flex; align-items: center; justify-content: space-between; gap: 32px;">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 17px; letter-spacing: 0.26em; text-transform: uppercase; color: #a9d227;">Classifica</div>
+              <div style="font-family: 'Anton', sans-serif; font-size: 76px; line-height: 0.9; text-transform: uppercase; letter-spacing: -0.005em;">{{ titoloClassifica }}</div>
+              <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 24px; letter-spacing: 0.04em; color: #b6bfba;">{{ sottotitoloClassifica }}</div>
+            </div>
+            <img src="assets/logo-modena-magic.png" alt="Modena Magic" style="width: 172px; flex: none;">
+          </div>
+
+          <div style="position: relative; flex: 1; padding: 40px 56px 0; display: grid; grid-template-columns: 1fr 1fr; column-gap: 44px; align-content: start;">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <sc-for list="{{ colA }}" as="g" hint-placeholder-count="8">
+                <div style="display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 14px; background: #ffffff; padding: 12px 18px;">
+                  <div style="font-family: 'Anton', sans-serif; font-size: 30px; color: #6f9a17; line-height: 1;">{{ g.pos }}</div>
+                  <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 26px; letter-spacing: 0.01em; text-transform: uppercase; line-height: 1.1;">{{ g.nome }}</div>
+                  <div style="font-family: 'Anton', sans-serif; font-size: 28px; line-height: 1;">{{ g.punti }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <sc-for list="{{ colB }}" as="g" hint-placeholder-count="8">
+                <div style="display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 14px; background: #ffffff; padding: 12px 18px;">
+                  <div style="font-family: 'Anton', sans-serif; font-size: 30px; color: #6f9a17; line-height: 1;">{{ g.pos }}</div>
+                  <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 26px; letter-spacing: 0.01em; text-transform: uppercase; line-height: 1.1;">{{ g.nome }}</div>
+                  <div style="font-family: 'Anton', sans-serif; font-size: 28px; line-height: 1;">{{ g.punti }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="position: relative; padding: 34px 56px 44px; display: flex; align-items: center; justify-content: space-between; gap: 24px;">
+            <div style="background: #a9d227; color: #14171a; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 20px; letter-spacing: 0.16em; padding: 10px 20px;">#modenamagic</div>
+            <img src="assets/unocritico.png" alt="Uno Critico" style="height: 78px;">
+          </div>
+        </div>
+
+        <div style="width: 1080px; height: 1080px; position: relative; overflow: hidden; background: #f1f3ee; color: #14171a; display: flex; flex-direction: column;">
+          <div style="position: absolute; top: 0; right: 0; width: 300px; height: 100%; background: #a9d227;"></div>
+          <img src="assets/triangoli.png" alt="" style="position: absolute; top: 40px; right: -60px; height: 1000px; opacity: 0.55;">
+
+          <div style="position: relative; margin: 56px 56px 0; background: #14171a; padding: 30px 36px; display: flex; align-items: center; justify-content: space-between; gap: 28px; width: 620px;">
+            <img src="assets/logo-modena-magic.png" alt="Modena Magic" style="width: 150px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 14px; line-height: 1.9; letter-spacing: 0.2em; text-transform: uppercase; color: #a9d227; text-align: right;">Ogni settimana<br>a Modena</div>
+          </div>
+
+          <div style="position: relative; flex: 1; padding: 48px 56px 0; display: flex; flex-direction: column; gap: 26px; max-width: 720px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 19px; letter-spacing: 0.26em; text-transform: uppercase; color: #6f9a17;">{{ formato }}</div>
+            <div style="font-family: 'Anton', sans-serif; font-size: 150px; line-height: 0.84; text-transform: uppercase; letter-spacing: -0.01em; text-wrap: balance;">{{ titoloEvento }}</div>
+            <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 10px;">
+              <div style="display: grid; grid-template-columns: 190px 1fr; align-items: baseline; gap: 18px; background: #ffffff; padding: 16px 22px;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: 0.2em; text-transform: uppercase; color: #6f7873;">Quando</span>
+                <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 34px; text-transform: uppercase; letter-spacing: 0.01em;">{{ quando }}</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 190px 1fr; align-items: baseline; gap: 18px; background: #ffffff; padding: 16px 22px;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: 0.2em; text-transform: uppercase; color: #6f7873;">Dove</span>
+                <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 34px; text-transform: uppercase; letter-spacing: 0.01em;">{{ dove }}</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 190px 1fr; align-items: baseline; gap: 18px; background: #ffffff; padding: 16px 22px;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: 0.2em; text-transform: uppercase; color: #6f7873;">Iscrizione</span>
+                <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 34px; text-transform: uppercase; letter-spacing: 0.01em;">{{ quota }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="position: relative; padding: 0 56px 48px; display: flex; align-items: flex-end; justify-content: space-between; gap: 28px;">
+            <div style="display: flex; align-items: center; gap: 20px;">
+              <div style="width: 124px; height: 124px; background: #14171a; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.5; text-align: center; color: #a9d227; letter-spacing: 0.06em;">QR<br>iscrizioni</div>
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 28px; letter-spacing: 0.06em; text-transform: uppercase;">Iscriviti</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 16px; color: #4c5450;">{{ link }}</span>
+              </div>
+            </div>
+            <div style="background: #14171a; padding: 16px 22px; display: flex; align-items: center;">
+              <img src="assets/unocritico.png" alt="Uno Critico" style="height: 74px;">
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;titoloClassifica&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Torneo Modern&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Classifica&quot;},&quot;sottotitoloClassifica&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Modern Fall — Tappa 1&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Classifica&quot;},&quot;giocatori&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{pos:number,nome:string,punti:number}[]&quot;,&quot;section&quot;:&quot;Classifica&quot;},&quot;titoloEvento&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Giovedì Modern&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Evento&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Modern · Torneo settimanale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Evento&quot;},&quot;quando&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Giovedì 24 settembre, 20:30&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Evento&quot;},&quot;dove&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Uno Critico — Modena&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Evento&quot;},&quot;quota&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;10 € · include buste&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Evento&quot;},&quot;link&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;modenamagic.it/iscrizioni&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Evento&quot;}}">
+const DEFAULT = [
+  ["Tianguang Liu", 10], ["Alessandro Solmi", 10], ["Paolo Bini", 9], ["Jay Jasper Flores", 9],
+  ["Luigi Esposito", 9], ["Matteo Montorsi", 6], ["Pietro Maria Oltolina", 6], ["Giacomo Becchi", 6],
+  ["guidolombardo13", 6], ["mmiceli994", 6], ["Davide Pulcini", 4], ["Giacomo Franchini", 4],
+  ["Giorgio Colautti", 3], ["Pietro Malferrari", 3], ["matteoferraresi07", 3], ["Andrea Zanetti", 0]
+].map((r, i) => ({ pos: i + 1, nome: r[0], punti: r[1] }));
+
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const lista = (p.giocatori && p.giocatori.length ? p.giocatori : DEFAULT).slice(0, 32);
+    const half = Math.ceil(lista.length / 2);
+    return {
+      colA: lista.slice(0, half),
+      colB: lista.slice(half),
+      titoloClassifica: p.titoloClassifica ?? "Torneo Modern",
+      sottotitoloClassifica: p.sottotitoloClassifica ?? "Modern Fall — Tappa 1",
+      titoloEvento: p.titoloEvento ?? "Giovedì Modern",
+      formato: p.formato ?? "Modern · Torneo settimanale",
+      quando: p.quando ?? "Giovedì 24 settembre, 20:30",
+      dove: p.dove ?? "Uno Critico — Modena",
+      quota: p.quota ?? "10 € · include buste",
+      link: p.link ?? "modenamagic.it/iscrizioni"
+    };
+  }
+}
+
+</script>
+</body>
+</html>
