@@ -213,3 +213,40 @@ def test_agenda_mostra_il_titolo_della_card_e_la_quota(cfg, capsys, monkeypatch)
     out = capsys.readouterr().out
     assert "Modern Fall 2026 · Tappa 2" in out    # non il nome grezzo
     assert "10 €" in out                          # non "10.00"
+
+
+def test_media_test_riconosce_un_hosting_che_non_serve_immagini(cfg, monkeypatch,
+                                                                capsys, tmp_path):
+    """Un 200 che non e' un'immagine e' quasi sempre una pagina di login."""
+    from moma_social import cli as modulo
+
+    png = tmp_path / "slide.png"
+    png.write_bytes(b"\x89PNG\r\n\x1a\n" + b"0" * 100)
+    monkeypatch.setattr("moma_social.uploader.upload",
+                        lambda cfg_, path: "https://esempio.invalid/slide.png")
+
+    class Risposta:
+        status_code = 200
+        headers = {"Content-Type": "text/html", "Content-Length": "512"}
+
+    monkeypatch.setattr("requests.get", lambda *a, **k: Risposta())
+    esito = modulo.main(["media-test", "--file", str(png)])
+    assert esito == cli.EXIT_ERROR
+    assert "Content-Type" in capsys.readouterr().err
+
+
+def test_media_test_promuove_un_hosting_corretto(cfg, monkeypatch, capsys, tmp_path):
+    from moma_social import cli as modulo
+
+    png = tmp_path / "slide.png"
+    png.write_bytes(b"\x89PNG\r\n\x1a\n" + b"0" * 100)
+    monkeypatch.setattr("moma_social.uploader.upload",
+                        lambda cfg_, path: "https://cdn.esempio.invalid/slide.png")
+
+    class Risposta:
+        status_code = 200
+        headers = {"Content-Type": "image/png", "Content-Length": "108"}
+
+    monkeypatch.setattr("requests.get", lambda *a, **k: Risposta())
+    assert modulo.main(["media-test", "--file", str(png)]) == cli.EXIT_OK
+    assert "Instagram riuscirebbe" in capsys.readouterr().out

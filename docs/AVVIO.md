@@ -104,6 +104,8 @@ Verifica: rigenerate e **guardate i PNG**.
 ```bash
 momasocial weekly  --no-publish
 momasocial monthly --no-publish   # calendario del mese successivo
+
+# Per mettere in linea hosting e Instagram: docs/PUBBLICAZIONE.md
 momasocial format  --no-publish
 momasocial results --no-publish
 ```

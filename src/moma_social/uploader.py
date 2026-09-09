@@ -2,7 +2,7 @@
 
 La Content Publishing API di Instagram non accetta upload binari: scarica
 l'immagine da un URL pubblico. I PNG generati vanno quindi esposti su HTTP
-prima della pubblicazione. Tre backend, uno solo attivo per volta.
+prima della pubblicazione. Due backend, uno solo attivo per volta.
 """
 
 from __future__ import annotations

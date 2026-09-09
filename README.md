@@ -86,6 +86,8 @@ Il repo e' attrezzato come progetto Claude Code:
 
 - **Skill** — `social-mtg` (piano editoriale), `template-grafici`,
   `sorgenti-dati`, `instagram-publishing`
+- **Guida alla messa in linea** — `docs/PUBBLICAZIONE.md`: hosting delle
+  immagini e credenziali Instagram, passo per passo
 - **Slash command** — `/post-calendario`, `/post-mensile`, `/post-formato`,
   `/post-risultati`, `/social-check`, `/rivedi-post`
 - **Subagent** — `revisore-social` (QA su slide e caption),

@@ -188,6 +188,65 @@ def cmd_gate(args) -> int:
     return EXIT_OK
 
 
+def cmd_media_test(args) -> int:
+    """Carica un PNG sull'hosting e verifica che sia scaricabile davvero.
+
+    E' il collaudo che separa i due problemi: se il file si carica ma non si
+    scarica, l'errore e' nell'hosting e non ha senso cercarlo su Instagram.
+    Meta scarica l'immagine da un URL pubblico, senza credenziali: se non
+    riesce a prenderla, il container va in ERROR con un messaggio generico.
+    """
+    import requests
+
+    from .uploader import upload
+
+    cfg = config.load(args.config)
+    if args.file:
+        path = Path(args.file)
+    else:
+        out = cfg.resolve_path(cfg.get("render.output_dir", "out"))
+        png = sorted(out.rglob("*.png"), key=lambda p: p.stat().st_mtime)
+        if not png:
+            raise ConfigError(
+                f"Nessun PNG in {out}: genera prima un post "
+                "(momasocial weekly --no-publish) o passa --file."
+            )
+        path = png[-1]
+    if not path.exists():
+        raise ConfigError(f"File inesistente: {path}")
+
+    backend = cfg.get("media.backend", "none")
+    print(f"Backend: {backend}")
+    print(f"File:    {path} ({path.stat().st_size / 1024:.0f} KB)")
+
+    url = upload(cfg, path)
+    print(f"URL:     {url}")
+
+    # La verifica va fatta senza credenziali, come la fa Meta.
+    try:
+        risposta = requests.get(url, timeout=60, stream=True)
+    except requests.RequestException as exc:
+        print(f"[errore] l'URL non e' raggiungibile: {exc}", file=sys.stderr)
+        return EXIT_ERROR
+
+    tipo = risposta.headers.get("Content-Type", "")
+    lunghezza = risposta.headers.get("Content-Length", "?")
+    print(f"Risposta: {risposta.status_code} · {tipo} · {lunghezza} byte")
+
+    if risposta.status_code != 200:
+        print(f"[errore] Meta si aspetta 200, ha ricevuto {risposta.status_code}: "
+              "l'oggetto non e' pubblico o l'URL e' sbagliato.", file=sys.stderr)
+        return EXIT_ERROR
+    if not tipo.startswith("image/"):
+        print(f"[errore] Content-Type '{tipo}' invece di image/*: quasi sempre "
+              "una pagina di login o un errore travestito da 200.",
+              file=sys.stderr)
+        return EXIT_ERROR
+
+    print("\nOK: Instagram riuscirebbe a scaricare questa immagine.")
+    return EXIT_OK
+
+
 def cmd_doctor(args) -> int:
     """Diagnosi completa: config, sorgenti dati, rendering, credenziali."""
     cfg = config.load(args.config)
@@ -450,6 +509,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--weekday", type=int, default=None, help="0=lunedi ... 6=domenica")
     p.add_argument("--day-of-month", type=int, default=None, dest="day_of_month",
                    help="giorno del mese; nei mesi piu' corti vale l'ultimo")
+
+    p = sub.add_parser("media-test",
+                       help="carica un PNG sull'hosting e verifica che sia scaricabile")
+    p.set_defaults(func=cmd_media_test)
+    p.add_argument("--file", default="",
+                   help="PNG da caricare (default: l'ultimo generato in out/)")
 
     p = sub.add_parser("doctor", help="diagnosi di configurazione, dati e credenziali")
     p.set_defaults(func=cmd_doctor)
