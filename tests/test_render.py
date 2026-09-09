@@ -266,3 +266,22 @@ def test_card_riepilogo_si_renderizza(cfg):
                   size=(1080, 1080))
     scale = cfg.get("render.scale")
     assert _size(path) == (1080 * scale, 1080 * scale)
+
+
+@pytest.mark.slow
+def test_card_classifica_si_renderizza(cfg):
+    """Sedici nomi su due colonne devono restare dentro la slide."""
+    from moma_social.models import StandingRow
+
+    contesto = {
+        "kicker_1": "Classifica generale", "kicker_2": "1/2",
+        "badge": "Pauper", "sopratitolo": "", "titolo": "Classifica",
+        "righe": [StandingRow(rank=i, player=f"Giocatore Numero {i}",
+                              points=str(90 - i * 3)) for i in range(1, 17)],
+        "link": "modena-magic.vercel.app/tornei", "invito": "Iscriviti",
+        "qr_image": "", "background": "", "density": "",
+    }
+    path = render(cfg, "classifica.html.j2", contesto, "test-classifica",
+                  size=(1080, 1080))
+    scale = cfg.get("render.scale")
+    assert _size(path) == (1080 * scale, 1080 * scale)

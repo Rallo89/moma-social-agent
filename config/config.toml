@@ -192,7 +192,9 @@ expiration  = 0                            # secondi; 0 = mai
 hashtags_base   = ["#modenamagic", "#magicthegathering", "#mtg", "#tcg"]
 # Nome del torneo mostrato nel titolo della grafica. {format} = formato di gioco.
 tournament_name = "Torneo {format}"
-standings_subtitle = "Classifica generale"
+leg_kicker         = "Risultati di tappa"   # occhiello della slide tappa
+standings_subtitle = "Classifica generale"  # occhiello della slide classifica
+standings_title    = "Classifica"           # titolo grande della slide classifica
 hashtag_grafica = "#modenamagic"          # hashtag stampato in fondo alla slide
 hashtags_max    = 20
 caption_max     = 2200          # limite Instagram
@@ -298,7 +300,7 @@ height           = 1080
 [posts.leg_results]
 # Il template grafico dell'associazione e' quadrato e vale per entrambe le
 # slide del carosello: cambiano solo titolo, sottotitolo e righe.
-image_templates  = ["standings_2col.html.j2", "standings_2col.html.j2"]
+image_templates  = ["classifica.html.j2", "classifica.html.j2"]
 width            = 1080
 height           = 1080
 # Stessa grafica per entrambe le slide del carosello.

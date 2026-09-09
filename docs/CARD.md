@@ -1,14 +1,30 @@
 # Le card
 
-Grafica di due dei tre post: il **calendario del lunedì** e il **formato del
-giorno**.
+Grafica di tutti e tre i post: il **calendario del lunedì**, il **formato del
+giorno** e il **carosello dei risultati**.
 
-Il lunedì esce un carosello: la prima slide è la **card di riepilogo**
-(`settimana.html.j2`) con tutte le serate in elenco, poi una **card evento**
-(`evento.html.j2`) per ogni serata. Le due condividono la cornice
-(`_carta.html.j2`): fondo, trama, occhiello, filo lime, piede. Cambia solo il
-centro, così non possono divergere. `riepilogo = false` in
-`[posts.weekly_calendar]` lascia il solo carosello di card.
+Tre template, una cornice sola (`_carta.html.j2`): fondo, trama, occhiello,
+filo lime, piede. Cambia solo il centro, così non possono divergere e un
+ritocco al disegno vale per tutti.
+
+| Template | Dove | Centro |
+|---|---|---|
+| `settimana.html.j2` | prima slide del lunedì | elenco delle serate |
+| `evento.html.j2` | lunedì e mercoledì/giovedì | una serata, in grande |
+| `classifica.html.j2` | giovedì e venerdì | nomi e punti su due colonne |
+
+Il lunedì esce un carosello: prima il riepilogo, poi una card per serata.
+`riepilogo = false` in `[posts.weekly_calendar]` lascia il solo carosello di
+card.
+
+Nel carosello dei risultati il badge è il formato, l'occhiello dice di cosa si
+tratta (`Risultati di tappa` / `Classifica generale`) e il titolo grande è
+`Tappa N` — lo stesso che compare sul calendario, letto dal nome del torneo,
+così i due post si riconoscono come la stessa cosa.
+
+`standings_2col.html.j2`, la grafica su sfondo Canva, resta nel repo e si
+riattiva da `image_templates` in `[posts.leg_results]`: è superata, non
+cancellata.
 
 Nel riepilogo ogni riga porta il formato in testa — `Modern · Tappa 2` — perché
 in un calendario è quello che si cerca; se il nome dell'evento lo dice già

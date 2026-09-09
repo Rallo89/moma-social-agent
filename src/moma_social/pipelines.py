@@ -12,7 +12,7 @@ import datetime as dt
 from .captions import render_caption
 from .config import Config
 from .errors import MtgSocialError, NoDataError
-from .models import PostDraft, Standings, format_fee
+from .models import PostDraft, Standings, format_fee, stage_from_title
 from .render import post_size, render
 from .repos import (
     events_by_day,
@@ -419,30 +419,54 @@ def _post_di_tappa(cfg: Config, day: dt.date, leg, senza_classifica: bool) -> Po
     )
     hashtag = cfg.get("content.hashtag_grafica", "")
 
-    def _slide(template, kind, etichetta, pagina, indice, totale, contesto):
+    def _slide(template, kind, etichetta, pagina, indice, totale, contesto, titolo):
         # Il numero di pagina compare solo quando ce n'e' piu' di una.
-        suffisso = f" · {indice + 1}/{totale}" if totale > 1 else ""
+        suffisso = f"{indice + 1}/{totale}" if totale > 1 else fmt_date(day)
         nome = _stamp(cfg, etichetta, day, leg.format.lower().replace(" ", "-"))
         return render(
             cfg, template,
-            {"leg": leg, "standings": standings, "title": torneo,
+            {# La cornice comune: gli stessi slot delle card del calendario.
+             "kicker_1": contesto, "kicker_2": suffisso,
+             "badge": leg.format, "sopratitolo": "", "titolo": titolo,
+             "righe": pagina,
+             "link": _senza_schema(cfg.get("content.evento.link", "")),
+             "invito": cfg.get("content.evento.invito", "Iscriviti"),
+             "qr_image": cfg.get("content.evento.qr", ""),
+             # Serviti al vecchio template su sfondo Canva, ancora disponibile:
+             # li' il sottotitolo diceva la tappa, non l'occhiello.
+             "leg": leg, "standings": standings, "title": torneo,
              "hashtag": hashtag, "rows": pagina,
              "row_style": cfg.get("posts.leg_results.row_style", "strip"),
-             "subtitle": contesto + suffisso,
+             "subtitle": ((titolo if kind == "leg_results" else contesto)
+                          + (f" · {indice + 1}/{totale}" if totale > 1 else "")),
              "background": _background(cfg, kind) or background,
              "density": _density(len(pagina))},
             f"{nome}-{indice + 1}" if totale > 1 else nome,
             size=post_size(cfg, kind),
         )
 
+    # "Modern Fall tappa 1" diventa "Tappa 1": lo stesso titolo standard delle
+    # card del calendario, cosi' i due post si riconoscono come la stessa cosa.
+    numero, finale = stage_from_title(leg.leg)
+    if finale:
+        titolo_tappa = cfg.get("content.evento.titolo_finale", "Finale")
+    elif numero:
+        titolo_tappa = cfg.get("content.evento.titolo_tappa",
+                               "Tappa {stage}").format(stage=numero)
+    else:
+        titolo_tappa = leg.leg or leg.format
+
     immagini = [
         _slide(templates[0], "leg_results", "risultati", pagina, i,
-               len(pagine_tappa), leg.leg or "Risultati di tappa")
+               len(pagine_tappa),
+               cfg.get("content.leg_kicker", "Risultati di tappa"),
+               titolo_tappa)
         for i, pagina in enumerate(pagine_tappa)
     ] + [
         _slide(templates[1], "leg_results_standings", "classifica", pagina, i,
                len(pagine_classifica),
-               cfg.get("content.standings_subtitle", "Classifica generale"))
+               cfg.get("content.standings_subtitle", "Classifica generale"),
+               cfg.get("content.standings_title", "Classifica"))
         for i, pagina in enumerate(pagine_classifica)
     ]
 

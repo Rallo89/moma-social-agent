@@ -100,13 +100,23 @@ def test_formato_senza_eventi_ne_fallback(cfg):
         pipelines.format_spotlight(cfg, dt.date(2030, 1, 7))
 
 
-def test_titolo_e_sottotitolo_delle_due_slide(cfg):
-    """La grafica mostra nome torneo e tappa: entrambe le slide li ricevono."""
+def test_le_due_slide_usano_gli_slot_della_card(cfg):
+    """Risultati e classifica parlano la lingua delle card del calendario."""
     pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
     tappa, classifica = RENDERED[0][1], RENDERED[1][1]
-    assert tappa["title"] == "Torneo Pauper"
+    assert RENDERED[0][0] == RENDERED[1][0] == "classifica.html.j2"
+
+    assert tappa["badge"] == "Pauper"
+    assert tappa["kicker_1"] == "Risultati di tappa"
+    assert tappa["titolo"] == "Tappa 10"        # letto dal nome del torneo
+    assert tappa["righe"][0].player
+
+    assert classifica["badge"] == "Pauper"
+    assert classifica["kicker_1"] == "Classifica generale"
+    assert classifica["titolo"] == "Classifica"
+
+    # Il vecchio template su sfondo Canva resta selezionabile e coerente.
     assert tappa["subtitle"] == "Tappa 10"
-    assert classifica["title"] == "Torneo Pauper"
     assert classifica["subtitle"] == "Classifica generale"
 
 
@@ -188,10 +198,10 @@ def test_venti_giocatori_diventano_tre_slide(cfg, monkeypatch):
 def test_numero_di_pagina_solo_quando_serve(cfg, monkeypatch):
     _tappa_con(cfg, monkeypatch, 20)
     pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
-    assert RENDERED[0][1]["subtitle"] == "Tappa 10 · 1/2"
-    assert RENDERED[1][1]["subtitle"] == "Tappa 10 · 2/2"
-    # La classifica sta in una slide sola: niente numerazione.
-    assert RENDERED[2][1]["subtitle"] == "Classifica generale"
+    assert RENDERED[0][1]["kicker_2"] == "1/2"
+    assert RENDERED[1][1]["kicker_2"] == "2/2"
+    # La classifica sta in una slide sola: al posto del numero, la data.
+    assert RENDERED[2][1]["kicker_2"] == "13 marzo"
 
 
 def test_nomi_dei_file_distinti_fra_le_pagine(cfg, monkeypatch):

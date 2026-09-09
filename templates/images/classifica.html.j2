@@ -1,0 +1,64 @@
+{#
+  Card di una classifica: risultati di tappa o classifica generale.
+
+  Stessa cornice delle altre due — fondo, occhiello, filo lime, piede — con
+  al centro l'elenco su due colonne. Le righe si misurano in em, cosi' otto
+  o sedici nomi rientrano riducendo il corpo del blocco invece che riga per
+  riga: le proporzioni interne restano quelle.
+
+  Slot: kicker_1 kicker_2 · badge · titolo · righe · invito · link
+        righe = [{rank, player, points}]
+#}
+{% extends "_carta.html.j2" %}
+
+{% set per_colonna = (righe|length + 1) // 2 %}
+{% set colonne = [righe[:per_colonna], righe[per_colonna:]] %}
+
+{% block stili %}
+  /* Il titolo cede spazio all'elenco: qui la notizia sono i nomi. */
+  .titolo.classifica { font-size: 110px; }
+
+  .griglia {
+    flex: 1; min-width: 0; display: flex; gap: 1.1em;
+    font-size: 34px; align-items: flex-start;
+  }
+  .colonna {
+    flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .34em;
+  }
+  .riga { display: flex; align-items: baseline; gap: .45em; min-width: 0; }
+  .riga .pos {
+    flex: none; width: 1.9em; text-align: right;
+    font-family: 'JetBrains Mono', monospace; font-size: .60em;
+    color: #a9d227;
+  }
+  .riga .nome {
+    flex: 1; min-width: 0;
+    font-weight: 600; font-size: 1em; letter-spacing: .02em;
+    text-transform: uppercase;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .riga .punti {
+    flex: none; font-weight: 700; font-size: 1em; letter-spacing: .02em;
+  }
+{% endblock %}
+
+{% block corpo %}
+    {% if badge %}<div class="badge" data-fit="20">{{ badge }}</div>{% endif %}
+    <div class="titolo classifica" data-fit="60">{{ titolo }}</div>
+    <div class="dati">
+      <div class="filo"></div>
+      <div class="griglia" data-fit="14" data-fit-altezza="corpo">
+        {% for colonna in colonne %}
+        <div class="colonna">
+          {% for r in colonna %}
+          <div class="riga">
+            <span class="pos">{{ r.rank }}</span>
+            <span class="nome">{{ r.player }}</span>
+            <span class="punti">{{ r.points }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+{% endblock %}
