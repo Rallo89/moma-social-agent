@@ -1,29 +1,20 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 --  v_social_eventi — eventi in calendario per l'agente social
 --
---  Rispetto alla versione attuale aggiunge due colonne:
+--  Sostituisce la versione attuale ed espone tutto quello che serve alla card
+--  evento, cosi' non si torna piu' a toccarla:
 --
---    lega   nome della lega a cui la tappa appartiene (NULL per gli spot)
---    tappa  numero progressivo della tappa dentro quella lega
+--    sede / indirizzo   dove si gioca, su due righe nella grafica
+--    quota              tournaments.costo — il prezzo vero, non uno in config
+--    lega / tappa       titolo standard: "Lega Pauper Fall" / "Tappa 3"
+--    tipo / stato       non usati oggi, ma li abbiamo sotto mano se servono
 --
---  Servono al titolo della grafica, che deve essere uguale ogni settimana
---  ("Lega Pauper Fall 2026" / "Tappa 3") invece del nome che il torneo ha a
---  database, diverso ogni volta. Senza lega non c'e' nessuna tappa da
---  numerare e la card tiene il nome dell'evento: e' il caso degli eventi spot.
+--  Il numero di tappa NON e' una colonna: si ricava contando i tornei della
+--  stessa lega in ordine di data. Nessun campo da aggiornare a mano, e resta
+--  giusto se un torneo viene spostato. Il rovescio: inserire una tappa in
+--  mezzo alla stagione rinumera quelle successive.
 --
---  Il numero di tappa NON e' una colonna della tabella: si ricava contando i
---  tornei della stessa lega in ordine di data. Cosi' resta giusto anche se un
---  torneo viene spostato, e non c'e' un campo in piu' da tenere aggiornato a
---  mano. Il rovescio: aggiungere una tappa in mezzo rinumera quelle dopo.
---
---  ATTENZIONE — questa e' una BOZZA da fondere con la vista esistente.
---  La versione attuale espone gia' sede, quota e note, e non so da quali
---  colonne le prenda. Prima di eseguire:
---
---    1. leggere la definizione attuale
---         select pg_get_viewdef('public.v_social_eventi'::regclass, true);
---    2. tenerne tutte le colonne e aggiungere solo il join su leagues,
---       la colonna `lega` e la colonna `tappa` qui sotto.
+--  Nessun dato personale: solo il torneo, mai chi ci gioca.
 --
 --  Sostituire <UUID-MODENA-MAGIC> con lo stesso valore delle altre viste.
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -32,8 +23,14 @@ create or replace view public.v_social_eventi as
 select t.start_date                    as data,
        t.name                          as titolo,
        t.format::text                  as formato,
-       -- ... qui vanno le colonne che la vista attuale espone gia':
-       --     sede, quota, note
+       -- location_alias e' il nome del locale, location l'indirizzo esteso.
+       -- Se nei vostri dati sono invertiti, scambiare queste due righe.
+       t.location_alias                as sede,
+       t.location                      as indirizzo,
+       t.costo                         as quota,
+       t.description                   as note,
+       t.kind::text                    as tipo,
+       t.status::text                  as stato,
        l.name                          as lega,
        case
          when t.league_id is null then null
@@ -47,16 +44,24 @@ where t.community_id = '<UUID-MODENA-MAGIC>';
 grant select on public.v_social_eventi to anon;
 
 -- ── Verifica ────────────────────────────────────────────────────────────────
--- Le tappe di una lega devono numerarsi 1, 2, 3... in ordine di data:
+-- a) sede e indirizzo non devono essere invertiti, e la quota deve esserci:
 --
---   select lega, tappa, data, titolo
---   from public.v_social_eventi
---   where lega is not null
---   order by lega, tappa;
+--      select data, titolo, sede, indirizzo, quota
+--      from public.v_social_eventi
+--      order by data desc
+--      limit 10;
 --
--- E gli eventi spot devono avere lega e tappa nulle:
+-- b) le tappe di una lega devono numerarsi 1, 2, 3... in ordine di data:
 --
---   select data, titolo, formato
---   from public.v_social_eventi
---   where lega is null
---   order by data;
+--      select lega, tappa, data, titolo
+--      from public.v_social_eventi
+--      where lega is not null
+--      order by lega, tappa;
+--
+-- c) quali stati esistono davvero, per capire se ce n'e' uno da escludere
+--    dal calendario (un torneo annullato non va annunciato):
+--
+--      select stato, count(*)
+--      from public.v_social_eventi
+--      group by stato
+--      order by 2 desc;

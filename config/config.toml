@@ -83,14 +83,16 @@ date      = "data"
 title     = "titolo"
 format    = "formato"
 venue     = "sede"
-entry_fee = "quota"
+address   = "indirizzo"  # riga piccola sotto la sede
+entry_fee = "quota"      # tournaments.costo, formattata dall'agente
 notes     = "note"
-league    = "lega"      # nome della lega, prima riga del titolo
-stage     = "tappa"     # numero di tappa, seconda riga: "Tappa 3"
-# Non presenti nel database: ora di inizio, premi, link iscrizioni. Se verranno
-# aggiunti a `tournaments`, basta esporli nella vista e mapparli qui.
-# `lega` e `tappa` richiedono la modifica in supabase/v_social_eventi.sql:
-# finche' la vista non le espone, la card tiene il nome del torneo.
+league    = "lega"       # nome della lega, prima riga del titolo
+stage     = "tappa"      # numero di tappa, seconda riga: "Tappa 3"
+# Non presenti nel database: ora di inizio, premi, link iscrizioni. Restano in
+# [content.evento]; se un giorno finiscono in `tournaments`, basta esporli
+# nella vista e mapparli qui.
+# Tutte le altre colonne arrivano da supabase/v_social_eventi.sql: finche'
+# quella vista non e' aggiornata, la card ricade sui valori di configurazione.
 
 [sources.results]
 url  = "https://wxvxtodrnrefbechawgz.supabase.co/rest/v1/v_social_risultati?select=*&data=eq.{date}&order=posizione.asc"

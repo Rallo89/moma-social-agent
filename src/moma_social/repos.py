@@ -61,6 +61,7 @@ def fetch_events(cfg: Config, start: dt.date, end: dt.date) -> list[Event]:
                 format=_clean(row.get("format")),
                 start_time=_clean(row.get("start_time")),
                 venue=_clean(row.get("venue")),
+                address=_clean(row.get("address")),
                 city=_clean(row.get("city")),
                 entry_fee=_clean(row.get("entry_fee")),
                 prize=_clean(row.get("prize")),

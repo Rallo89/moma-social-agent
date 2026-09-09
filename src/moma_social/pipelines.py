@@ -128,10 +128,12 @@ def _card_evento(cfg: Config, day: dt.date, fmt: str, event=None,
                                  "{giorno}"))
     sede = _testo_evento(cfg, "dove", event, day, fmt)
     dove = (event.venue if event and event.venue else "") or sede
-    # L'indirizzo in configurazione e' quello della sede abituale: accostarlo a
-    # una sede diversa sarebbe indicare il posto sbagliato.
-    indirizzo = (_testo_evento(cfg, "indirizzo", event, day, fmt)
-                 if dove.strip().casefold() == sede.strip().casefold() else "")
+    # L'indirizzo del torneo vince. Quello in configurazione e' della sede
+    # abituale: accostarlo a una sede diversa indicherebbe il posto sbagliato,
+    # quindi vale solo quando la sede coincide.
+    indirizzo = (event.address if event and event.address else "") or (
+        _testo_evento(cfg, "indirizzo", event, day, fmt)
+        if dove.strip().casefold() == sede.strip().casefold() else "")
     # La quota del torneo vince sempre: quella in configurazione e' un ripiego
     # per gli eventi che a database non ce l'hanno.
     quota = (format_fee(event.entry_fee if event else "")

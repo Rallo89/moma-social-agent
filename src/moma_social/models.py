@@ -20,6 +20,7 @@ class Event:
     format: str = ""
     start_time: str = ""
     venue: str = ""
+    address: str = ""
     city: str = ""
     entry_fee: str = ""
     prize: str = ""
