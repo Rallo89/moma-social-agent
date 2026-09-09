@@ -1,7 +1,20 @@
-# La card evento
+# Le card
 
-Grafica di due dei tre post: il **calendario del lunedì** (un carosello, una
-card per evento) e il **formato del giorno** (una card sola).
+Grafica di due dei tre post: il **calendario del lunedì** e il **formato del
+giorno**.
+
+Il lunedì esce un carosello: la prima slide è la **card di riepilogo**
+(`settimana.html.j2`) con tutte le serate in elenco, poi una **card evento**
+(`evento.html.j2`) per ogni serata. Le due condividono la cornice
+(`_carta.html.j2`): fondo, trama, occhiello, filo lime, piede. Cambia solo il
+centro, così non possono divergere. `riepilogo = false` in
+`[posts.weekly_calendar]` lascia il solo carosello di card.
+
+Nel riepilogo ogni riga porta il formato in testa — `Modern · Tappa 2` — perché
+in un calendario è quello che si cerca; se il nome dell'evento lo dice già
+(`Serata Commander`) non si ripete. L'elenco si rimpicciolisce da solo quando
+le serate sono tante, in blocco, così le proporzioni fra le righe restano
+quelle.
 
 Nasce dall'artboard `templates/calendar/Template Evento Dark.dc.html`, fatto in
 Claude Design. Il file dell'artboard resta nel repo come originale di

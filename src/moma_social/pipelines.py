@@ -177,6 +177,44 @@ def _una_card_per_tappa(events: list) -> list:
     return unici
 
 
+def _serata(cfg: Config, event) -> dict:
+    """Una riga dell'elenco settimanale: quando, e cosa si gioca."""
+    ora = event.start_time or cfg.get("content.evento.ora_default", "")
+    quando = f"{weekday_it(event.date)} {event.date.day}"
+    if ora:
+        quando += f" · {ora}"
+    if event.league:
+        coda = ("Finale" if event.is_final
+                else (f"Tappa {event.stage}" if event.stage else ""))
+    else:
+        # Uno spot non ha tappa da citare: vale il suo nome.
+        coda = event.title
+    # In un calendario si cerca il formato: c'e' sempre in testa, tranne
+    # quando il nome dell'evento lo dice gia' ("Serata Commander").
+    if not event.format:
+        return {"quando": quando, "cosa": coda or event.label}
+    if coda and event.format.casefold() in coda.casefold():
+        return {"quando": quando, "cosa": coda}
+    return {"quando": quando,
+            "cosa": f"{event.format} · {coda}" if coda else event.format}
+
+
+def _card_riepilogo(cfg: Config, events: list, inizio: dt.date, fine: dt.date,
+                    periodo: str) -> dict:
+    """Contesto della card che apre il carosello: la settimana in un colpo d'occhio."""
+    return {
+        "kicker_1": cfg.get("content.evento.kicker_calendario",
+                            "Calendario settimanale"),
+        "kicker_2": cfg.get("org.city", ""),
+        "badge": periodo,
+        "titolo": cfg.get("content.evento.titolo_settimana", "La settimana"),
+        "serate": [_serata(cfg, evento) for evento in events],
+        "link": _senza_schema(cfg.get("content.evento.link", "")),
+        "invito": cfg.get("content.evento.invito", "Iscriviti"),
+        "qr_image": cfg.get("content.evento.qr", ""),
+    }
+
+
 # ── 1. Calendario settimanale (lunedi 10:00) ────────────────────────────────
 def weekly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
     day = day or resolve_date("today", cfg.timezone)
@@ -192,8 +230,24 @@ def weekly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
     size = post_size(cfg, "weekly_calendar")
     kicker = cfg.get("content.evento.kicker_calendario", "Calendario settimanale")
     massimo = min(cfg.get("posts.weekly_calendar.max_carousel_slides", 10), 10)
-    in_post = _una_card_per_tappa(events)[:massimo]
-    immagini = [
+    in_post = _una_card_per_tappa(events)
+    # La card di riepilogo apre il carosello: prima si vede tutta la
+    # settimana, poi si scorre per il dettaglio di ogni serata. Occupa una
+    # slide, quindi le card evento che restano sono una in meno.
+    riepilogo = cfg.get("posts.weekly_calendar.riepilogo", True)
+    in_post = in_post[:massimo - 1 if riepilogo else massimo]
+    immagini = []
+    if riepilogo:
+        immagini.append(render(
+            cfg,
+            cfg.get("posts.weekly_calendar.image_template_riepilogo",
+                    "settimana.html.j2"),
+            {**_card_riepilogo(cfg, in_post, start, end, periodo),
+             "background": _background(cfg, "weekly_calendar"), "density": ""},
+            _stamp(cfg, "calendario", start, "00-riepilogo"),
+            size=size,
+        ))
+    immagini += [
         render(
             cfg, template,
             {**_card_evento(cfg, evento.date, evento.format or "", evento,
@@ -226,7 +280,7 @@ def weekly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
         meta={"week_start": start.isoformat(), "week_end": end.isoformat(),
               "events": len(events), "formats": formats,
               "slide": len(immagini),
-              "slide_tagliate": len(events) - len(in_post)},
+              "slide_tagliate": len(_una_card_per_tappa(events)) - len(in_post)},
     )
 
 

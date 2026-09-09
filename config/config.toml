@@ -211,6 +211,8 @@ badge             = "{format}"
 # Titolo di una tappa di lega: sopra il nome della lega, sotto questa riga.
 titolo_tappa      = "Tappa {stage}"
 titolo_finale     = "Finale"
+titolo_settimana  = "La settimana"            # card di riepilogo del lunedi
+ora_default       = "21:00"                   # nell'elenco della settimana
 # Usato solo quando non c'e' nessun evento in sorgente (post da fallback).
 titolo            = "{weekday} {format}"
 quando            = "{giorno}, 21:00"          # usata se la sorgente non ha l'ora
@@ -276,6 +278,10 @@ ledger = "state/published.jsonl"
 # ogni appuntamento resta leggibile invece di stare in una riga minuscola.
 [posts.weekly_calendar]
 image_template      = "evento.html.j2"
+# Prima slide: tutta la settimana in un colpo d'occhio, poi una card per
+# serata. `riepilogo = false` la toglie e lascia il solo carosello di card.
+image_template_riepilogo = "settimana.html.j2"
+riepilogo           = true
 caption_template    = "weekly_calendar.txt.j2"
 hashtags            = ["#tornei", "#calendario"]
 width               = 1080

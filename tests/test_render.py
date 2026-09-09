@@ -248,3 +248,21 @@ def test_card_evento_si_renderizza(cfg):
     path = render(cfg, "evento.html.j2", contesto, "test-card", size=(1080, 1080))
     scale = cfg.get("render.scale")
     assert _size(path) == (1080 * scale, 1080 * scale)
+
+
+@pytest.mark.slow
+def test_card_riepilogo_si_renderizza(cfg):
+    """Sette serate in elenco devono restare dentro la slide."""
+
+    contesto = {
+        "kicker_1": "Calendario settimanale", "kicker_2": "Modena",
+        "badge": "14 - 20 settembre", "titolo": "La settimana",
+        "serate": [{"quando": f"Giorno {i} · 21:00",
+                    "cosa": f"Formato {i} · Tappa {i}"} for i in range(1, 8)],
+        "link": "modena-magic.vercel.app/tornei", "invito": "Iscriviti",
+        "qr_image": "", "background": "", "density": "",
+    }
+    path = render(cfg, "settimana.html.j2", contesto, "test-settimana",
+                  size=(1080, 1080))
+    scale = cfg.get("render.scale")
+    assert _size(path) == (1080 * scale, 1080 * scale)

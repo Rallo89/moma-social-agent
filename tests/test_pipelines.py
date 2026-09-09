@@ -29,14 +29,21 @@ def fake_render(monkeypatch, tmp_path):
 
 
 def test_calendario_settimanale(cfg):
-    """Il lunedi esce un carosello: una card per evento della settimana."""
+    """Il lunedi: una card di riepilogo, poi una card per evento."""
     draft = pipelines.weekly_calendar(cfg, dt.date(2026, 3, 11))
     assert draft.kind == "weekly_calendar"
     assert draft.meta["events"] == 5
     assert draft.meta["week_start"] == "2026-03-09"
-    assert len(draft.images) == 5
+    assert len(draft.images) == 6          # 1 riepilogo + 5 serate
     assert draft.is_carousel
-    template, context = RENDERED[0]
+
+    riepilogo, contesto = RENDERED[0]
+    assert riepilogo == "settimana.html.j2"
+    assert contesto["badge"] == "9 - 15 marzo"
+    assert len(contesto["serate"]) == 5
+    assert contesto["serate"][0]["quando"].startswith("Lunedì 9")
+
+    template, context = RENDERED[1]
     assert template == "evento.html.j2"
     # Ogni card porta i suoi slot compilati, non i dati grezzi dell'evento.
     assert context["kicker_1"] == "Calendario settimanale"
@@ -45,11 +52,21 @@ def test_calendario_settimanale(cfg):
         "Quando", "Dove", "Iscrizione"]
 
 
+def test_calendario_senza_riepilogo(cfg):
+    cfg.data["posts"]["weekly_calendar"]["riepilogo"] = False
+    draft = pipelines.weekly_calendar(cfg, dt.date(2026, 3, 11))
+    assert len(draft.images) == 5
+    assert RENDERED[0][0] == "evento.html.j2"
+
+
 def test_calendario_non_supera_il_limite_della_graph_api(cfg):
+    """Il riepilogo occupa una slide: le serate che restano sono una in meno."""
     cfg.data["posts"]["weekly_calendar"]["max_carousel_slides"] = 3
     draft = pipelines.weekly_calendar(cfg, dt.date(2026, 3, 11))
-    assert len(draft.images) == 3
-    assert draft.meta["slide_tagliate"] == 2
+    assert len(draft.images) == 3          # riepilogo + 2 serate
+    assert draft.meta["slide_tagliate"] == 3
+    # Il riepilogo elenca solo le serate che il carosello mostra davvero.
+    assert len(RENDERED[0][1]["serate"]) == 2
 
 
 
@@ -462,3 +479,28 @@ def test_i_tavoli_della_stessa_tappa_sono_una_card_sola(cfg):
                     league="Modern Spring 2026", stage="5")]
     unici = pipelines._una_card_per_tappa(eventi)
     assert [e.format for e in unici] == ["Limited", "Modern"]
+
+
+def _serata(cfg, **kw):
+    from moma_social.models import Event
+    return pipelines._serata(cfg, Event(date=dt.date(2026, 9, 17), **kw))
+
+
+def test_riga_della_settimana_mette_il_formato_in_testa(cfg):
+    """In un calendario si cerca il formato: sta all'inizio di ogni riga."""
+    assert _serata(cfg, format="Modern", league="Modern Fall 2026",
+                   stage="2")["cosa"] == "Modern · Tappa 2"
+    assert _serata(cfg, format="Pauper", league="Pauper fall 2026",
+                   is_final=True)["cosa"] == "Pauper · Finale"
+    # Uno spot porta il proprio nome, ma il formato resta in testa.
+    assert _serata(cfg, format="Limited", title="Prerelease Edge of Eternities"
+                   )["cosa"] == "Limited · Prerelease Edge of Eternities"
+    # Tranne quando il nome lo dice gia': "Commander · Serata Commander" no.
+    assert _serata(cfg, format="Commander", title="Serata Commander"
+                   )["cosa"] == "Serata Commander"
+
+
+def test_riga_della_settimana_usa_l_ora_di_configurazione(cfg):
+    assert _serata(cfg, format="Modern")["quando"] == "Giovedì 17 · 21:00"
+    assert _serata(cfg, format="Modern", start_time="15:00"
+                   )["quando"] == "Giovedì 17 · 15:00"

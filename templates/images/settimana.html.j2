@@ -1,0 +1,51 @@
+{#
+  Card riepilogo: tutte le serate della settimana in un colpo d'occhio.
+
+  Stesso sistema della card evento — e' la stessa cornice — ma il centro
+  cambia mestiere: al posto di un titolo grande e tre dati, un elenco di
+  serate. Ogni riga usa la coppia etichetta/valore del disegno originale,
+  cosi' le due card si riconoscono come parenti.
+
+  Slot: kicker_1 kicker_2 · badge · titolo · serate · invito · link
+        serate = [{quando, cosa}]
+#}
+{% extends "_carta.html.j2" %}
+
+{% block stili %}
+  /* Il titolo qui non e' la notizia: la notizia e' l'elenco. */
+  .titolo.riepilogo { font-size: 130px; }
+
+  /* L'elenco si misura in em, cosi' basta ridurre il corpo del contenitore
+     per farlo rientrare tutto insieme, senza toccare riga per riga. */
+  .serate {
+    display: flex; flex-direction: column; gap: .34em;
+    font-size: 44px; min-width: 0;
+  }
+  .serata { display: flex; flex-direction: column; }
+  .serata .quando {
+    font-family: 'JetBrains Mono', monospace; font-size: .30em;
+    letter-spacing: .22em; text-transform: uppercase; color: #a9d227;
+  }
+  .serata .cosa {
+    font-weight: 600; font-size: 1em; line-height: 1.05;
+    letter-spacing: .03em; text-transform: uppercase; white-space: nowrap;
+  }
+{% endblock %}
+
+{% block corpo %}
+    {% if badge %}<div class="badge" data-fit="20">{{ badge }}</div>{% endif %}
+    <div class="titolo riepilogo" data-fit="70">{{ titolo }}</div>
+    <div class="dati">
+      <div class="filo"></div>
+      {# Un solo data-fit-altezza sull'elenco: sette serate o due, rientra
+         sempre, e le proporzioni fra le righe restano quelle. #}
+      <div class="serate" data-fit="16" data-fit-altezza="corpo">
+        {% for serata in serate %}
+        <div class="serata">
+          <span class="quando">{{ serata.quando }}</span>
+          <span class="cosa">{{ serata.cosa }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+{% endblock %}
