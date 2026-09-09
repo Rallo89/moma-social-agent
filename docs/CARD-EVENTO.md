@@ -16,21 +16,27 @@ Tutto in `config/config.toml`, sezione `[content.evento]`:
 |---|---|---|
 | `kicker_1` / `kicker_2` | occhiello in alto a destra | "Evento settimanale" / "Modena" |
 | `kicker_calendario` | riga 1 delle slide del lunedì | "Calendario settimanale" |
-| `badge` | fascia lime | "Modern · Torneo settimanale" |
+| `badge` | fascia lime | "Modern" |
 | `titolo` | tipografia grande | "Giovedì Modern" |
-| `quando` `dove` `quota` | blocco dati | usati solo se il database non li espone |
-| `invito` `link` `qr` | piede | "Iscriviti" / "modenamagic.it/iscrizioni" |
+| `quando` `dove` | blocco dati | usati solo se il database non li espone |
+| `invito` `link` `qr` | piede | "Iscriviti" / l'indirizzo del sito |
 
-Segnaposto disponibili nei modelli: `{format}` `{cadenza}` `{weekday}`
-`{giorno}` `{data}` `{title}` `{venue}` `{city}` `{fee}` `{time}` `{org}`.
+Segnaposto disponibili nei modelli: `{format}` `{weekday}` `{giorno}`
+`{data}` `{title}` `{venue}` `{city}` `{fee}` `{time}` `{org}`.
 
-I dati dell'evento hanno la precedenza: `quando`, `dove` e `quota` in config
+I dati dell'evento hanno la precedenza: `quando`, `dove` e la quota in config
 servono quando la sorgente non li espone. Oggi il Supabase non ha ora di
 inizio né link iscrizioni, quindi quelli arrivano da qui.
 
-`[content.evento.cadenza]` dichiara la cadenza per formato: una lega è
-settimanale, una Prerelease no, e stampare "Torneo settimanale" su una
-Prerelease sarebbe una frase falsa.
+`[content.evento.quota]` dichiara la quota per formato — il Pauper non costa
+come il Limited — con `default` per tutti gli altri.
+
+Il `link` si scrive per intero in configurazione: la card lo stampa senza
+`https://`, come chiede il grafico, ma il valore completo resta disponibile
+altrove.
+
+`qr` è vuoto: senza un PNG vero il riquadro non viene disegnato affatto. Per
+riattivarlo basta metterci il percorso di un file.
 
 ## I limiti del disegno
 

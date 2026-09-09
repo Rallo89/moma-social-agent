@@ -198,20 +198,20 @@ caption_max     = 2200          # limite Instagram
 kicker_1          = "Evento settimanale"
 kicker_2          = "{city}"
 kicker_calendario = "Calendario settimanale"   # riga 1 delle slide del lunedi
-badge             = "{format} · {cadenza}"
+badge             = "{format}"
 titolo            = "{weekday} {format}"
-quando            = "{giorno}, 20:30"          # usata se la sorgente non ha l'ora
-dove              = "Uno Critico — Modena"     # usata se l'evento non ha sede
-quota             = "10 € · include buste"     # usata se l'evento non ha quota
+quando            = "{giorno}, 21"             # usata se la sorgente non ha l'ora
+dove              = "Uno Critico — Modena - Via Cesare Balbo, 88/B"
 invito            = "Iscriviti"
-link              = "modenamagic.it/iscrizioni"
-qr                = ""                         # PNG del QR; vuoto = segnaposto
+link              = "https://modena-magic.vercel.app/tornei"
+qr                = ""                         # PNG del QR; vuoto = nessun QR
 
-# Cadenza mostrata nel badge, per formato. Una lega e' settimanale, una
-# Prerelease no: dichiararlo qui evita di stampare una frase falsa.
-[content.evento.cadenza]
-default = "Torneo settimanale"
-limited = "Evento speciale"
+# Quota per formato, usata quando l'evento non la porta con se'. Il Pauper
+# non costa come il Limited: tenerla qui evita di scriverla torneo per torneo.
+[content.evento.quota]
+default = "10 €"
+pauper  = "7 €"
+limited = "25 €"
 
 # Fallback formati per giorno se la sorgente eventi non copre quel giorno
 [content.formats_by_weekday]

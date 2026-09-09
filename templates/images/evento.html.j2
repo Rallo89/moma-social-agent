@@ -143,8 +143,10 @@
 
   <div class="piede">
     <div class="iscrizioni">
+      {# Il QR compare solo se ce n'e' uno vero: un riquadro con scritto "QR"
+         al posto del codice occupa spazio senza servire a niente. #}
       {% set qr = qr_image|default("")|asset %}
-      <div class="qr">{% if qr %}<img src="{{ qr }}" alt="">{% else %}QR<br>iscrizioni{% endif %}</div>
+      {% if qr %}<div class="qr"><img src="{{ qr }}" alt=""></div>{% endif %}
       <div class="invito">
         <span class="titolino">{{ invito|default("Iscriviti") }}</span>
         <span class="link" data-fit="12">{{ link }}</span>

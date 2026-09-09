@@ -312,12 +312,21 @@ def test_una_sera_con_due_tornei_produce_due_post(cfg, tmp_path):
     assert len({dedupe_key(b) for b in bozze}) == 2
 
 
-def test_cadenza_del_badge_dipende_dal_formato(cfg):
-    """"Torneo settimanale" e' vero per una lega, non per una Prerelease."""
-    assert "Torneo settimanale" in pipelines._card_evento(
-        cfg, dt.date(2026, 3, 12), "Modern")["badge"]
-    assert "Evento speciale" in pipelines._card_evento(
-        cfg, dt.date(2026, 3, 14), "Limited")["badge"]
+def test_quota_dipende_dal_formato(cfg):
+    """Il Pauper non costa come il Limited."""
+    def quota(fmt):
+        return dict(pipelines._card_evento(cfg, dt.date(2026, 3, 12), fmt)["voci"])[
+            "Iscrizione"]
+
+    assert quota("Pauper") == "7 €"
+    assert quota("Limited") == "25 €"
+    assert quota("Modern") == "10 €"          # default per tutti gli altri
+
+
+def test_il_link_perde_lo_schema(cfg):
+    """La grafica scrive l'indirizzo senza https://, come da istruzioni."""
+    assert pipelines._card_evento(cfg, dt.date(2026, 3, 12), "Modern")["link"] == (
+        "modena-magic.vercel.app/tornei")
 
 
 def test_la_card_usa_i_dati_dell_evento_quando_ci_sono(cfg):
@@ -332,5 +341,5 @@ def test_la_card_usa_i_dati_dell_evento_quando_ci_sono(cfg):
     assert voci["Iscrizione"] == "8 €"
 
     senza = dict(pipelines._card_evento(cfg, dt.date(2026, 3, 12), "Modern")["voci"])
-    assert senza["Quando"] == "Giovedì 12 marzo, 20:30"     # ora da config
+    assert senza["Quando"] == "Giovedì 12 marzo, 21"        # ora da config
     assert senza["Dove"] == cfg.get("content.evento.dove")

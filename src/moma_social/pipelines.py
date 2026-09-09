@@ -70,12 +70,7 @@ def _testo_evento(cfg: Config, chiave: str, event, day: dt.date, fmt: str,
     modello = cfg.get(f"content.evento.{chiave}", default)
     if not modello:
         return ""
-    # "Torneo settimanale" e' vero per le leghe, non per una Prerelease: la
-    # cadenza si dichiara per formato, con un valore generico di ripiego.
-    cadenza = (cfg.get(f"content.evento.cadenza.{fmt.lower()}", "")
-               or cfg.get("content.evento.cadenza.default", ""))
     return modello.format(
-        cadenza=cadenza,
         format=fmt,
         formato=fmt,
         weekday=weekday_it(day),
@@ -90,6 +85,24 @@ def _testo_evento(cfg: Config, chiave: str, event, day: dt.date, fmt: str,
     ).strip()
 
 
+def _per_formato(cfg: Config, chiave: str, fmt: str) -> str:
+    """Un valore che cambia col formato, con un default per tutti gli altri.
+
+    La quota del Pauper non e' quella del Limited: tenerla in una tabella
+    evita di doverla scrivere evento per evento nel database.
+    """
+    return (cfg.get(f"content.evento.{chiave}.{fmt.lower()}", "")
+            or cfg.get(f"content.evento.{chiave}.default", ""))
+
+
+def _senza_schema(url: str) -> str:
+    """L'indirizzo come lo vuole la grafica: senza https://, senza slash finale."""
+    for prefisso in ("https://", "http://"):
+        if url.startswith(prefisso):
+            url = url[len(prefisso):]
+    return url.rstrip("/")
+
+
 def _card_evento(cfg: Config, day: dt.date, fmt: str, event=None,
                  kicker_1: str = "", kicker_2: str = "") -> dict:
     """Contesto della grafica evento: gli slot del template del grafico."""
@@ -101,7 +114,7 @@ def _card_evento(cfg: Config, day: dt.date, fmt: str, event=None,
              else (event.venue if event and event.venue else ""))
             or _testo_evento(cfg, "dove", event, day, fmt))
     quota = ((event.entry_fee if event and event.entry_fee else "")
-             or _testo_evento(cfg, "quota", event, day, fmt))
+             or _per_formato(cfg, "quota", fmt))
     titolo = _testo_evento(cfg, "titolo", event, day, fmt, "{weekday} {format}")
     return {
         "kicker_1": kicker_1 or _testo_evento(cfg, "kicker_1", event, day, fmt),
@@ -109,7 +122,7 @@ def _card_evento(cfg: Config, day: dt.date, fmt: str, event=None,
         "badge": _testo_evento(cfg, "badge", event, day, fmt, "{format}"),
         "titolo": titolo,
         "voci": [("Quando", quando), ("Dove", dove), ("Iscrizione", quota)],
-        "link": _testo_evento(cfg, "link", event, day, fmt),
+        "link": _senza_schema(_testo_evento(cfg, "link", event, day, fmt)),
         "invito": cfg.get("content.evento.invito", "Iscriviti"),
         "qr_image": cfg.get("content.evento.qr", ""),
     }
