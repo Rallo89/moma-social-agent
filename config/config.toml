@@ -83,7 +83,10 @@ date      = "data"
 title     = "titolo"
 format    = "formato"
 venue     = "sede"
-address   = "indirizzo"  # riga piccola sotto la sede
+# `indirizzo` esiste nella vista ma NON si mappa: a database e' una stringa di
+# geocodifica ("88, Via Cesare Balbo, Sacca, Crocetta-San Lazzaro-Modena Est,
+# Modena, Emilia-Romagna, 41122, Italia"), buona per una mappa e illeggibile su
+# una locandina. Sulla card va quello scritto in [content.evento].
 entry_fee = "quota"      # tournaments.costo, formattata dall'agente
 notes     = "note"
 league    = "lega"       # nome della lega, prima riga del titolo
@@ -207,6 +210,7 @@ kicker_calendario = "Calendario settimanale"   # riga 1 delle slide del lunedi
 badge             = "{format}"
 # Titolo di una tappa di lega: sopra il nome della lega, sotto questa riga.
 titolo_tappa      = "Tappa {stage}"
+titolo_finale     = "Finale"
 # Usato solo quando non c'e' nessun evento in sorgente (post da fallback).
 titolo            = "{weekday} {format}"
 quando            = "{giorno}, 21:00"          # usata se la sorgente non ha l'ora

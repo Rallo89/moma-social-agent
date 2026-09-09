@@ -4,15 +4,22 @@
 --  Sostituisce la versione attuale ed espone tutto quello che serve alla card
 --  evento, cosi' non si torna piu' a toccarla:
 --
---    sede / indirizzo   dove si gioca, su due righe nella grafica
+--    sede / indirizzo   dove si gioca
 --    quota              tournaments.costo — il prezzo vero, non uno in config
---    lega / tappa       titolo standard: "Lega Pauper Fall" / "Tappa 3"
+--    lega               nome della lega, prima riga del titolo della grafica
 --    tipo / stato       non usati oggi, ma li abbiamo sotto mano se servono
 --
---  Il numero di tappa NON e' una colonna: si ricava contando i tornei della
---  stessa lega in ordine di data. Nessun campo da aggiornare a mano, e resta
---  giusto se un torneo viene spostato. Il rovescio: inserire una tappa in
---  mezzo alla stagione rinumera quelle successive.
+--  Il NUMERO DI TAPPA non c'e', e non e' una dimenticanza. Contare i tornei
+--  della lega in ordine di data sembrava ovvio ma sui dati veri sbaglia:
+--  le finali sono datate fuori sequenza (la finale di Modern Autumn 2025 e'
+--  del 12 maggio, prima della tappa 1), una serata di Limited gira su due o
+--  tre tavoli che a database sono tornei distinti, e le tappe saltate
+--  lasciano buchi. Il numero vero e' scritto nel nome del torneo, e da li'
+--  lo legge l'agente.
+--
+--  I tornei `eliminato` sono esclusi: sono cancellati, e annunciarli in
+--  calendario sarebbe peggio che non annunciare niente. Restano `aperto` e
+--  `chiuso`. Fuori anche i tornei senza data, che sono prove.
 --
 --  Nessun dato personale: solo il torneo, mai chi ci gioca.
 --
@@ -44,37 +51,25 @@ select t.start_date                    as data,
        t.description                   as note,
        t.kind::text                    as tipo,
        t.status::text                  as stato,
-       l.name                          as lega,
-       case
-         when t.league_id is null then null
-         else row_number() over (partition by t.league_id
-                                 order by t.start_date, t.id)
-       end                             as tappa
+       l.name                          as lega
 from public.tournaments t
 left join public.leagues l on l.id = t.league_id
-where t.community_id = '<UUID-MODENA-MAGIC>';
+where t.community_id = '<UUID-MODENA-MAGIC>'
+  and t.status::text <> 'eliminato'
+  and t.start_date is not null;
 
 grant select on public.v_social_eventi to anon;
 
 -- ── Verifica ────────────────────────────────────────────────────────────────
--- a) sede e indirizzo non devono essere invertiti, e la quota deve esserci:
+-- a) sede, indirizzo e quota devono esserci:
 --
---      select data, titolo, sede, indirizzo, quota
+--      select data, titolo, sede, quota
 --      from public.v_social_eventi
 --      order by data desc
 --      limit 10;
 --
--- b) le tappe di una lega devono numerarsi 1, 2, 3... in ordine di data:
+-- b) nessun torneo eliminato e nessuna data nulla:
 --
---      select lega, tappa, data, titolo
---      from public.v_social_eventi
---      where lega is not null
---      order by lega, tappa;
---
--- c) quali stati esistono davvero, per capire se ce n'e' uno da escludere
---    dal calendario (un torneo annullato non va annunciato):
---
---      select stato, count(*)
---      from public.v_social_eventi
---      group by stato
---      order by 2 desc;
+--      select count(*) filter (where stato = 'eliminato') as eliminati,
+--             count(*) filter (where data is null)        as senza_data
+--      from public.v_social_eventi;

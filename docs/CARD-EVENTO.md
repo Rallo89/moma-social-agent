@@ -27,8 +27,8 @@ Segnaposto disponibili nei modelli: `{format}` `{weekday}` `{giorno}`
 Il **titolo** ha tre forme, in ordine di preferenza:
 
 1. **Tappa di lega** — due righe: sopra il nome della lega, più piccolo; sotto
-   `Tappa N`, in tipografia grande. Serve che la vista esponga sia `lega` sia
-   `tappa`. È la forma normale, e resta identica ogni settimana.
+   `Tappa N` (o `Finale`), in tipografia grande. È la forma normale, e resta
+   identica ogni settimana.
 2. **Evento spot** — una riga sola con il nome del torneo a database. Un
    evento che non appartiene a nessuna lega non ha una tappa da numerare, e il
    suo nome è l'unica cosa che lo identifica.
@@ -39,9 +39,21 @@ Il **titolo** ha tre forme, in ordine di preferenza:
 Una lega senza numero di tappa ricade nel caso 2: meglio il nome del torneo
 che un "Tappa" senza numero.
 
-Il numero di tappa non è un campo del database: la vista lo calcola contando
-i tornei della stessa lega in ordine di data — vedi
-`supabase/v_social_eventi.sql`.
+**Il numero di tappa non è un campo del database**: l'unico posto dove esiste
+è il nome del torneo, e `stage_from_title` lo legge da lì. I nomi sono scritti
+a mano e assumono molte forme — `Tappa 3`, `1° tappa`, `quinta tappa`,
+`Tappa 1 -Recupero` — tutte riconosciute; il numero è limitato a due cifre,
+altrimenti `Lega Pauper Fall 1° tappa 2026` diventerebbe la tappa 2026. Quello
+che non si riconosce resta senza numero e ricade sul caso 2: meglio il nome
+del torneo che un numero sbagliato.
+
+Contarle in ordine di data sembrava più pulito, ma sui dati veri sbaglia: le
+finali sono datate fuori sequenza, una serata di Limited gira su due o tre
+tavoli che a database sono tornei distinti, e le tappe saltate lasciano buchi.
+
+Quei tavoli multipli sono anche il motivo di `_una_card_per_tappa`: nel
+carosello del lunedì tre tornei con la stessa lega, tappa e data diventano una
+card sola.
 
 L'**indirizzo** è la riga piccola sotto la sede. Compare solo quando la sede
 dell'evento coincide con `dove`: accostare l'indirizzo di Uno Critico a un

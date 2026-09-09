@@ -111,9 +111,12 @@ def _titolo_evento(cfg: Config, event, day: dt.date, fmt: str) -> tuple[str, str
     database. Un evento spot, che non appartiene a nessuna lega, tiene invece
     il nome che ha: e' l'unica cosa che lo identifica.
     """
-    if event and event.league and event.stage:
-        modello = cfg.get("content.evento.titolo_tappa", "Tappa {stage}")
-        return event.league, modello.format(stage=event.stage)
+    if event and event.league:
+        if event.is_final:
+            return event.league, cfg.get("content.evento.titolo_finale", "Finale")
+        if event.stage:
+            modello = cfg.get("content.evento.titolo_tappa", "Tappa {stage}")
+            return event.league, modello.format(stage=event.stage)
     if event and event.title:
         return "", event.title
     return "", _testo_evento(cfg, "titolo", event, day, fmt, "{weekday} {format}")
@@ -128,12 +131,12 @@ def _card_evento(cfg: Config, day: dt.date, fmt: str, event=None,
                                  "{giorno}"))
     sede = _testo_evento(cfg, "dove", event, day, fmt)
     dove = (event.venue if event and event.venue else "") or sede
-    # L'indirizzo del torneo vince. Quello in configurazione e' della sede
-    # abituale: accostarlo a una sede diversa indicherebbe il posto sbagliato,
-    # quindi vale solo quando la sede coincide.
-    indirizzo = (event.address if event and event.address else "") or (
-        _testo_evento(cfg, "indirizzo", event, day, fmt)
-        if dove.strip().casefold() == sede.strip().casefold() else "")
+    # L'indirizzo e' quello scritto in configurazione, non quello a database:
+    # li' e' una stringa di geocodifica lunga una riga e mezzo, buona per una
+    # mappa e illeggibile su una locandina. Vale solo quando la sede coincide
+    # con quella abituale, altrimenti indicherebbe il posto sbagliato.
+    indirizzo = (_testo_evento(cfg, "indirizzo", event, day, fmt)
+                 if dove.strip().casefold() == sede.strip().casefold() else "")
     # La quota del torneo vince sempre: quella in configurazione e' un ripiego
     # per gli eventi che a database non ce l'hanno.
     quota = (format_fee(event.entry_fee if event else "")
@@ -156,6 +159,24 @@ def _card_evento(cfg: Config, day: dt.date, fmt: str, event=None,
     }
 
 
+def _una_card_per_tappa(events: list) -> list:
+    """Scarta i doppioni: una serata su piu' tavoli resta un evento solo.
+
+    Le tappe di Limited girano su due o tre tavoli, e a database sono tornei
+    distinti ("Tappa 3 - TAV. A", "- TAV. B"). Per chi legge il calendario
+    sono la stessa serata: tre card identiche sarebbero solo rumore.
+    """
+    viste, unici = set(), []
+    for evento in events:
+        chiave = ((evento.date, evento.league, evento.stage, evento.is_final)
+                  if evento.league else (evento.date, evento.title))
+        if chiave in viste:
+            continue
+        viste.add(chiave)
+        unici.append(evento)
+    return unici
+
+
 # ── 1. Calendario settimanale (lunedi 10:00) ────────────────────────────────
 def weekly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
     day = day or resolve_date("today", cfg.timezone)
@@ -171,7 +192,7 @@ def weekly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
     size = post_size(cfg, "weekly_calendar")
     kicker = cfg.get("content.evento.kicker_calendario", "Calendario settimanale")
     massimo = min(cfg.get("posts.weekly_calendar.max_carousel_slides", 10), 10)
-    in_post = events[:massimo]
+    in_post = _una_card_per_tappa(events)[:massimo]
     immagini = [
         render(
             cfg, template,

@@ -8,6 +8,7 @@ Google Sheets, SQL) viene tradotta in queste strutture tramite la sezione
 from __future__ import annotations
 
 import datetime as dt
+import re
 from dataclasses import dataclass, field
 
 from .timeutil import fmt_date, weekday_it
@@ -31,6 +32,7 @@ class Event:
     # nome che il torneo ha a database, diverso ogni volta.
     league: str = ""
     stage: str = ""
+    is_final: bool = False
     extra: dict = field(default_factory=dict)
 
     @property
@@ -63,6 +65,49 @@ def format_record(wins, losses, draws) -> str:
     if v is None or s is None:
         return ""
     return f"{v}-{s}-{p}" if p else f"{v}-{s}"
+
+
+# Numeri di tappa scritti a parole: capitano, e sono pochi.
+_ORDINALI = {
+    "prima": 1, "seconda": 2, "terza": 3, "quarta": 4, "quinta": 5,
+    "sesta": 6, "settima": 7, "ottava": 8, "nona": 9, "decima": 10,
+}
+# "Tappa 3", "3° tappa", "terza tappa" — tutte forme che compaiono davvero.
+# Il numero e' di una o due cifre: cosi' l'anno in "Lega Pauper Fall 1° tappa
+# 2026" non viene scambiato per la tappa 2026, ne' il 2023 di "Limited Winter
+# 2023 Tappa 1" per la tappa 23.
+_TAPPA_DOPO = re.compile(r"\btappa\s*n?[.°º]?\s*(\d{1,2})\b", re.IGNORECASE)
+# Il segno di ordinale qui e' obbligatorio: e' l'unica cosa che distingue
+# "1° tappa" da "Spring '26 tappa 8", dove il numero davanti e' l'anno.
+_TAPPA_PRIMA = re.compile(r"\b(\d{1,2})\s*[°ºaª]\s*tappa\b", re.IGNORECASE)
+_TAPPA_PAROLA = re.compile(r"\b(" + "|".join(_ORDINALI) + r")\s+tappa\b",
+                           re.IGNORECASE)
+_FINALE = re.compile(r"\bfinal[ei]\b", re.IGNORECASE)
+
+
+def stage_from_title(titolo: str) -> tuple[str, bool]:
+    """Numero di tappa e "e' una finale", letti dal nome del torneo.
+
+    Il numero di tappa non e' una colonna del database: l'unico posto dove
+    esiste e' il nome, scritto a mano e quindi in dieci modi diversi
+    ("Tappa 3", "3° tappa", "quinta tappa", "Tappa 1 -Recupero"). Contarle in
+    ordine di data non funziona: le finali sono datate fuori sequenza, una
+    serata puo' avere piu' tavoli, e le tappe saltate lascerebbero un buco.
+
+    Restituisce ("", False) quando non riconosce niente: meglio ricadere sul
+    nome del torneo che stampare un numero sbagliato.
+    """
+    testo = str(titolo or "")
+    if _FINALE.search(testo):
+        return "", True
+    for espressione in (_TAPPA_PRIMA, _TAPPA_DOPO):
+        trovato = espressione.search(testo)
+        if trovato:
+            return trovato.group(1), False
+    trovato = _TAPPA_PAROLA.search(testo)
+    if trovato:
+        return str(_ORDINALI[trovato.group(1).lower()]), False
+    return "", False
 
 
 def format_fee(valore) -> str:

@@ -12,7 +12,15 @@ from pathlib import Path
 
 from .config import Config
 from .errors import NoDataError, SourceError
-from .models import Event, LegResults, ResultRow, StandingRow, Standings, format_record
+from .models import (
+    Event,
+    LegResults,
+    ResultRow,
+    StandingRow,
+    Standings,
+    format_record,
+    stage_from_title,
+)
 from .sources import load_rows
 from .timeutil import parse_date
 
@@ -54,10 +62,14 @@ def fetch_events(cfg: Config, start: dt.date, end: dt.date) -> list[Event]:
         day = parse_date(row.get("date"))
         if day is None or not (start <= day <= end):
             continue
+        titolo = _clean(row.get("title"))
+        # Il numero di tappa vive nel nome del torneo: la sorgente puo' darlo
+        # gia' pronto, altrimenti lo si legge da li'.
+        numero, finale = stage_from_title(titolo)
         events.append(
             Event(
                 date=day,
-                title=_clean(row.get("title")),
+                title=titolo,
                 format=_clean(row.get("format")),
                 start_time=_clean(row.get("start_time")),
                 venue=_clean(row.get("venue")),
@@ -68,7 +80,8 @@ def fetch_events(cfg: Config, start: dt.date, end: dt.date) -> list[Event]:
                 signup_url=_clean(row.get("signup_url")),
                 notes=_clean(row.get("notes")),
                 league=_clean(row.get("league")),
-                stage=_clean(row.get("stage")),
+                stage=_clean(row.get("stage")) or numero,
+                is_final=finale,
                 extra=row.get("_extra", {}),
             )
         )

@@ -415,3 +415,50 @@ def test_la_quota_del_database_vince_su_quella_di_configurazione(cfg):
     evento = Event(date=dt.date(2026, 3, 12), format="Pauper", entry_fee="12")
     card = pipelines._card_evento(cfg, evento.date, "Pauper", evento)
     assert _voci(card)["Iscrizione"] == "12 €"   # non i 7 € del ripiego
+
+
+def test_numero_di_tappa_letto_dal_nome_del_torneo(cfg):
+    """I nomi veri sono scritti a mano: dieci forme diverse, tutte da capire."""
+    from moma_social.models import stage_from_title
+
+    assert stage_from_title("Modern Fall tappa 1") == ("1", False)
+    assert stage_from_title("Limited Spring 2025 Tappa 5 - TAV. C") == ("5", False)
+    assert stage_from_title("Limited spring 26  quinta tappa") == ("5", False)
+    assert stage_from_title("Legacy Tappa 1 -Recupero") == ("1", False)
+    # L'anno non e' un numero di tappa, ne' scritto per esteso ne' abbreviato.
+    assert stage_from_title("Lega Pauper Fall 1° tappa 2026") == ("1", False)
+    assert stage_from_title("Limited Winter 2023 Tappa 1") == ("1", False)
+    assert stage_from_title("Premodern Spring '26 tappa 8") == ("8", False)
+    # Le finali si dichiarano finali, non si numerano.
+    assert stage_from_title("Finale Legacy Autumn 2025") == ("", True)
+    assert stage_from_title("Limited Winter 2023 Finale") == ("", True)
+    # Quello che non si riconosce resta senza numero, non ne inventa uno.
+    assert stage_from_title("Prerelease Strixhaven - TAV. B") == ("", False)
+
+
+def test_titolo_di_una_finale(cfg):
+    from moma_social.models import Event
+
+    evento = Event(date=dt.date(2026, 7, 10), format="Modern",
+                   title="Finale Modern Spring 2026",
+                   league="Modern Spring 2026", is_final=True)
+    card = pipelines._card_evento(cfg, evento.date, "Modern", evento)
+    assert card["sopratitolo"] == "Modern Spring 2026"
+    assert card["titolo"] == "Finale"
+
+
+def test_i_tavoli_della_stessa_tappa_sono_una_card_sola(cfg):
+    """A database sono tre tornei; per chi legge il calendario e' una serata."""
+    from moma_social.models import Event
+
+    def tavolo(lettera):
+        return Event(date=dt.date(2026, 4, 23), format="Limited",
+                     title=f"Limited Spring 2026 Tappa 2 - TAV. {lettera}",
+                     league="Limited Spring 2026", stage="2")
+
+    eventi = [tavolo("A"), tavolo("B"), tavolo("C"),
+              Event(date=dt.date(2026, 4, 23), format="Modern",
+                    title="Modern Spring 2026 Tappa 5",
+                    league="Modern Spring 2026", stage="5")]
+    unici = pipelines._una_card_per_tappa(eventi)
+    assert [e.format for e in unici] == ["Limited", "Modern"]
