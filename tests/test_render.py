@@ -221,3 +221,30 @@ def test_messaggio_se_nessun_browser(monkeypatch):
         _find_chromium()
     assert "Edge" in str(errore.value)
     assert "render.chromium_path" in str(errore.value)
+
+
+def test_card_evento_stampa_indirizzo_sotto_la_sede(cfg):
+    """La sede e l'indirizzo sono due righe, non una stringa sola."""
+    import datetime as d
+
+    from moma_social.pipelines import _card_evento
+
+    contesto = {**_card_evento(cfg, d.date(2026, 9, 24), "Modern"),
+                "background": "", "density": ""}
+    html = build_html(cfg, "evento.html.j2", contesto)
+    assert 'class="valore"' in html and "Uno Critico" in html
+    assert 'class="dettaglio"' in html and "Via Cesare Balbo" in html
+
+
+@pytest.mark.slow
+def test_card_evento_si_renderizza(cfg):
+    """Il template del grafico arriva davvero a PNG, non solo a HTML."""
+    import datetime as d
+
+    from moma_social.pipelines import _card_evento
+
+    contesto = {**_card_evento(cfg, d.date(2026, 9, 24), "Modern"),
+                "background": "", "density": ""}
+    path = render(cfg, "evento.html.j2", contesto, "test-card", size=(1080, 1080))
+    scale = cfg.get("render.scale")
+    assert _size(path) == (1080 * scale, 1080 * scale)

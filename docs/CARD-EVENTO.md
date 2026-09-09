@@ -17,12 +17,21 @@ Tutto in `config/config.toml`, sezione `[content.evento]`:
 | `kicker_1` / `kicker_2` | occhiello in alto a destra | "Evento settimanale" / "Modena" |
 | `kicker_calendario` | riga 1 delle slide del lunedì | "Calendario settimanale" |
 | `badge` | fascia lime | "Modern" |
-| `titolo` | tipografia grande | "Giovedì Modern" |
-| `quando` `dove` | blocco dati | usati solo se il database non li espone |
+| `titolo` | tipografia grande | solo se l'evento non ha un nome a database |
+| `quando` `dove` `indirizzo` | blocco dati | usati solo se il database non li espone |
 | `invito` `link` `qr` | piede | "Iscriviti" / l'indirizzo del sito |
 
 Segnaposto disponibili nei modelli: `{format}` `{weekday}` `{giorno}`
 `{data}` `{title}` `{venue}` `{city}` `{fee}` `{time}` `{org}`.
+
+Il **titolo** è il nome del torneo scritto a database: lo decide chi crea il
+torneo, non l'agente. Il modello `titolo` in configurazione copre solo il caso
+in cui non ci sia nessun evento (per esempio il post del formato del giorno
+generato da `content.formats_by_weekday`).
+
+L'**indirizzo** è la riga piccola sotto la sede. Compare solo quando la sede
+dell'evento coincide con `dove`: accostare l'indirizzo di Uno Critico a un
+torneo giocato altrove indicherebbe il posto sbagliato.
 
 I dati dell'evento hanno la precedenza: `quando`, `dove` e la quota in config
 servono quando la sorgente non li espone. Oggi il Supabase non ha ora di

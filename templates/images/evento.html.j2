@@ -86,6 +86,13 @@
     font-weight: 600; font-size: 46px; letter-spacing: .03em;
     text-transform: uppercase; white-space: nowrap;
   }
+  /* Seconda riga di una voce: l'indirizzo sotto il nome della sede. Piu'
+     piccolo e piu' spento, cosi' non compete con il dato principale. */
+  .voce .dettaglio {
+    font-weight: 600; font-size: 28px; letter-spacing: .04em;
+    text-transform: uppercase; white-space: nowrap;
+    color: #8b9490; margin-top: 2px;
+  }
 
   .piede {
     position: relative; padding: 0 64px 46px;
@@ -129,11 +136,14 @@
     <div class="dati">
       <div class="filo"></div>
       <div class="voci">
-        {% for etichetta, valore in voci %}
-        {% if valore %}
+        {% for voce in voci %}
+        {% if voce.valore %}
         <div class="voce">
-          <span class="etichetta">{{ etichetta }}</span>
-          <span class="valore" data-fit="30">{{ valore }}</span>
+          <span class="etichetta">{{ voce.etichetta }}</span>
+          <span class="valore" data-fit="30">{{ voce.valore }}</span>
+          {% if voce.get("dettaglio") %}
+          <span class="dettaglio" data-fit="18">{{ voce.get("dettaglio") }}</span>
+          {% endif %}
         </div>
         {% endif %}
         {% endfor %}

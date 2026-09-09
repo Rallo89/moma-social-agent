@@ -110,18 +110,28 @@ def _card_evento(cfg: Config, day: dt.date, fmt: str, event=None,
               if event and event.start_time
               else _testo_evento(cfg, "quando", event, day, fmt,
                                  "{giorno}"))
-    dove = ((f"{event.venue} — {event.city}" if event and event.venue and event.city
-             else (event.venue if event and event.venue else ""))
-            or _testo_evento(cfg, "dove", event, day, fmt))
+    sede = _testo_evento(cfg, "dove", event, day, fmt)
+    dove = (event.venue if event and event.venue else "") or sede
+    # L'indirizzo in configurazione e' quello della sede abituale: accostarlo a
+    # una sede diversa sarebbe indicare il posto sbagliato.
+    indirizzo = (_testo_evento(cfg, "indirizzo", event, day, fmt)
+                 if dove.strip().casefold() == sede.strip().casefold() else "")
     quota = ((event.entry_fee if event and event.entry_fee else "")
              or _per_formato(cfg, "quota", fmt))
-    titolo = _testo_evento(cfg, "titolo", event, day, fmt, "{weekday} {format}")
+    # Il nome del torneo lo decide chi lo crea a database; il modello in
+    # configurazione copre solo il caso in cui non ci sia nessun evento.
+    titolo = ((event.title if event and event.title else "")
+              or _testo_evento(cfg, "titolo", event, day, fmt, "{weekday} {format}"))
     return {
         "kicker_1": kicker_1 or _testo_evento(cfg, "kicker_1", event, day, fmt),
         "kicker_2": kicker_2 or _testo_evento(cfg, "kicker_2", event, day, fmt),
         "badge": _testo_evento(cfg, "badge", event, day, fmt, "{format}"),
         "titolo": titolo,
-        "voci": [("Quando", quando), ("Dove", dove), ("Iscrizione", quota)],
+        "voci": [
+            {"etichetta": "Quando", "valore": quando, "dettaglio": ""},
+            {"etichetta": "Dove", "valore": dove, "dettaglio": indirizzo},
+            {"etichetta": "Iscrizione", "valore": quota, "dettaglio": ""},
+        ],
         "link": _senza_schema(_testo_evento(cfg, "link", event, day, fmt)),
         "invito": cfg.get("content.evento.invito", "Iscriviti"),
         "qr_image": cfg.get("content.evento.qr", ""),

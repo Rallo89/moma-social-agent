@@ -41,7 +41,7 @@ def test_calendario_settimanale(cfg):
     # Ogni card porta i suoi slot compilati, non i dati grezzi dell'evento.
     assert context["kicker_1"] == "Calendario settimanale"
     assert context["kicker_2"] == "1/5"
-    assert [etichetta for etichetta, _ in context["voci"]] == [
+    assert [voce["etichetta"] for voce in context["voci"]] == [
         "Quando", "Dove", "Iscrizione"]
 
 
@@ -315,7 +315,7 @@ def test_una_sera_con_due_tornei_produce_due_post(cfg, tmp_path):
 def test_quota_dipende_dal_formato(cfg):
     """Il Pauper non costa come il Limited."""
     def quota(fmt):
-        return dict(pipelines._card_evento(cfg, dt.date(2026, 3, 12), fmt)["voci"])[
+        return _voci(pipelines._card_evento(cfg, dt.date(2026, 3, 12), fmt))[
             "Iscrizione"]
 
     assert quota("Pauper") == "7 €"
@@ -329,17 +329,40 @@ def test_il_link_perde_lo_schema(cfg):
         "modena-magic.vercel.app/tornei")
 
 
+def _voci(card):
+    return {voce["etichetta"]: voce["valore"] for voce in card["voci"]}
+
+
 def test_la_card_usa_i_dati_dell_evento_quando_ci_sono(cfg):
     """Sede e quota vengono dall'evento; i modelli in config sono il ripiego."""
     from moma_social.models import Event
 
     evento = Event(date=dt.date(2026, 3, 12), format="Modern", start_time="21:15",
-                   venue="Circolo Arcano", city="Modena", entry_fee="8 €")
-    voci = dict(pipelines._card_evento(cfg, evento.date, "Modern", evento)["voci"])
+                   venue="Circolo Arcano", city="Modena", entry_fee="8 €",
+                   title="Tappa 4 - Modern League")
+    card = pipelines._card_evento(cfg, evento.date, "Modern", evento)
+    # Il titolo e' il nome del torneo a database, non un'etichetta costruita.
+    assert card["titolo"] == "Tappa 4 - Modern League"
+    voci = _voci(card)
     assert voci["Quando"] == "Giovedì 12 marzo, 21:15"
-    assert voci["Dove"] == "Circolo Arcano — Modena"
+    assert voci["Dove"] == "Circolo Arcano"
     assert voci["Iscrizione"] == "8 €"
 
-    senza = dict(pipelines._card_evento(cfg, dt.date(2026, 3, 12), "Modern")["voci"])
-    assert senza["Quando"] == "Giovedì 12 marzo, 21"        # ora da config
-    assert senza["Dove"] == cfg.get("content.evento.dove")
+    senza = pipelines._card_evento(cfg, dt.date(2026, 3, 12), "Modern")
+    assert senza["titolo"] == "Giovedì Modern"              # nessun evento
+    assert _voci(senza)["Quando"] == "Giovedì 12 marzo, 21:00"
+
+
+def test_l_indirizzo_segue_la_sede(cfg):
+    """L'indirizzo in config vale per la sede abituale, non per un'altra."""
+    from moma_social.models import Event
+
+    def dettaglio(venue):
+        evento = Event(date=dt.date(2026, 3, 12), format="Modern", venue=venue)
+        card = pipelines._card_evento(cfg, evento.date, "Modern", evento)
+        return next(v for v in card["voci"] if v["etichetta"] == "Dove").get(
+            "dettaglio", "")
+
+    assert dettaglio("Uno Critico") == cfg.get("content.evento.indirizzo")
+    # Sede diversa: meglio nessun indirizzo che quello sbagliato.
+    assert dettaglio("Palazzetto Fiera") == ""

@@ -200,8 +200,11 @@ kicker_2          = "{city}"
 kicker_calendario = "Calendario settimanale"   # riga 1 delle slide del lunedi
 badge             = "{format}"
 titolo            = "{weekday} {format}"
-quando            = "{giorno}, 21"             # usata se la sorgente non ha l'ora
-dove              = "Uno Critico — Modena - Via Cesare Balbo, 88/B"
+quando            = "{giorno}, 21:00"          # usata se la sorgente non ha l'ora
+dove              = "Uno Critico"              # usata se l'evento non ha sede
+# Riga piccola sotto la sede. Compare solo se la sede e' quella qui sopra:
+# accostare questo indirizzo a un'altra sede indicherebbe il posto sbagliato.
+indirizzo         = "Via Cesare Balbo, 88/B, Modena"
 invito            = "Iscriviti"
 link              = "https://modena-magic.vercel.app/tornei"
 qr                = ""                         # PNG del QR; vuoto = nessun QR
