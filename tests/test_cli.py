@@ -194,3 +194,22 @@ def test_doctor_senza_tappe_ricade_sul_formato(cfg):
     assert lega == ""
     assert "nessuna lega" in etichetta
     assert formato
+
+
+def test_agenda_mostra_il_titolo_della_card_e_la_quota(cfg, capsys, monkeypatch):
+    """L'agenda anticipa la grafica: se sbaglia qui, sbaglia anche sulla card."""
+    import datetime as d
+
+    from moma_social import repos
+    from moma_social.models import Event
+
+    def eventi(cfg_, start, end):
+        return [Event(date=d.date(2026, 9, 17), format="Modern",
+                      title="Modern Fall tappa 2", league="Modern Fall 2026",
+                      stage="2", venue="Uno Critico", entry_fee="10.00")]
+
+    monkeypatch.setattr(repos, "fetch_events", eventi)
+    assert cli.main(["agenda", "--date", "2026-09-17"]) == cli.EXIT_OK
+    out = capsys.readouterr().out
+    assert "Modern Fall 2026 · Tappa 2" in out    # non il nome grezzo
+    assert "10 €" in out                          # non "10.00"

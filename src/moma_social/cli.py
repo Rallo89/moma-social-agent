@@ -360,9 +360,20 @@ def cmd_schema(args) -> int:
     return EXIT_OK
 
 
+def _etichetta_evento(event) -> str:
+    """Come l'evento si chiamera' sulla grafica."""
+    if event.league:
+        if event.is_final:
+            return f"{event.league} · Finale"
+        if event.stage:
+            return f"{event.league} · Tappa {event.stage}"
+    return event.label
+
+
 def cmd_agenda(args) -> int:
     """Cosa c'e' in programma: utile per decidere a mano cosa postare."""
     cfg = config.load(args.config)
+    from .models import format_fee
     from .repos import events_by_day, fetch_events
 
     day = resolve_date(args.date or "today", cfg.timezone)
@@ -375,15 +386,21 @@ def cmd_agenda(args) -> int:
     if args.json:
         print(json.dumps(
             [{"date": e.date.isoformat(), "title": e.title, "format": e.format,
-              "start_time": e.start_time, "venue": e.venue} for e in events],
+              "league": e.league, "stage": e.stage, "final": e.is_final,
+              "entry_fee": e.entry_fee, "start_time": e.start_time,
+              "venue": e.venue, "address": e.address} for e in events],
             ensure_ascii=False, indent=2))
         return EXIT_OK
     print(f"Settimana {fmt_range(start, end)} — {len(events)} eventi")
     for group_day, group in events_by_day(events):
         print(f"\n{group_day.isoformat()} — {group[0].weekday}")
         for event in group:
-            print(f"  {event.start_time or '  —  '}  {event.label}  [{event.format}]"
-                  f"{'  @' + event.venue if event.venue else ''}")
+            # Si mostra quello che finira' sulla card, non la riga grezza:
+            # se qui il titolo o la quota sono sbagliati, lo sono anche li'.
+            print(f"  {event.start_time or '  —  '}  {_etichetta_evento(event)}"
+                  f"  [{event.format}]"
+                  f"{'  @' + event.venue if event.venue else ''}"
+                  f"{'  ' + format_fee(event.entry_fee) if event.entry_fee else ''}")
     return EXIT_OK
 
 
