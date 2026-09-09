@@ -64,6 +64,26 @@ def format_record(wins, losses, draws) -> str:
     return f"{v}-{s}-{p}" if p else f"{v}-{s}"
 
 
+def format_fee(valore) -> str:
+    """La quota come si scrive su una locandina, da come sta a database.
+
+    Un database registra un numero: 7, 7.00, 7.5. Una grafica scrive "7 €" e
+    "7,50 €". La conversione e' presentazione, quindi sta qui — e un valore
+    gia' scritto per esteso ("Gratis", "10 € + buste") passa intatto, perche'
+    chi l'ha scritto cosi' aveva una ragione.
+    """
+    testo = str(valore or "").strip()
+    if not testo:
+        return ""
+    try:
+        numero = float(testo.replace(",", "."))
+    except ValueError:
+        return testo
+    if numero == int(numero):
+        return f"{int(numero)} €"
+    return f"{numero:.2f}".replace(".", ",") + " €"
+
+
 @dataclass
 class ResultRow:
     rank: int

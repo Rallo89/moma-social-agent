@@ -12,7 +12,7 @@ import datetime as dt
 from .captions import render_caption
 from .config import Config
 from .errors import MtgSocialError, NoDataError
-from .models import PostDraft, Standings
+from .models import PostDraft, Standings, format_fee
 from .render import post_size, render
 from .repos import (
     events_by_day,
@@ -132,7 +132,9 @@ def _card_evento(cfg: Config, day: dt.date, fmt: str, event=None,
     # una sede diversa sarebbe indicare il posto sbagliato.
     indirizzo = (_testo_evento(cfg, "indirizzo", event, day, fmt)
                  if dove.strip().casefold() == sede.strip().casefold() else "")
-    quota = ((event.entry_fee if event and event.entry_fee else "")
+    # La quota del torneo vince sempre: quella in configurazione e' un ripiego
+    # per gli eventi che a database non ce l'hanno.
+    quota = (format_fee(event.entry_fee if event else "")
              or _per_formato(cfg, "quota", fmt))
     sopratitolo, titolo = _titolo_evento(cfg, event, day, fmt)
     return {

@@ -400,3 +400,18 @@ def test_lega_senza_numero_di_tappa_non_inventa_la_tappa(cfg):
     card = pipelines._card_evento(cfg, evento.date, "Modern", evento)
     assert card["sopratitolo"] == ""
     assert card["titolo"] == "Modern Fall tappa 3"
+
+
+def test_la_quota_del_database_vince_su_quella_di_configurazione(cfg):
+    """Un numero a database diventa "7 €"; il testo scritto a mano resta com'e'."""
+    from moma_social.models import Event, format_fee
+
+    assert format_fee("7") == "7 €"
+    assert format_fee(7.0) == "7 €"
+    assert format_fee("7.50") == "7,50 €"
+    assert format_fee("Gratis") == "Gratis"      # gia' scritto per esteso
+    assert format_fee("") == ""
+
+    evento = Event(date=dt.date(2026, 3, 12), format="Pauper", entry_fee="12")
+    card = pipelines._card_evento(cfg, evento.date, "Pauper", evento)
+    assert _voci(card)["Iscrizione"] == "12 €"   # non i 7 € del ripiego
