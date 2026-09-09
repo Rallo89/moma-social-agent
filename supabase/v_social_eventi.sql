@@ -17,9 +17,22 @@
 --  Nessun dato personale: solo il torneo, mai chi ci gioca.
 --
 --  Sostituire <UUID-MODENA-MAGIC> con lo stesso valore delle altre viste.
+--
+--  PERCHE' UN DROP E NON UN CREATE OR REPLACE
+--  `create or replace view` in Postgres sa solo aggiungere colonne in fondo:
+--  non puo' rinominarle ne' riordinarle, e qui l'ordine cambia. Da cui
+--
+--      ERROR: cannot change name of view column "quota" to "indirizzo"
+--
+--  Il drop e' senza CASCADE apposta: se qualcosa dipendesse da questa vista,
+--  meglio un errore che scoprire dopo di averlo cancellato. In quel caso
+--  fermarsi e guardare cosa dipende, invece di aggiungere CASCADE.
+--  Fra il drop e il create la vista non esiste: eseguire tutto insieme.
 -- ═══════════════════════════════════════════════════════════════════════════
 
-create or replace view public.v_social_eventi as
+drop view if exists public.v_social_eventi;
+
+create view public.v_social_eventi as
 select t.start_date                    as data,
        t.name                          as titolo,
        t.format::text                  as formato,
