@@ -69,6 +69,12 @@
     font-weight: 700; font-size: 30px; letter-spacing: .2em;
     text-transform: uppercase; padding: 9px 22px; white-space: nowrap;
   }
+  /* Prima riga del titolo: il nome della lega, subordinato alla tappa. */
+  .sopratitolo {
+    font-weight: 700; font-size: 44px; letter-spacing: .06em;
+    text-transform: uppercase; white-space: nowrap;
+    color: #d5dad6; margin-bottom: 6px;
+  }
   .titolo {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 190px;
@@ -132,7 +138,12 @@
 
   <div class="corpo" id="corpo">
     {% if badge %}<div class="badge" data-fit="20">{{ badge }}</div>{% endif %}
-    <div class="titolo" data-fit="100" data-fit-altezza="corpo">{{ titolo }}</div>
+    <div class="blocco-titolo">
+      {% if sopratitolo %}
+      <div class="sopratitolo" data-fit="24">{{ sopratitolo }}</div>
+      {% endif %}
+      <div class="titolo" data-fit="100" data-fit-altezza="corpo">{{ titolo }}</div>
+    </div>
     <div class="dati">
       <div class="filo"></div>
       <div class="voci">

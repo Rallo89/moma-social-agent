@@ -366,3 +366,37 @@ def test_l_indirizzo_segue_la_sede(cfg):
     assert dettaglio("Uno Critico") == cfg.get("content.evento.indirizzo")
     # Sede diversa: meglio nessun indirizzo che quello sbagliato.
     assert dettaglio("Palazzetto Fiera") == ""
+
+
+def test_titolo_di_una_tappa_di_lega(cfg):
+    """Lega e numero: il titolo resta uguale ogni settimana."""
+    from moma_social.models import Event
+
+    evento = Event(date=dt.date(2026, 3, 12), format="Modern",
+                   title="Modern Fall tappa 3 - recupero",
+                   league="Lega Modern Fall", stage="3")
+    card = pipelines._card_evento(cfg, evento.date, "Modern", evento)
+    assert card["sopratitolo"] == "Lega Modern Fall"
+    assert card["titolo"] == "Tappa 3"
+
+
+def test_evento_spot_tiene_il_proprio_nome(cfg):
+    """Senza lega non c'e' nessuna tappa da numerare: vale il nome dell'evento."""
+    from moma_social.models import Event
+
+    evento = Event(date=dt.date(2026, 3, 14), format="Limited",
+                   title="Prerelease Edge of Eternities")
+    card = pipelines._card_evento(cfg, evento.date, "Limited", evento)
+    assert card["sopratitolo"] == ""
+    assert card["titolo"] == "Prerelease Edge of Eternities"
+
+
+def test_lega_senza_numero_di_tappa_non_inventa_la_tappa(cfg):
+    """Meglio il nome del torneo che un "Tappa" senza numero."""
+    from moma_social.models import Event
+
+    evento = Event(date=dt.date(2026, 3, 12), format="Modern",
+                   title="Modern Fall tappa 3", league="Lega Modern Fall")
+    card = pipelines._card_evento(cfg, evento.date, "Modern", evento)
+    assert card["sopratitolo"] == ""
+    assert card["titolo"] == "Modern Fall tappa 3"

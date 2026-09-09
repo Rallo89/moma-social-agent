@@ -25,6 +25,11 @@ class Event:
     prize: str = ""
     signup_url: str = ""
     notes: str = ""
+    # Lega di appartenenza e numero di tappa: insieme danno alla grafica un
+    # titolo uguale ogni settimana ("Lega Modern Fall" / "Tappa 3") invece del
+    # nome che il torneo ha a database, diverso ogni volta.
+    league: str = ""
+    stage: str = ""
     extra: dict = field(default_factory=dict)
 
     @property

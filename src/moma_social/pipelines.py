@@ -103,6 +103,22 @@ def _senza_schema(url: str) -> str:
     return url.rstrip("/")
 
 
+def _titolo_evento(cfg: Config, event, day: dt.date, fmt: str) -> tuple[str, str]:
+    """Sopratitolo e titolo della card: (lega, "Tappa N").
+
+    Una tappa di lega si nomina sempre allo stesso modo, cosi' la grafica non
+    cambia forma ogni settimana solo perche' e' cambiato il nome del torneo a
+    database. Un evento spot, che non appartiene a nessuna lega, tiene invece
+    il nome che ha: e' l'unica cosa che lo identifica.
+    """
+    if event and event.league and event.stage:
+        modello = cfg.get("content.evento.titolo_tappa", "Tappa {stage}")
+        return event.league, modello.format(stage=event.stage)
+    if event and event.title:
+        return "", event.title
+    return "", _testo_evento(cfg, "titolo", event, day, fmt, "{weekday} {format}")
+
+
 def _card_evento(cfg: Config, day: dt.date, fmt: str, event=None,
                  kicker_1: str = "", kicker_2: str = "") -> dict:
     """Contesto della grafica evento: gli slot del template del grafico."""
@@ -118,14 +134,12 @@ def _card_evento(cfg: Config, day: dt.date, fmt: str, event=None,
                  if dove.strip().casefold() == sede.strip().casefold() else "")
     quota = ((event.entry_fee if event and event.entry_fee else "")
              or _per_formato(cfg, "quota", fmt))
-    # Il nome del torneo lo decide chi lo crea a database; il modello in
-    # configurazione copre solo il caso in cui non ci sia nessun evento.
-    titolo = ((event.title if event and event.title else "")
-              or _testo_evento(cfg, "titolo", event, day, fmt, "{weekday} {format}"))
+    sopratitolo, titolo = _titolo_evento(cfg, event, day, fmt)
     return {
         "kicker_1": kicker_1 or _testo_evento(cfg, "kicker_1", event, day, fmt),
         "kicker_2": kicker_2 or _testo_evento(cfg, "kicker_2", event, day, fmt),
         "badge": _testo_evento(cfg, "badge", event, day, fmt, "{format}"),
+        "sopratitolo": sopratitolo,
         "titolo": titolo,
         "voci": [
             {"etichetta": "Quando", "valore": quando, "dettaglio": ""},

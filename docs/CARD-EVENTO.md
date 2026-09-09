@@ -24,10 +24,24 @@ Tutto in `config/config.toml`, sezione `[content.evento]`:
 Segnaposto disponibili nei modelli: `{format}` `{weekday}` `{giorno}`
 `{data}` `{title}` `{venue}` `{city}` `{fee}` `{time}` `{org}`.
 
-Il **titolo** è il nome del torneo scritto a database: lo decide chi crea il
-torneo, non l'agente. Il modello `titolo` in configurazione copre solo il caso
-in cui non ci sia nessun evento (per esempio il post del formato del giorno
-generato da `content.formats_by_weekday`).
+Il **titolo** ha tre forme, in ordine di preferenza:
+
+1. **Tappa di lega** — due righe: sopra il nome della lega, più piccolo; sotto
+   `Tappa N`, in tipografia grande. Serve che la vista esponga sia `lega` sia
+   `tappa`. È la forma normale, e resta identica ogni settimana.
+2. **Evento spot** — una riga sola con il nome del torneo a database. Un
+   evento che non appartiene a nessuna lega non ha una tappa da numerare, e il
+   suo nome è l'unica cosa che lo identifica.
+3. **Nessun evento** — il modello `titolo` in configurazione (`{weekday}
+   {format}`). Capita solo quando il post del formato del giorno viene
+   generato dal fallback `content.formats_by_weekday`.
+
+Una lega senza numero di tappa ricade nel caso 2: meglio il nome del torneo
+che un "Tappa" senza numero.
+
+Il numero di tappa non è un campo del database: la vista lo calcola contando
+i tornei della stessa lega in ordine di data — vedi
+`supabase/v_social_eventi.sql`.
 
 L'**indirizzo** è la riga piccola sotto la sede. Compare solo quando la sede
 dell'evento coincide con `dove`: accostare l'indirizzo di Uno Critico a un

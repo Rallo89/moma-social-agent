@@ -66,6 +66,8 @@ def fetch_events(cfg: Config, start: dt.date, end: dt.date) -> list[Event]:
                 prize=_clean(row.get("prize")),
                 signup_url=_clean(row.get("signup_url")),
                 notes=_clean(row.get("notes")),
+                league=_clean(row.get("league")),
+                stage=_clean(row.get("stage")),
                 extra=row.get("_extra", {}),
             )
         )

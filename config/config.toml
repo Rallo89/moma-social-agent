@@ -85,8 +85,12 @@ format    = "formato"
 venue     = "sede"
 entry_fee = "quota"
 notes     = "note"
+league    = "lega"      # nome della lega, prima riga del titolo
+stage     = "tappa"     # numero di tappa, seconda riga: "Tappa 3"
 # Non presenti nel database: ora di inizio, premi, link iscrizioni. Se verranno
 # aggiunti a `tournaments`, basta esporli nella vista e mapparli qui.
+# `lega` e `tappa` richiedono la modifica in supabase/v_social_eventi.sql:
+# finche' la vista non le espone, la card tiene il nome del torneo.
 
 [sources.results]
 url  = "https://wxvxtodrnrefbechawgz.supabase.co/rest/v1/v_social_risultati?select=*&data=eq.{date}&order=posizione.asc"
@@ -199,6 +203,9 @@ kicker_1          = "Evento settimanale"
 kicker_2          = "{city}"
 kicker_calendario = "Calendario settimanale"   # riga 1 delle slide del lunedi
 badge             = "{format}"
+# Titolo di una tappa di lega: sopra il nome della lega, sotto questa riga.
+titolo_tappa      = "Tappa {stage}"
+# Usato solo quando non c'e' nessun evento in sorgente (post da fallback).
 titolo            = "{weekday} {format}"
 quando            = "{giorno}, 21:00"          # usata se la sorgente non ha l'ora
 dove              = "Uno Critico"              # usata se l'evento non ha sede
