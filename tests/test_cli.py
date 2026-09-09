@@ -173,3 +173,24 @@ def test_settimana_prosegue_dopo_una_giornata_fallita(cfg, monkeypatch, capsys):
     # Il fallimento si conta a parte: non deve travestirsi da giorno di riposo.
     assert "2 post su 7 giornate (4 senza tappe, 1 fallita)" in catturato.out
     assert "1 giornate fallite" in catturato.err
+
+
+def test_doctor_sonda_la_classifica_con_la_lega_della_tappa(cfg):
+    """Sondare per solo formato mescolerebbe le stagioni e darebbe rosso."""
+    import datetime as d
+
+    formato, lega, etichetta = cli._classifica_da_provare(
+        cfg, d.date(2026, 3, 15), d.date(2026, 3, 13))
+    assert formato == "Pauper"
+    assert lega == "lega-pauper-2026"        # ereditata dalla tappa
+    assert "lega della tappa" in etichetta
+
+
+def test_doctor_senza_tappe_ricade_sul_formato(cfg):
+    import datetime as d
+
+    formato, lega, etichetta = cli._classifica_da_provare(
+        cfg, d.date(2030, 1, 10), d.date(2030, 1, 9))
+    assert lega == ""
+    assert "nessuna lega" in etichetta
+    assert formato

@@ -213,9 +213,9 @@ def cmd_doctor(args) -> int:
     check(f"Sorgente risultati ({giorno}, {motivo})",
           lambda: f"{len(fetch_leg_results(cfg, giorno).rows)} righe")
 
-    formato = args.format or _formato_da_provare(cfg, oggi)
-    check(f"Sorgente classifiche (formato '{formato}')",
-          lambda: f"{len(fetch_standings(cfg, formato).rows)} righe")
+    formato, lega, etichetta = _classifica_da_provare(cfg, oggi, giorno, args.format)
+    check(f"Sorgente classifiche ({etichetta})",
+          lambda: f"{len(fetch_standings(cfg, formato, league=lega).rows)} righe")
 
     backend = cfg.get("media.backend", "none")
     check(f"Hosting immagini ({backend})", lambda: _check_media(cfg, backend))
@@ -256,6 +256,29 @@ def _formato_da_provare(cfg, oggi) -> str:
         return "Modern"
     formati = formats_on(eventi)
     return formati[0] if formati else "Modern"
+
+
+def _classifica_da_provare(cfg, oggi, giorno, formato_forzato: str = ""):
+    """Formato e lega su cui sondare la classifica.
+
+    La pipeline non chiede mai "la classifica del Pauper": chiede quella della
+    lega a cui appartiene la tappa appena giocata. Sondare per solo formato
+    farebbe arrivare insieme tutte le stagioni — Pauper Autumn 2024, Spring
+    2025, Fall 2026 — e il doctor segnalerebbe rosso su un sistema sano.
+    """
+    from .repos import fetch_leg_results_all
+
+    if not formato_forzato:
+        try:
+            tappe = fetch_leg_results_all(cfg, giorno)
+        except MtgSocialError:
+            tappe = []
+        for tappa in tappe:
+            if tappa.league:
+                return (tappa.format, tappa.league,
+                        f"{tappa.format}, lega della tappa del {giorno}")
+    formato = formato_forzato or _formato_da_provare(cfg, oggi)
+    return formato, "", f"formato '{formato}', nessuna lega da cui partire"
 
 
 def _check_media(cfg, backend: str) -> str:
