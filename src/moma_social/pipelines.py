@@ -25,7 +25,10 @@ from .repos import (
 )
 from .timeutil import (
     fmt_date,
+    fmt_month,
     fmt_range,
+    month_bounds,
+    next_month,
     resolve_date,
     week_bounds,
     weekday_it,
@@ -284,6 +287,63 @@ def weekly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
     )
 
 
+# ── 1bis. Calendario del mese (il 30, per il mese dopo) ─────────────────────
+def monthly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
+    """Tutti gli appuntamenti del mese successivo, in elenco.
+
+    Gira a fine mese e guarda avanti: chi lo legge deve potersi segnare le
+    date prima che il mese cominci.
+    """
+    day = day or resolve_date("today", cfg.timezone)
+    inizio, fine = month_bounds(next_month(day))
+    events = _una_card_per_tappa(fetch_events(cfg, inizio, fine))
+    mese = fmt_month(inizio)
+
+    # Un mese ha piu' serate di quante ne stiano leggibili in una slide: si
+    # impagina invece di rimpicciolire il testo finche' non si legge piu'.
+    per_slide = cfg.get("posts.monthly_calendar.rows_per_slide", 8)
+    max_slide = min(cfg.get("posts.monthly_calendar.max_carousel_slides", 10), 10)
+    pagine = _pagine(events, per_slide)[:max_slide]
+
+    template = cfg.get("posts.monthly_calendar.image_template", "settimana.html.j2")
+    size = post_size(cfg, "monthly_calendar")
+    immagini = [
+        render(
+            cfg, template,
+            {"kicker_1": cfg.get("content.evento.kicker_mensile",
+                                 "Calendario del mese"),
+             "kicker_2": (f"{indice + 1}/{len(pagine)}" if len(pagine) > 1
+                          else cfg.get("org.city", "")),
+             "badge": mese,
+             "titolo": cfg.get("content.evento.titolo_mese", "Il mese"),
+             "serate": [_serata(cfg, evento) for evento in pagina],
+             "link": _senza_schema(cfg.get("content.evento.link", "")),
+             "invito": cfg.get("content.evento.invito", "Iscriviti"),
+             "qr_image": cfg.get("content.evento.qr", ""),
+             "background": _background(cfg, "monthly_calendar"), "density": ""},
+            _stamp(cfg, "mese", inizio,
+                   f"{indice + 1:02d}" if len(pagine) > 1 else ""),
+            size=size,
+        )
+        for indice, pagina in enumerate(pagine)
+    ]
+    caption = render_caption(
+        cfg, "monthly_calendar",
+        {"days": events_by_day(events), "mese": mese, "periodo": mese,
+         "events_count": len(events), "formats": formats_on(events),
+         "signup_url": cfg.get("content.evento.link", "")},
+        extra_hashtags=[f"#{f.replace(' ', '')}" for f in formats_on(events)],
+    )
+    return PostDraft(
+        kind="monthly_calendar",
+        images=[str(path) for path in immagini],
+        caption=caption,
+        meta={"month_start": inizio.isoformat(), "month_end": fine.isoformat(),
+              "events": len(events), "slide": len(immagini),
+              "slide_tagliate": max(0, len(_pagine(events, per_slide)) - len(pagine))},
+    )
+
+
 # ── 2. Formato del giorno (mercoledi e giovedi 10:00) ───────────────────────
 def format_spotlight(cfg: Config, day: dt.date | None = None,
                      fmt: str = "") -> PostDraft:
@@ -510,6 +570,7 @@ def _next_event_label(cfg: Config, after: dt.date, fmt: str) -> str:
 
 PIPELINES = {
     "weekly_calendar": weekly_calendar,
+    "monthly_calendar": monthly_calendar,
     "format_spotlight": format_spotlight,
     "leg_results": leg_results,
 }

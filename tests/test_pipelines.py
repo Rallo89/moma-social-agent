@@ -514,3 +514,27 @@ def test_riga_della_settimana_usa_l_ora_di_configurazione(cfg):
     assert _serata(cfg, format="Modern")["quando"] == "Giovedì 17 · 21:00"
     assert _serata(cfg, format="Modern", start_time="15:00"
                    )["quando"] == "Giovedì 17 · 15:00"
+
+
+def test_calendario_mensile_guarda_al_mese_dopo(cfg):
+    """Gira il 30 e annuncia il mese successivo, non quello in corso."""
+    cfg.data["sources"]["events"] = {"url": "data/samples/events.json",
+                                     "kind": "auto"}
+    draft = pipelines.monthly_calendar(cfg, dt.date(2026, 2, 28))
+    assert draft.kind == "monthly_calendar"
+    assert draft.meta["month_start"] == "2026-03-01"
+    assert draft.meta["month_end"] == "2026-03-31"
+    template, contesto = RENDERED[0]
+    assert template == "settimana.html.j2"
+    assert contesto["badge"] == "marzo 2026"
+
+
+def test_calendario_mensile_impagina_invece_di_rimpicciolire(cfg):
+    """Un mese pieno non entra leggibile in una slide sola."""
+    cfg.data["sources"]["events"] = {"url": "data/samples/events.json",
+                                     "kind": "auto"}
+    cfg.data["posts"]["monthly_calendar"]["rows_per_slide"] = 2
+    draft = pipelines.monthly_calendar(cfg, dt.date(2026, 2, 28))
+    assert len(draft.images) == 3          # 5 eventi, 2 per slide
+    assert RENDERED[0][1]["kicker_2"] == "1/3"
+    assert len(RENDERED[0][1]["serate"]) == 2

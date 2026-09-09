@@ -25,7 +25,7 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoes
 from .config import Config
 from .errors import RenderError
 from .pngutil import crop_top_left
-from .timeutil import fmt_date, weekday_it
+from .timeutil import fmt_date, resolve_date, weekday_it
 
 # Nomi cercati nel PATH. msedge c'e' sempre su Windows ed e' Chromium:
 # per fare uno screenshot va bene quanto Chrome.
@@ -222,6 +222,11 @@ def render(cfg: Config, template: str, context: dict, out_name: str,
     context = {**context, "width": size[0], "height": size[1]}
     html = build_html(cfg, template, context)
     out_dir = cfg.resolve_path(cfg.get("render.output_dir", "out"))
+    if cfg.get("render.cartella_per_giorno", True):
+        # Una cartella per lancio: il giorno in cui l'agente ha girato, non
+        # quello dell'evento. Rigenerare una settimana vecchia non si mescola
+        # con l'ultimo giro, e per capire cosa e' uscito oggi basta la data.
+        out_dir = out_dir / resolve_date("today", cfg.timezone).isoformat()
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / (out_name if out_name.endswith(".png") else f"{out_name}.png")
 

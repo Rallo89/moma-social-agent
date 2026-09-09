@@ -6,6 +6,7 @@ Europe/Rome). GitHub Actions gira in UTC: la conversione avviene solo qui.
 
 from __future__ import annotations
 
+import calendar
 import datetime as dt
 import re
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -96,6 +97,34 @@ def week_bounds(day: dt.date, week_start: str = "monday") -> tuple[dt.date, dt.d
     offset = WEEKDAY_NAMES[week_start]
     start = day - dt.timedelta(days=(day.weekday() - offset) % 7)
     return start, start + dt.timedelta(days=6)
+
+
+def month_bounds(day: dt.date) -> tuple[dt.date, dt.date]:
+    """Primo e ultimo giorno del mese che contiene `day` (estremi inclusi)."""
+    primo = day.replace(day=1)
+    ultimo = calendar.monthrange(day.year, day.month)[1]
+    return primo, day.replace(day=ultimo)
+
+
+def next_month(day: dt.date) -> dt.date:
+    """Il primo del mese successivo."""
+    return (day.replace(day=1) + dt.timedelta(days=32)).replace(day=1)
+
+
+def fmt_month(day: dt.date) -> str:
+    """'ottobre 2026'."""
+    return f"{MONTHS_IT[day.month - 1]} {day.year}"
+
+
+def is_monthly_run_day(day: dt.date, giorno: int = 30) -> bool:
+    """Se oggi e' il giorno del mese in cui gira il post mensile.
+
+    Il 30 non esiste a febbraio: in un mese piu' corto vale l'ultimo giorno,
+    altrimenti quel post salterebbe un mese all'anno senza che nessuno se ne
+    accorga fino a marzo.
+    """
+    ultimo = calendar.monthrange(day.year, day.month)[1]
+    return day.day == min(giorno, ultimo)
 
 
 def fmt_date(day: dt.date, with_weekday: bool = False) -> str:

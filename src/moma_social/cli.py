@@ -18,7 +18,13 @@ from . import __version__, config
 from .errors import ConfigError, MtgSocialError, NoDataError
 from .pipelines import drafts
 from .publish import publish_draft
-from .timeutil import fmt_range, now, resolve_date, week_bounds
+from .timeutil import (
+    fmt_range,
+    is_monthly_run_day,
+    now,
+    resolve_date,
+    week_bounds,
+)
 
 EXIT_OK = 0
 EXIT_ERROR = 1
@@ -172,6 +178,8 @@ def cmd_gate(args) -> int:
     ok = local.hour == args.hour
     if args.weekday is not None:
         ok = ok and local.weekday() == args.weekday
+    if getattr(args, "day_of_month", None) is not None:
+        ok = ok and is_monthly_run_day(local.date(), args.day_of_month)
     print(f"{local.isoformat()} (ora locale {cfg.timezone}) -> run={'true' if ok else 'false'}")
     _github_output(run=str(ok).lower(), local_time=local.strftime("%Y-%m-%d %H:%M"))
     if not ok:
@@ -416,6 +424,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     for name, kind, help_text in (
         ("weekly", "weekly_calendar", "post calendario settimanale (lunedi 10:00)"),
+        ("monthly", "monthly_calendar",
+         "post calendario del mese successivo (il 30, 10:00)"),
         ("format", "format_spotlight", "post formato del giorno (mer/gio 10:00)"),
         ("results", "leg_results", "carosello risultati + classifica (gio/ven 03:00)"),
     ):
@@ -438,6 +448,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_gate)
     p.add_argument("--hour", type=int, required=True, help="ora attesa in fuso locale")
     p.add_argument("--weekday", type=int, default=None, help="0=lunedi ... 6=domenica")
+    p.add_argument("--day-of-month", type=int, default=None, dest="day_of_month",
+                   help="giorno del mese; nei mesi piu' corti vale l'ultimo")
 
     p = sub.add_parser("doctor", help="diagnosi di configurazione, dati e credenziali")
     p.set_defaults(func=cmd_doctor)

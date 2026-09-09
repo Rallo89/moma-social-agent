@@ -103,6 +103,7 @@ Verifica: rigenerate e **guardate i PNG**.
 
 ```bash
 momasocial weekly  --no-publish
+momasocial monthly --no-publish   # calendario del mese successivo
 momasocial format  --no-publish
 momasocial results --no-publish
 ```

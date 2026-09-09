@@ -3,19 +3,21 @@
 Agente che genera e pubblica su Instagram i contenuti settimanali di
 un'associazione no-profit che organizza tornei di Magic: The Gathering.
 
-Cinque post a settimana, tutti automatici:
+Cinque post a settimana piu' uno al mese, tutti automatici:
 
 | Quando (Europe/Rome) | Post | Contenuto |
 |---|---|---|
-| **Lunedi 10:00** | immagine singola | calendario di tutti gli eventi della settimana |
+| **Lunedi 10:00** | carosello | riepilogo della settimana + una card per serata |
 | **Mercoledi 10:00** | immagine singola | formato in programma quel giorno |
 | **Giovedi 10:00** | immagine singola | formato in programma quel giorno |
-| **Giovedi 03:00** | carosello 2 slide | risultati della tappa di mercoledi + classifica generale |
-| **Venerdi 03:00** | carosello 2 slide | risultati della tappa di giovedi + classifica generale |
+| **Giovedi 03:00** | carosello | risultati della tappa di mercoledi + classifica generale |
+| **Venerdi 03:00** | carosello | risultati della tappa di giovedi + classifica generale |
+| **Il 30, 10:00** | carosello | calendario del mese successivo |
 
 I formati di mercoledi e giovedi non sono cablati: si deducono dagli eventi in
 calendario. I due post notturni leggono la tappa **della sera prima**, quando i
-risultati sono stati caricati a fine serata.
+risultati sono stati caricati a fine serata. Il post mensile gira l'ultimo
+giorno utile: a febbraio il 30 non esiste, quindi esce il 28.
 
 ## Come funziona
 
@@ -84,8 +86,8 @@ Il repo e' attrezzato come progetto Claude Code:
 
 - **Skill** — `social-mtg` (piano editoriale), `template-grafici`,
   `sorgenti-dati`, `instagram-publishing`
-- **Slash command** — `/post-calendario`, `/post-formato`, `/post-risultati`,
-  `/social-check`, `/rivedi-post`
+- **Slash command** — `/post-calendario`, `/post-mensile`, `/post-formato`,
+  `/post-risultati`, `/social-check`, `/rivedi-post`
 - **Subagent** — `revisore-social` (QA su slide e caption),
   `analista-dati` (diagnosi sorgenti)
 - **Server MCP** — `moma-social`: interroga calendario, risultati e classifiche

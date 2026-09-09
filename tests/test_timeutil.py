@@ -79,3 +79,24 @@ def test_fuso_orario_valido():
     from moma_social.timeutil import tz
 
     assert tz("Europe/Rome").key == "Europe/Rome"
+
+
+def test_giorno_del_mese_del_post_mensile():
+    """Il 30 non esiste a febbraio: li' vale l'ultimo giorno."""
+    from moma_social.timeutil import is_monthly_run_day
+
+    assert is_monthly_run_day(dt.date(2026, 1, 30))
+    assert not is_monthly_run_day(dt.date(2026, 1, 31))
+    assert is_monthly_run_day(dt.date(2026, 2, 28))     # mese corto
+    assert not is_monthly_run_day(dt.date(2026, 2, 27))
+    assert is_monthly_run_day(dt.date(2028, 2, 29))     # bisestile
+    assert not is_monthly_run_day(dt.date(2028, 2, 28))
+
+
+def test_confini_del_mese_e_mese_successivo():
+    from moma_social.timeutil import fmt_month, month_bounds, next_month
+
+    assert month_bounds(dt.date(2026, 2, 14)) == (dt.date(2026, 2, 1),
+                                                  dt.date(2026, 2, 28))
+    assert next_month(dt.date(2026, 12, 31)) == dt.date(2027, 1, 1)
+    assert fmt_month(dt.date(2026, 10, 1)) == "ottobre 2026"

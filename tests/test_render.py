@@ -285,3 +285,16 @@ def test_card_classifica_si_renderizza(cfg):
                   size=(1080, 1080))
     scale = cfg.get("render.scale")
     assert _size(path) == (1080 * scale, 1080 * scale)
+
+
+def test_i_png_finiscono_nella_cartella_del_giorno(cfg, contesto_calendario):
+    """Un giro non si mescola con quello di ieri."""
+    from moma_social.timeutil import resolve_date
+
+    oggi = resolve_date("today", cfg.timezone).isoformat()
+    path = render(cfg, "weekly_calendar.html.j2", contesto_calendario, "test-cartella")
+    assert path.parent.name == oggi
+
+    cfg.data["render"]["cartella_per_giorno"] = False
+    piatto = render(cfg, "weekly_calendar.html.j2", contesto_calendario, "test-piatto")
+    assert piatto.parent.name != oggi

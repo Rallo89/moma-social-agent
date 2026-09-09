@@ -1,0 +1,33 @@
+{# ───────────────────────────────────────────────────────────────────────────
+   Caption del post "calendario del mese" (il 30, per il mese successivo).
+   Variabili disponibili:
+     org.name / org.handle / org.site
+     mese             -> "ottobre 2026"
+     days             -> lista di (data, [eventi]) ordinata
+     events_count     -> numero totale eventi del mese
+     formats          -> lista formati distinti
+     hashtags         -> stringa gia' composta e deduplicata
+   Filtri: |data ("11 marzo"), |giorno ("Mercoledi")
+   ─────────────────────────────────────────────────────────────────────────── #}
+🗓️ {{ mese|upper }} DI {{ org.name|upper }}
+
+{{ events_count }} appuntament{{ "o" if events_count == 1 else "i" }} da segnare in agenda.
+
+{% for day, events in days %}
+{% for e in events %}
+{{ day|giorno }} {{ day|data }}{% if e.start_time %} · {{ e.start_time }}{% endif %} — {{ e.label }}{% if e.format and e.format not in e.label %} ({{ e.format }}){% endif +%}
+{% endfor %}
+{% endfor %}
+
+{% if formats %}
+🎴 Formati in programma: {{ formats|join(" · ") }}
+{% endif %}
+{% if signup_url %}
+✍️ Iscrizioni e regolamenti: {{ signup_url }}
+{% else %}
+✍️ Iscrizioni e info: link in bio
+{% endif %}
+
+Ci vediamo ai tavoli! 🔥
+
+{{ hashtags }}
