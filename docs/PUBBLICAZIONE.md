@@ -15,24 +15,36 @@ La Content Publishing API **non accetta un file**: vuole un URL, e va a
 scaricarlo lei, senza credenziali. Quindi i PNG devono stare su HTTP pubblico
 prima della pubblicazione.
 
-Due strade. Consiglio di partire dalla prima e passare alla seconda quando
-volete tenervi i file.
+Due strade. **Modena Magic usa imgbb**; R2 resta documentato per quando
+vorrete tenervi i file.
 
-### imgbb — cinque minuti, nessuna infrastruttura
+### imgbb — quella in uso
 
-1. Registratevi su <https://imgbb.com> e aprite <https://api.imgbb.com>.
-2. Copiate la **API key**.
-3. Nel `.env` (che non finisce su git):
+1. Registratevi su <https://imgbb.com> (account gratuito).
+2. Aprite <https://api.imgbb.com> e cliccate **Get API key**.
+3. Copiate la chiave nel `.env`, che è git-ignored e non lascia mai la vostra
+   macchina:
 
    ```
    IMGBB_API_KEY=la-chiave
    ```
-4. In `config/config.toml`:
+4. `config/config.toml` è già impostato così:
 
    ```toml
    [media]
    backend = "imgbb"
+
+   [media.imgbb]
+   expiration = 86400        # imgbb cancella il file dopo un giorno
    ```
+
+   `expiration` è il motivo per cui abbiamo scelto imgbb: Instagram scarica
+   l'immagine in pochi minuti e poi ne tiene una copia propria, quindi dopo
+   ventiquattr'ore il file sul server di imgbb non serve più e sparisce da
+   solo. Il minimo accettato è 60 secondi; `0` significa "non scade mai".
+5. Su GitHub, in *Settings → Secrets and variables → Actions*, aggiungete il
+   secret **`IMGBB_API_KEY`** con lo stesso valore. Il `.env` resta sulla
+   vostra macchina: i runner non lo vedono.
 
 ### Cloudflare R2 — i file restano vostri
 

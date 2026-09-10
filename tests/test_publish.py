@@ -171,3 +171,14 @@ def test_carosello_oltre_il_limite_viene_rifiutato(cfg):
     with pytest.raises(PublishError, match=str(MAX_CAROUSEL)):
         InstagramClient(cfg).publish_post(urls, "caption")
     assert not responses.calls          # nessuna chiamata sprecata
+
+
+def test_imgbb_rifiuta_una_scadenza_troppo_corta(cfg):
+    """Sotto il minuto imgbb dice solo "invalid parameter"."""
+    from pathlib import Path
+
+    cfg.data["media"]["backend"] = "imgbb"
+    cfg.data["media"]["imgbb"]["api_key"] = "finta"
+    cfg.data["media"]["imgbb"]["expiration"] = 30
+    with pytest.raises(ConfigError, match="60 secondi"):
+        upload(cfg, Path("data/samples/events.json"))

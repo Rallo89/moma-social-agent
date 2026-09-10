@@ -74,13 +74,23 @@ def _upload_imgbb(cfg: Config, path: Path) -> str:
     if not api_key:
         raise ConfigError("media.imgbb.api_key non configurato (variabile IMGBB_API_KEY)")
     data = {"key": api_key}
-    if cfg.get("media.imgbb.expiration"):
-        data["expiration"] = cfg.get("media.imgbb.expiration")
+    scadenza = cfg.get("media.imgbb.expiration") or 0
+    if scadenza:
+        # Sotto il minuto imgbb rifiuta: meglio dirlo qui che leggere un
+        # "invalid parameter" senza contesto.
+        if int(scadenza) < 60:
+            raise ConfigError(
+                f"media.imgbb.expiration = {scadenza}: imgbb accetta da 60 "
+                "secondi in su. Usa 0 per non far scadere l'immagine."
+            )
+        data["expiration"] = int(scadenza)
     try:
         response = requests.post(
             "https://api.imgbb.com/1/upload",
             data=data,
-            files={"image": path.read_bytes()},
+            # Nome e tipo espliciti: una parte multipart anonima puo' essere
+            # rifiutata, e l'errore che ne esce non dice perche'.
+            files={"image": (path.name, path.read_bytes(), "image/png")},
             timeout=TIMEOUT,
         )
         response.raise_for_status()

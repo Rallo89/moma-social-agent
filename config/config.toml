@@ -174,10 +174,7 @@ publish_enabled = true
 # backend: "s3" (S3/R2/MinIO) | "imgbb" | "none" (solo dry-run/export locale)
 # ─────────────────────────────────────────────────────────────────────────────
 [media]
-# "none" finche' non e' stato scelto: cosi' il primo lancio dice cosa manca
-# invece di chiedere una dipendenza per un backend che magari non userete.
-# Vedi docs/PUBBLICAZIONE.md.
-backend     = "none"
+backend     = "imgbb"
 
 [media.s3]
 bucket      = "${MEDIA_BUCKET}"
@@ -189,7 +186,11 @@ acl         = "public-read"
 
 [media.imgbb]
 api_key     = "${IMGBB_API_KEY}"
-expiration  = 0                            # secondi; 0 = mai
+# Secondi dopo i quali imgbb cancella il file. Instagram lo scarica in pochi
+# minuti e poi ne tiene una copia sua, quindi un giorno e' gia' abbondante e
+# non lascia nostre immagini su un server altrui piu' del necessario.
+# Minimo accettato da imgbb: 60. 0 = non scade mai.
+expiration  = 86400
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CONTENUTI
