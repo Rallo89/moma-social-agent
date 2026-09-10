@@ -227,3 +227,48 @@ def test_filtro_per_formato_isola_un_torneo(cfg, tmp_path):
     ])
     tappe = fetch_leg_results_all(cfg, dt.date(2026, 9, 2), "premodern")
     assert [t.winner.player for t in tappe] == ["Bruno"]
+
+
+def _riga_giocata(torneo, posizione, giocatore, punti, v, s, p):
+    return {"date": "2026-09-09", "leg": torneo, "format": "Legacy",
+            "league": "lega-legacy", "rank": posizione, "player": giocatore,
+            "points": str(punti), "wins": v, "losses": s, "draws": p}
+
+
+def test_chi_non_ha_giocato_non_entra_nel_post(cfg, tmp_path):
+    """Un iscritto assente puo' avere posizione 0 e finire in cima al podio."""
+    _sorgente(cfg, tmp_path, [
+        _riga_giocata("Legacy Tappa 1", 0, "Tianguang Liu", 0, 0, 0, 0),
+        _riga_giocata("Legacy Tappa 1", 1, "Marco Saguatti", 10, 3, 0, 1),
+        _riga_giocata("Legacy Tappa 1", 2, "Francesco Cameli", 9, 3, 1, 0),
+        # Zero punti ma tre sconfitte: ha giocato, resta.
+        _riga_giocata("Legacy Tappa 1", 10, "Alessandro Vecchi", 0, 0, 3, 0),
+    ])
+    tappa = fetch_leg_results(cfg, dt.date(2026, 9, 9))
+    nomi = [r.player for r in tappa.rows]
+    assert "Tianguang Liu" not in nomi
+    assert nomi == ["Marco Saguatti", "Francesco Cameli", "Alessandro Vecchi"]
+    assert tappa.winner.player == "Marco Saguatti"
+    # Il conteggio segue chi ha giocato, non chi si era iscritto.
+    assert tappa.players_count == 3
+
+
+def test_un_torneo_senza_partite_non_produce_un_post(cfg, tmp_path):
+    _sorgente(cfg, tmp_path, [
+        _riga_giocata("Legacy Tappa 1", 0, "Anna", 0, 0, 0, 0),
+        _riga_giocata("Legacy Tappa 1", 1, "Bruno", 0, 0, 0, 0),
+    ])
+    with pytest.raises(NoDataError, match="Nessuna partita giocata"):
+        fetch_leg_results_all(cfg, dt.date(2026, 9, 9))
+
+
+def test_senza_i_tre_numeri_non_si_scarta_nessuno(cfg, tmp_path):
+    """Una regola che non sa cosa guarda non deve svuotare il post."""
+    _sorgente(cfg, tmp_path, [
+        {"date": "2026-09-09", "leg": "Coppa", "format": "Legacy",
+         "rank": 1, "player": "Anna", "points": "9"},
+        {"date": "2026-09-09", "leg": "Coppa", "format": "Legacy",
+         "rank": 2, "player": "Bruno", "points": "6"},
+    ])
+    tappa = fetch_leg_results(cfg, dt.date(2026, 9, 9))
+    assert [r.player for r in tappa.rows] == ["Anna", "Bruno"]

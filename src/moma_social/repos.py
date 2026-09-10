@@ -150,7 +150,36 @@ def fetch_leg_results_all(cfg: Config, day: dt.date,
                   _clean(row.get("league")))
         gruppi.setdefault(chiave, []).append(row)
 
-    return [_tappa(day, righe, fmt) for righe in gruppi.values()]
+    tappe = []
+    for righe in gruppi.values():
+        giocate = [r for r in righe if _ha_giocato(r)]
+        # Un torneo dove nessuno ha giocato e' stato creato ma non disputato:
+        # non ha risultati da pubblicare, e sparisce invece di produrre un
+        # post vuoto.
+        if giocate:
+            tappe.append(_tappa(day, giocate, fmt, len(giocate) < len(righe)))
+    if not tappe:
+        label = f" ({fmt})" if fmt else ""
+        raise NoDataError(
+            f"Nessuna partita giocata nella tappa del {day.isoformat()}{label}")
+    return tappe
+
+
+def _ha_giocato(row: dict) -> bool:
+    """Chi non ha disputato nessuna partita non e' un partecipante.
+
+    Un iscritto che non si presenta puo' restare a database con una posizione
+    assegnata — a volte lo zero, che lo manda in cima all'elenco — e zero
+    partite. In un post dei risultati e' rumore, e in testa e' un errore.
+
+    Se la sorgente non espone vinte/perse/pari non si puo' decidere, e si
+    tiene: meglio una riga di troppo che un post svuotato da una regola che
+    non sa cosa sta guardando.
+    """
+    campi = ("wins", "losses", "draws")
+    if all(row.get(campo) in (None, "") for campo in campi):
+        return True
+    return any(_as_int(row.get(campo), default=0) for campo in campi)
 
 
 def fetch_leg_results(cfg: Config, day: dt.date, fmt: str = "") -> LegResults:
@@ -158,7 +187,8 @@ def fetch_leg_results(cfg: Config, day: dt.date, fmt: str = "") -> LegResults:
     return fetch_leg_results_all(cfg, day, fmt)[0]
 
 
-def _tappa(day: dt.date, selected: list[dict], fmt: str) -> LegResults:
+def _tappa(day: dt.date, selected: list[dict], fmt: str,
+           scartati: bool = False) -> LegResults:
     head = selected[0]
     results = LegResults(
         date=day,
@@ -166,7 +196,11 @@ def _tappa(day: dt.date, selected: list[dict], fmt: str) -> LegResults:
         leg=_clean(head.get("leg")),
         venue=_clean(head.get("venue")),
         league=_clean(head.get("league")),
-        players_count=_as_int(head.get("players_count"), default="") or len(selected),
+        # Il conteggio della sorgente comprende anche chi non ha giocato:
+        # dopo averlo tolto dall'elenco, dirlo nella caption sarebbe falso.
+        players_count=(len(selected) if scartati else
+                       _as_int(head.get("players_count"), default="")
+                       or len(selected)),
         rows=[
             ResultRow(
                 rank=_as_int(row.get("rank"), default=index + 1),
