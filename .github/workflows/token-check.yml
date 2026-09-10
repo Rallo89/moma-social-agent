@@ -1,11 +1,16 @@
 name: Controllo token Instagram
 
-# Il token long-lived dura 60 giorni. Alla scadenza si fermano tutti e cinque
-# i post settimanali senza preavviso: questo controllo apre una issue con
-# due settimane di margine.
+# Il token dura 60 giorni. Alla scadenza si fermano tutti i post insieme e in
+# silenzio, quindi lo si controlla ogni lunedi'.
+#
+# Sul percorso Instagram Login non esiste un modo di sapere quanto gli resta
+# da vivere: si puo' solo chiedere se apre ancora l'account. Per questo il
+# primo del mese arriva comunque un promemoria a rinnovarlo — con un token da
+# 60 giorni rinnovato ogni mese, la scadenza non si raggiunge mai.
 on:
   schedule:
     - cron: "0 7 * * 1"
+    - cron: "0 7 1 * *"
   workflow_dispatch:
 
 permissions:
@@ -19,51 +24,40 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
 
-      - name: Interroga la Graph API
+      # La logica sta in `momasocial token-status`, dove e' testata: qui
+      # dentro sarebbe un heredoc Python in mezzo allo YAML.
+      - name: Il token e' ancora buono?
         id: check
         env:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
-        run: |
-          set -euo pipefail
-          # Il token passa da --data-urlencode e poi dall'ambiente: non compare
-          # mai nella riga di comando, che finirebbe nei log di processo.
-          RESPONSE=$(curl -sS -G "https://graph.facebook.com/v21.0/debug_token" \
-            --data-urlencode "input_token=$IG_ACCESS_TOKEN" \
-            --data-urlencode "access_token=$IG_ACCESS_TOKEN")
-          export RESPONSE
-          python - <<'PY'
-          import json, os, time
-          data = json.loads(os.environ["RESPONSE"]).get("data", {})
-          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
-              if not data.get("is_valid"):
-                  out.write("state=invalid\ndays=0\n")
-              elif not data.get("expires_at"):      # 0 = token che non scade
-                  out.write("state=ok\ndays=9999\n")
-              else:
-                  days = int((data["expires_at"] - time.time()) // 86400)
-                  out.write(f"state={'expiring' if days < 14 else 'ok'}\ndays={days}\n")
-          PY
+        run: momasocial token-status
 
       - name: Apri una issue se serve
-        if: steps.check.outputs.state != 'ok'
+        if: steps.check.outputs.state != 'ok' || github.event.schedule == '0 7 1 * *'
         uses: actions/github-script@v7
         with:
           script: |
             const state = '${{ steps.check.outputs.state }}';
             const days = '${{ steps.check.outputs.days }}';
-            const title = 'Token Instagram: rinnovo necessario';
+            const promemoria = state === 'ok';
+            const title = promemoria
+              ? 'Token Instagram: rinnovo mensile'
+              : 'Token Instagram: rinnovo necessario';
             const existing = await github.rest.issues.listForRepo({
               owner: context.repo.owner, repo: context.repo.repo,
               state: 'open', labels: 'instagram-token',
             });
             if (existing.data.length) return;
+            const comando = 'Rinnovalo con `momasocial ig-refresh`, poi aggiorna'
+              + ' il secret `IG_ACCESS_TOKEN`.\n\nProcedura completa in'
+              + ' `docs/PUBBLICAZIONE.md`.';
             const body = state === 'invalid'
               ? 'Il token Instagram non e\' piu\' valido: **i post automatici sono fermi**.\n\n'
-                + 'Rigenera un token long-lived e aggiorna il secret `IG_ACCESS_TOKEN`.\n'
-                + 'Procedura in `.claude/skills/instagram-publishing/SKILL.md`.'
-              : `Il token Instagram scade fra **${days} giorni**.\n\n`
-                + 'Rinnovalo prima della scadenza e aggiorna il secret `IG_ACCESS_TOKEN`.\n'
-                + 'Procedura in `.claude/skills/instagram-publishing/SKILL.md`.';
+                + comando
+              : promemoria
+                ? 'Promemoria mensile: il token dura 60 giorni e su Instagram Login non'
+                  + ' si puo\' sapere quanto gliene resta.\n\n' + comando
+                : `Il token Instagram scade fra **${days} giorni**.\n\n` + comando;
             await github.rest.issues.create({
               owner: context.repo.owner, repo: context.repo.repo,
               title, body, labels: ['instagram-token'],

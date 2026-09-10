@@ -1,10 +1,21 @@
-"""Client minimale della Instagram Content Publishing API (Graph API).
+"""Client minimale della Instagram Content Publishing API.
 
 Flusso singola immagine:   media -> media_publish
 Flusso carosello:          media(is_carousel_item) x N -> media(CAROUSEL) -> media_publish
 
-Il container va atteso: la Graph API restituisce subito un id ma processa
+Il container va atteso: la API restituisce subito un id ma processa
 l'immagine in modo asincrono, e un publish su container non FINISHED fallisce.
+
+DUE PERCORSI, STESSE CHIAMATE
+Meta espone la stessa API da due host, a seconda di come ci si autentica:
+
+  graph.instagram.com   Instagram Login — si autentica l'account Instagram,
+                        senza Pagina Facebook di mezzo
+  graph.facebook.com    Facebook Login — richiede una Pagina Facebook
+                        collegata all'account
+
+I percorsi delle risorse sono gli stessi, cambia l'host: sta in
+`instagram.api_host` e non tocca nient'altro di questo file.
 """
 
 from __future__ import annotations
@@ -30,11 +41,16 @@ class InstagramClient:
         self.ig_user_id = cfg.get("instagram.ig_user_id", "")
         self.token = cfg.get("instagram.access_token", "")
         self.version = cfg.get("instagram.api_version", "v21.0")
+        self.host = cfg.get("instagram.api_host", "graph.facebook.com")
 
     # -- infrastruttura --------------------------------------------------
     @property
     def base(self) -> str:
-        return f"https://graph.facebook.com/{self.version}"
+        return f"https://{self.host}/{self.version}"
+
+    @property
+    def instagram_login(self) -> bool:
+        return "graph.instagram.com" in self.host
 
     def _check_credentials(self) -> None:
         missing = [
@@ -85,7 +101,11 @@ class InstagramClient:
     # -- API -------------------------------------------------------------
     def check(self) -> dict:
         """Verifica credenziali e permessi: usata da `momasocial doctor`."""
-        return self._get(self.ig_user_id, {"fields": "id,username,name,followers_count"})
+        # `name` esiste solo sul percorso Facebook: chiederlo all'altro host
+        # fa fallire tutta la chiamata per un campo che non ci serve.
+        campi = ("id,username,followers_count" if self.instagram_login
+                 else "id,username,name,followers_count")
+        return self._get(self.ig_user_id, {"fields": campi})
 
     def create_item(self, image_url: str, *, caption: str = "",
                     is_carousel_item: bool = False) -> str:

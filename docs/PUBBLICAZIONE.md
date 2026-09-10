@@ -109,89 +109,107 @@ che vedreste là (`container in stato ERROR`) non direbbe niente di utile.
 
 ## 2. Credenziali Instagram
 
-Servono due valori: **`IG_USER_ID`** e **`IG_ACCESS_TOKEN`**. Tutto il resto
-di questa sezione serve solo a ottenerli.
+Servono due valori: **`IG_USER_ID`** e **`IG_ACCESS_TOKEN`**.
+
+Meta espone la stessa API da due host, a seconda di come ci si autentica.
+**Modena Magic usa Instagram Login** (`graph.instagram.com`): si autorizza
+l'account Instagram e basta, senza Pagina Facebook di mezzo. L'altro percorso
+resta documentato in fondo.
 
 > La console di Meta cambia spesso nomi e posizioni delle voci. Quello che
-> segue è il percorso, non i click esatti: se una voce si chiama diversamente,
-> l'obiettivo resta ricavare quei due valori. La documentazione ufficiale è
-> *Instagram Platform → Content Publishing* su developers.facebook.com.
+> segue è il percorso, non i click esatti.
 
-### Prerequisiti sull'account
+### Prerequisiti
 
 - L'account Instagram deve essere **professionale** (Business o Creator).
-  Si cambia dall'app: Impostazioni → Tipo di account.
-- Deve essere **collegato a una Pagina Facebook**. L'agente parla con
-  `graph.facebook.com`, ed è questo il percorso che richiede la Pagina.
-- Chi fa la configurazione deve essere amministratore di entrambi.
+  Si cambia dall'app: Impostazioni → Tipo di account e strumenti. È gratis, ed
+  è reversibile — ma **un account professionale non può essere privato**.
+- Un'app su <https://developers.facebook.com> con il caso d'uso **API
+  Instagram**. L'app resta **in sviluppo**: la pubblicazione e la App Review
+  servono per usare account di terzi, non i vostri.
 
-### Creare l'app Meta
+### Configurare il caso d'uso
 
-1. <https://developers.facebook.com> → **My Apps → Create App**, tipo
-   *Business*.
-2. Aggiungete il prodotto **Instagram** (o *Instagram Graph API*) e collegate
-   la Pagina Facebook.
-3. I permessi che servono sono `instagram_basic`,
-   `instagram_content_publish`, `pages_show_list`, `pages_read_engagement`.
+**Casi d'uso → API Instagram → Personalizza**, e nella colonna di sinistra
+scegliete **Configurazione dell'API con Instagram login**.
 
-**La App Review di norma non serve**: finché pubblicate solo sull'account
-della vostra associazione e le persone coinvolte hanno un ruolo sull'app
-(amministratore, sviluppatore o tester), l'app può restare in sviluppo. La
-Review serve per pubblicare su account di terzi.
+1. **Autorizzazioni e funzioni**: servono `instagram_business_basic` e
+   `instagram_business_content_publish`. Il pulsante *Add all required
+   permissions* aggiunge quelle dei messaggi e **non** include
+   `instagram_business_content_publish`: va aggiunta a mano, ed è quella che
+   pubblica.
+2. **Ruoli**: assegnate all'account Instagram il ruolo di *tester*, e
+   accettate l'invito dall'app Instagram (Impostazioni → App e siti web).
+3. **Genera i token d'accesso → Aggiungi account**: autorizzate e copiate il
+   token che compare.
+4. Nella stessa pagina prendete la **Chiave segreta di Instagram** (non quella
+   dell'app Facebook) e mettetela nel `.env`:
 
-### Ricavare i due valori
+   ```
+   IG_APP_SECRET=...
+   ```
 
-Nelle **Impostazioni dell'app → Di base** trovate **ID dell'app** e **Chiave
-segreta**. Metteteli nel `.env`:
-
-```
-FB_APP_ID=...
-FB_APP_SECRET=...
-```
-
-Poi, nel **Graph API Explorer** (Tools → Graph API Explorer):
-
-1. Selezionate la vostra app.
-2. Chiedete i permessi elencati sopra e generate il token.
-3. Copiatelo: dura **un'ora**, serve solo per il passo successivo.
-
-E lasciate fare il resto all'agente:
+### I due valori, in un comando
 
 ```powershell
-.\.venv\Scripts\momasocial ig-setup --token "<il-token-di-un-ora>"
+.\.venv\Scripts\momasocial ig-setup --token "<il-token-appena-copiato>"
 ```
 
-Fa tre cose in fila: scambia il token con uno da 60 giorni, chiede a Meta
-quali Pagine amministrate, e da quella collegata ricava l'id Instagram.
-Stampa le due righe pronte da incollare:
+Scambia il token con uno da 60 giorni e legge l'id dell'account. Stampa le due
+righe pronte da incollare:
 
 ```
 Token long-lived ottenuto, scade il 2026-11-09
-Pagina: Modena Magic
 Instagram: @modenamagic
 
 Da incollare nel .env e nei secret di GitHub:
 
 IG_USER_ID=17841400000000000
-IG_ACCESS_TOKEN=EAAG...
+IG_ACCESS_TOKEN=IGQ...
 ```
 
-Se qualcosa non va, il comando dice **quale** dei tre passaggi è fallito
-invece di lasciarvi davanti a un JSON di Meta. I due errori più probabili:
+Se qualcosa non va, il comando dice **quale** chiamata è fallita invece di
+lasciarvi davanti a un JSON di Meta.
 
-| Messaggio | Cosa manca |
-|---|---|
-| *Nessuna Pagina Facebook visibile* | il token non ha `pages_show_list`, oppure l'account non amministra Pagine |
-| *Nessuna delle Pagine ha un account Instagram professionale collegato* | il collegamento Pagina ↔ Instagram, o l'account non è ancora professionale |
+### Il rinnovo
 
-Amministrate più di una Pagina? Il comando le elenca e chiede quale, con
-`--page "Modena Magic"`.
+Il token dura **60 giorni** e si allunga di altri 60 con:
 
-Il token **scade dopo 60 giorni**. Il workflow `token-check.yml` gira ogni
-lunedì e apre una issue quando mancano meno di 14 giorni: quando la vedete, è
-la cosa più urgente da fare, perché alla scadenza si fermano tutti i post
-insieme e in silenzio. Per rinnovarlo si rilancia `ig-setup` con un token
-fresco dall'Explorer.
+```powershell
+.\.venv\Scripts\momasocial ig-refresh
+```
+
+Poi si aggiorna `IG_ACCESS_TOKEN` nel `.env` e nei secret di GitHub.
+
+Su questo percorso **non esiste un modo di sapere quanto resta al token**: si
+può solo chiedere se apre ancora l'account. Per questo il workflow
+`token-check.yml` fa due cose: ogni lunedì verifica che sia valido, e **il
+primo di ogni mese apre comunque una issue di promemoria**. Con un token da 60
+giorni rinnovato ogni mese, la scadenza non si raggiunge mai.
+
+### L'altro percorso: Facebook Login
+
+Se un giorno serviranno gli insight o il monitoraggio degli hashtag, che
+Instagram Login non espone, si passa a `graph.facebook.com`. Richiede una
+**Pagina Facebook collegata** all'account e un ruolo di amministratore su
+quella Pagina. In `config/config.toml`:
+
+```toml
+[instagram]
+api_host = "graph.facebook.com"
+```
+
+I permessi diventano `instagram_basic`, `instagram_content_publish`,
+`pages_show_list`, `pages_read_engagement`, si generano dal **Graph API
+Explorer** (ricordandosi di **selezionare la Pagina** nella finestra di
+autorizzazione, o il token non vedrà nulla), e il comando diventa:
+
+```powershell
+.\.venv\Scripts\momasocial ig-setup --token "<token>" --app-id ... --app-secret ...
+```
+
+Su quel percorso `ig-refresh` non esiste: si rigenera un token nell'Explorer e
+si rilancia `ig-setup`.
 
 ---
 

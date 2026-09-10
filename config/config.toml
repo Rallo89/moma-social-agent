@@ -164,6 +164,10 @@ enabled        = true
 ig_user_id     = "${IG_USER_ID}"
 access_token   = "${IG_ACCESS_TOKEN}"     # long-lived token, mai committato
 api_version    = "v21.0"
+# Come ci si autentica. "graph.instagram.com" = Instagram Login: si autorizza
+# l'account Instagram e basta. "graph.facebook.com" = Facebook Login, che
+# richiede una Pagina Facebook collegata. Le chiamate sono identiche.
+api_host       = "graph.instagram.com"
 # Kill switch globale: se false ogni pipeline si ferma prima della pubblicazione
 # e lascia solo i file in out/ (utile per pausa senza toccare i workflow).
 publish_enabled = true

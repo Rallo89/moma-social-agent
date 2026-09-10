@@ -282,8 +282,8 @@ def test_ig_setup_stampa_i_due_valori(cfg, capsys):
         {"id": "10", "name": "Modena Magic",
          "instagram_business_account": {"id": "1784", "username": "modenamagic"}},
     ]})
-    esito = cli.main(["ig-setup", "--token", "breve",
-                      "--app-id", "1", "--app-secret", "2"])
+    esito = cli.main(["ig-setup", "--host", "graph.facebook.com",
+                      "--token", "breve", "--app-id", "1", "--app-secret", "2"])
     out = capsys.readouterr().out
     assert esito == cli.EXIT_OK
     assert "IG_USER_ID=1784" in out
@@ -297,8 +297,8 @@ def test_ig_setup_spiega_la_pagina_senza_instagram(cfg, capsys):
     _token_lungo()
     responses.add(responses.GET, f"{BASE_FB}/me/accounts",
                   json={"data": [{"id": "10", "name": "Modena Magic"}]})
-    assert cli.main(["ig-setup", "--token", "breve",
-                     "--app-id", "1", "--app-secret", "2"]) == cli.EXIT_ERROR
+    assert cli.main(["ig-setup", "--host", "graph.facebook.com",
+                     "--token", "breve", "--app-id", "1", "--app-secret", "2"]) == cli.EXIT_ERROR
     assert "professionale collegato" in capsys.readouterr().err
 
 
@@ -311,8 +311,8 @@ def test_ig_setup_chiede_quale_pagina(cfg, capsys):
         {"id": "20", "name": "Uno Critico",
          "instagram_business_account": {"id": "2", "username": "b"}},
     ]})
-    assert cli.main(["ig-setup", "--token", "breve",
-                     "--app-id", "1", "--app-secret", "2"]) == cli.EXIT_ERROR
+    assert cli.main(["ig-setup", "--host", "graph.facebook.com",
+                     "--token", "breve", "--app-id", "1", "--app-secret", "2"]) == cli.EXIT_ERROR
     assert "--page" in capsys.readouterr().err
 
 
@@ -320,7 +320,92 @@ def test_ig_setup_chiede_quale_pagina(cfg, capsys):
 def test_ig_setup_riporta_l_errore_di_meta(cfg, capsys):
     responses.add(responses.GET, f"{BASE_FB}/oauth/access_token", json={
         "error": {"message": "Invalid appsecret", "code": 101}})
-    assert cli.main(["ig-setup", "--token", "breve",
-                     "--app-id", "1", "--app-secret", "sbagliato"]) == cli.EXIT_ERROR
+    esito = cli.main(["ig-setup", "--host", "graph.facebook.com", "--token",
+                      "breve", "--app-id", "1", "--app-secret", "sbagliato"])
+    assert esito == cli.EXIT_ERROR
     err = capsys.readouterr().err
     assert "Scambio del token" in err and "Invalid appsecret" in err
+
+
+BASE_IG = "https://graph.instagram.com"
+
+
+@responses.activate
+def test_ig_setup_instagram_login_non_passa_dalla_pagina(cfg, capsys):
+    """Due chiamate sole: scambio del token e lettura dell'account."""
+    responses.add(responses.GET, f"{BASE_IG}/access_token",
+                  json={"access_token": "IGQlungo", "expires_in": 5184000})
+    responses.add(responses.GET, f"{BASE_IG}/v21.0/me",
+                  json={"id": "17841400000000000", "username": "modenamagic"})
+    esito = cli.main(["ig-setup", "--token", "breve", "--app-secret", "segreto"])
+    out = capsys.readouterr().out
+    assert esito == cli.EXIT_OK
+    assert "IG_USER_ID=17841400000000000" in out
+    assert "IG_ACCESS_TOKEN=IGQlungo" in out
+    assert "@modenamagic" in out
+    # Nessuna chiamata a Facebook: e' il punto di questo percorso.
+    assert all("facebook.com" not in c.request.url for c in responses.calls)
+
+
+@responses.activate
+def test_ig_setup_instagram_riporta_l_errore_nel_formato_di_instagram(cfg, capsys):
+    """graph.instagram.com non usa la busta "error" di Facebook."""
+    responses.add(responses.GET, f"{BASE_IG}/access_token",
+                  json={"error_type": "OAuthException",
+                        "error_message": "Invalid client_secret"})
+    assert cli.main(["ig-setup", "--token", "breve",
+                     "--app-secret", "sbagliato"]) == cli.EXIT_ERROR
+    err = capsys.readouterr().err
+    assert "Scambio del token" in err and "Invalid client_secret" in err
+
+
+def test_ig_setup_instagram_senza_segreto_dice_dove_trovarlo(cfg, capsys, monkeypatch):
+    monkeypatch.delenv("IG_APP_SECRET", raising=False)
+    assert cli.main(["ig-setup", "--token", "breve"]) == cli.EXIT_ERROR
+    assert "Chiave segreta di Instagram" in capsys.readouterr().err
+
+
+@responses.activate
+def test_ig_refresh_allunga_il_token(cfg, capsys):
+    responses.add(responses.GET, f"{BASE_IG}/refresh_access_token",
+                  json={"access_token": "IGQnuovo", "expires_in": 5184000})
+    cfg.data["instagram"]["access_token"] = "IGQvecchio"
+    assert cli.main(["ig-refresh"]) == cli.EXIT_OK
+    assert "IG_ACCESS_TOKEN=IGQnuovo" in capsys.readouterr().out
+
+
+def test_ig_refresh_non_esiste_sul_percorso_facebook(cfg, capsys):
+    """Meglio dire come si fa che fallire con un 400 di Meta."""
+    cfg.data["instagram"]["api_host"] = "graph.facebook.com"
+    assert cli.main(["ig-refresh", "--token", "x"]) == cli.EXIT_ERROR
+    assert "Graph API Explorer" in capsys.readouterr().err
+
+
+@responses.activate
+def test_token_status_instagram_valido(cfg, capsys):
+    responses.add(responses.GET, f"{BASE_IG}/v21.0/me",
+                  json={"id": "1", "username": "modenamagic"})
+    cfg.data["instagram"]["access_token"] = "IGQ"
+    assert cli.main(["token-status"]) == cli.EXIT_OK
+    assert "ok: @modenamagic" in capsys.readouterr().out
+
+
+@responses.activate
+def test_token_status_instagram_scaduto(cfg, capsys):
+    responses.add(responses.GET, f"{BASE_IG}/v21.0/me",
+                  json={"error_message": "Session has expired"})
+    cfg.data["instagram"]["access_token"] = "IGQ"
+    assert cli.main(["token-status"]) == cli.EXIT_OK      # non e' un guasto
+    assert "invalid" in capsys.readouterr().out
+
+
+@responses.activate
+def test_token_status_facebook_conta_i_giorni(cfg, capsys):
+    import time
+
+    cfg.data["instagram"]["api_host"] = "graph.facebook.com"
+    cfg.data["instagram"]["access_token"] = "EAA"
+    responses.add(responses.GET, f"{BASE_FB}/debug_token", json={"data": {
+        "is_valid": True, "expires_at": int(time.time()) + 5 * 86400}})
+    assert cli.main(["token-status"]) == cli.EXIT_OK
+    assert "expiring: scade fra 4 giorni" in capsys.readouterr().out

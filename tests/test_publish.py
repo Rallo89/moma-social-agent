@@ -11,7 +11,9 @@ from moma_social.models import PostDraft
 from moma_social.publish import dedupe_key, ledger_path, publish_draft
 from moma_social.uploader import upload
 
-API = "https://graph.facebook.com/v21.0"
+# L'host e' quello configurato: le stesse chiamate valgono per entrambi i
+# percorsi di autenticazione, e i test devono seguire la config, non fissarne uno.
+API = "https://graph.instagram.com/v21.0"
 
 
 @pytest.fixture
@@ -182,3 +184,34 @@ def test_imgbb_rifiuta_una_scadenza_troppo_corta(cfg):
     cfg.data["media"]["imgbb"]["expiration"] = 30
     with pytest.raises(ConfigError, match="60 secondi"):
         upload(cfg, Path("data/samples/events.json"))
+
+
+@responses.activate
+def test_lo_stesso_client_parla_con_entrambi_gli_host(cfg):
+    """Instagram Login e Facebook Login: cambia l'host, non le chiamate."""
+    cfg.data["instagram"]["ig_user_id"] = "999"
+    cfg.data["instagram"]["access_token"] = "TOKEN"
+    cfg.data["instagram"]["api_host"] = "graph.facebook.com"
+    client = InstagramClient(cfg)
+    assert client.base == "https://graph.facebook.com/v21.0"
+    assert not client.instagram_login
+
+    responses.add(responses.GET, f"{client.base}/{client.ig_user_id}",
+                  json={"id": "1", "username": "modenamagic"})
+    def campi(chiamata):
+        from urllib.parse import parse_qs, urlparse
+        return parse_qs(urlparse(chiamata.request.url).query)["fields"][0].split(",")
+
+    client.check()
+    # Su Facebook si puo' chiedere `name`; su Instagram quel campo non esiste
+    # e chiederlo farebbe fallire l'intera chiamata.
+    assert "name" in campi(responses.calls[0])
+
+    cfg.data["instagram"]["api_host"] = "graph.instagram.com"
+    altro = InstagramClient(cfg)
+    assert altro.instagram_login
+    responses.add(responses.GET, f"{altro.base}/{altro.ig_user_id}",
+                  json={"id": "1", "username": "modenamagic"})
+    altro.check()
+    assert "name" not in campi(responses.calls[1])
+    assert "username" in campi(responses.calls[1])
