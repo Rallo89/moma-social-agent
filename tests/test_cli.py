@@ -349,14 +349,22 @@ def test_ig_setup_instagram_login_non_passa_dalla_pagina(cfg, capsys):
 
 @responses.activate
 def test_ig_setup_instagram_riporta_l_errore_nel_formato_di_instagram(cfg, capsys):
-    """graph.instagram.com non usa la busta "error" di Facebook."""
+    """graph.instagram.com non usa la busta "error" di Facebook.
+
+    Con una chiave sbagliata il comando prosegue, ma deve dire chiaramente che
+    quel token potrebbe durare un'ora: e' l'unico modo di collegare, fra due
+    mesi, dei post fermi a una chiave copiata male oggi.
+    """
     responses.add(responses.GET, f"{BASE_IG}/access_token",
                   json={"error_type": "OAuthException",
                         "error_message": "Invalid client_secret"})
+    responses.add(responses.GET, f"{BASE_IG}/v21.0/me",
+                  json={"id": "1", "username": "modenamagic"})
     assert cli.main(["ig-setup", "--token", "breve",
-                     "--app-secret", "sbagliato"]) == cli.EXIT_ERROR
-    err = capsys.readouterr().err
-    assert "Scambio del token" in err and "Invalid client_secret" in err
+                     "--app-secret", "sbagliato"]) == cli.EXIT_OK
+    out = capsys.readouterr().out
+    assert "Invalid client_secret" in out
+    assert "IG_APP_SECRET" in out and "un'ora" in out
 
 
 def test_ig_setup_instagram_senza_segreto_dice_dove_trovarlo(cfg, capsys, monkeypatch):
@@ -409,3 +417,31 @@ def test_token_status_facebook_conta_i_giorni(cfg, capsys):
         "is_valid": True, "expires_at": int(time.time()) + 5 * 86400}})
     assert cli.main(["token-status"]) == cli.EXIT_OK
     assert "expiring: scade fra 4 giorni" in capsys.readouterr().out
+
+
+@responses.activate
+def test_ig_setup_procede_se_il_token_e_gia_a_lunga_durata(cfg, capsys):
+    """La console a volte ne da' gia' uno lungo: non e' un vicolo cieco."""
+    responses.add(responses.GET, f"{BASE_IG}/access_token",
+                  json={"error_message": "Token is already long-lived"})
+    responses.add(responses.GET, f"{BASE_IG}/v21.0/me",
+                  json={"id": "1784", "username": "modenamagic"})
+    esito = cli.main(["ig-setup", "--token", "IGQgialungo",
+                      "--app-secret", "segreto"])
+    catturato = capsys.readouterr()
+    assert esito == cli.EXIT_OK
+    assert "[avviso]" in catturato.out
+    assert "IG_ACCESS_TOKEN=IGQgialungo" in catturato.out
+    assert "IG_USER_ID=1784" in catturato.out
+
+
+@responses.activate
+def test_ig_setup_fallisce_se_il_token_non_apre_l_account(cfg, capsys):
+    """Senza scambio E senza /me non abbiamo niente: quello si' e' un errore."""
+    responses.add(responses.GET, f"{BASE_IG}/access_token",
+                  json={"error_message": "Invalid token"})
+    responses.add(responses.GET, f"{BASE_IG}/v21.0/me",
+                  json={"error_message": "Invalid token"})
+    assert cli.main(["ig-setup", "--token", "rotto",
+                     "--app-secret", "segreto"]) == cli.EXIT_ERROR
+    assert "Lettura dell'account" in capsys.readouterr().err

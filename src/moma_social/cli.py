@@ -288,17 +288,29 @@ def _setup_instagram_login(cfg, args) -> int:
             "Configurazione dell'API con Instagram login."
         )
 
-    scambio = _chiedi_meta(
-        "https://graph.instagram.com/access_token",
-        {"grant_type": "ig_exchange_token",
-         "client_secret": segreto,
-         "access_token": args.token},
-        "Scambio del token",
-    )
-    token = scambio.get("access_token", "")
-    if not token:
-        raise ConfigError("Scambio del token: risposta senza access_token")
-    quando = _scadenza(cfg, scambio.get("expires_in"))
+    # Lo scambio vale per un token breve. La console di Meta a volte ne
+    # consegna gia' uno a lunga durata, e in quel caso lo scambio fallisce: e'
+    # un vicolo cieco evitabile, perche' quel token va bene com'e'. Si prova,
+    # e se non funziona si tiene quello che c'e' — tanto la chiamata dopo
+    # verifica comunque che apra l'account.
+    token, quando = args.token, ""
+    try:
+        scambio = _chiedi_meta(
+            "https://graph.instagram.com/access_token",
+            {"grant_type": "ig_exchange_token",
+             "client_secret": segreto,
+             "access_token": args.token},
+            "Scambio del token",
+        )
+    except ConfigError as exc:
+        print(f"[avviso] lo scambio non e' riuscito: {exc}")
+        print("[avviso] proseguo con il token cosi' com'e'. Se la console te "
+              "l'ha gia' dato a lunga durata va bene, ma se la chiave segreta "
+              "era sbagliata questo token potrebbe durare un'ora: controlla "
+              "IG_APP_SECRET, e se i post si fermano subito e' questa la causa.")
+    else:
+        token = scambio.get("access_token", "") or args.token
+        quando = _scadenza(cfg, scambio.get("expires_in"))
     print("Token long-lived ottenuto" + (f", scade il {quando}" if quando else ""))
 
     versione = cfg.get("instagram.api_version", "v21.0")
