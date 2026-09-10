@@ -194,10 +194,18 @@ class LegResults:
             except (TypeError, ValueError):
                 return None
 
-        massimo = punteggio(self.rows[0])
-        if massimo is None:
+        # Il massimo si cerca fra TUTTE le righe, non si assume che sia la
+        # prima: quando posizione e punteggio non concordano — succede se un
+        # iscritto non ha giocato ma una posizione gli e' stata assegnata
+        # comunque — fidarsi della riga in testa fa incoronare chi ha zero.
+        punteggiati = [(r, punteggio(r)) for r in self.rows]
+        validi = [(r, p) for r, p in punteggiati if p is not None]
+        massimo = max((p for _, p in validi), default=None)
+        # Tutti a zero significa che questo torneo i punti non li registra:
+        # allora l'unica cosa di cui fidarsi e' la posizione.
+        if massimo is None or massimo <= 0:
             return [self.rows[0]]
-        return [r for r in self.rows if punteggio(r) == massimo]
+        return [r for r, p in validi if p == massimo]
 
     @property
     def ex_aequo(self) -> bool:

@@ -538,3 +538,30 @@ def test_calendario_mensile_impagina_invece_di_rimpicciolire(cfg):
     assert len(draft.images) == 3          # 5 eventi, 2 per slide
     assert RENDERED[0][1]["kicker_2"] == "1/3"
     assert len(RENDERED[0][1]["serate"]) == 2
+
+
+def _tappa_di(punti_e_nomi):
+    from moma_social.models import LegResults, ResultRow
+    return LegResults(date=dt.date(2026, 9, 9), format="Legacy", rows=[
+        ResultRow(rank=i, player=nome, points=str(punti))
+        for i, (nome, punti) in enumerate(punti_e_nomi, start=1)])
+
+
+def test_vince_chi_ha_piu_punti_non_chi_e_primo_in_elenco():
+    """Se posizione e punteggio non concordano, contano i punti."""
+    tappa = _tappa_di([("Tianguang", 0), ("Marco", 11), ("Francesco", 10)])
+    assert [r.player for r in tappa.winners] == ["Marco"]
+    assert not tappa.ex_aequo
+
+
+def test_pari_punti_veri_restano_pari():
+    tappa = _tappa_di([("Anna", 12), ("Bruno", 12), ("Carla", 9)])
+    assert [r.player for r in tappa.winners] == ["Anna", "Bruno"]
+    assert tappa.ex_aequo
+
+
+def test_tutti_a_zero_vale_la_posizione():
+    """Un torneo che non registra i punti non ha undici vincitori."""
+    tappa = _tappa_di([("Anna", 0), ("Bruno", 0), ("Carla", 0)])
+    assert [r.player for r in tappa.winners] == ["Anna"]
+    assert not tappa.ex_aequo
