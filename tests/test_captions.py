@@ -90,3 +90,28 @@ def test_caption_vincitore_unico(cfg):
     })
     assert "Vince Primo con Boros (4-0)" in testo
     assert "pari punti" not in testo
+
+
+def test_caption_formato_quota_link_e_orario(cfg):
+    """La caption deve dire le stesse cose della grafica, scritte uguale."""
+    import datetime as d
+    import json
+    import tempfile
+    from pathlib import Path
+
+    from moma_social.pipelines import format_spotlight
+
+    righe = [{"data": "2026-09-10", "titolo": "Modern Fall tappa 2",
+              "formato": "Modern", "lega": "Modern Fall 2026",
+              "sede": "Uno Critico", "quota": 10.0}]
+    f = Path(tempfile.mkdtemp()) / "e.json"
+    f.write_text(json.dumps(righe), encoding="utf-8")
+    cfg.data["sources"]["events"] = {"url": str(f), "kind": "json", "map": {
+        "date": "data", "title": "titolo", "format": "formato",
+        "venue": "sede", "entry_fee": "quota", "league": "lega"}}
+
+    testo = format_spotlight(cfg, d.date(2026, 9, 10)).caption
+    assert "10 €" in testo and "10.0" not in testo    # non la cifra grezza
+    assert "Modern Fall 2026 · Tappa 2" in testo      # come sulla grafica
+    assert "Inizio 21:00" in testo                    # ora di ripiego, come la card
+    assert cfg.get("content.evento.link") in testo    # non "link in bio"

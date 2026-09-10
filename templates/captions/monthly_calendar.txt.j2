@@ -15,7 +15,7 @@
 
 {% for day, events in days %}
 {% for e in events %}
-{{ day|giorno }} {{ day|data }}{% if e.start_time %} · {{ e.start_time }}{% endif %} — {{ e.label }}{% if e.format and e.format not in e.label %} ({{ e.format }}){% endif +%}
+{{ day|giorno }} {{ day|data }}{% if e|ora %} · {{ e|ora }}{% endif %} — {{ e|etichetta }}{% if e.format and e.format not in e|etichetta %} ({{ e.format }}){% endif +%}
 {% endfor %}
 {% endfor %}
 

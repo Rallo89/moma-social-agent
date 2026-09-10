@@ -5,6 +5,7 @@ from __future__ import annotations
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from .config import Config
+from .models import event_label, format_fee
 from .timeutil import fmt_date, fmt_range, weekday_it
 
 
@@ -18,6 +19,16 @@ def caption_env(cfg: Config) -> Environment:
     )
     env.filters["data"] = fmt_date
     env.filters["giorno"] = weekday_it
+    # "10.00" a database, "10 €" ovunque si legga.
+    env.filters["quota"] = format_fee
+    # Lo stesso nome che va sulla grafica, e la stessa ora di ripiego.
+    env.filters["etichetta"] = lambda evento: event_label(
+        evento,
+        cfg.get("content.evento.titolo_tappa", "Tappa {stage}"),
+        cfg.get("content.evento.titolo_finale", "Finale"),
+    )
+    env.filters["ora"] = lambda evento: (
+        evento.start_time or cfg.get("content.evento.ora_default", ""))
     env.globals["periodo"] = fmt_range
     return env
 

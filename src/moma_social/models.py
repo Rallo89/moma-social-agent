@@ -110,6 +110,21 @@ def stage_from_title(titolo: str) -> tuple[str, bool]:
     return "", False
 
 
+def event_label(event, tappa: str = "Tappa {stage}", finale: str = "Finale") -> str:
+    """Come l'evento si chiama nei testi: "Modern Fall 2026 · Tappa 2".
+
+    Lo stesso nome che compare sulla grafica, su una riga sola. Grafica e
+    caption che chiamano lo stesso torneo in due modi diversi sembrano parlare
+    di due serate diverse.
+    """
+    if event.league:
+        if event.is_final:
+            return f"{event.league} · {finale}"
+        if event.stage:
+            return f"{event.league} · {tappa.format(stage=event.stage)}"
+    return event.title or event.format or "Evento"
+
+
 def format_fee(valore) -> str:
     """La quota come si scrive su una locandina, da come sta a database.
 

@@ -98,6 +98,17 @@ def _per_formato(cfg: Config, chiave: str, fmt: str) -> str:
             or cfg.get(f"content.evento.{chiave}.default", ""))
 
 
+def _iscrizioni(cfg: Config, events: list) -> str:
+    """Il link da mettere in caption.
+
+    Se un evento porta il proprio link vince quello; altrimenti vale la pagina
+    iscrizioni dell'associazione. Un post che dice "link in bio" quando il
+    link esiste e' un'occasione persa a ogni pubblicazione.
+    """
+    proprio = next((e.signup_url for e in events if e.signup_url), "")
+    return proprio or cfg.get("content.evento.link", "")
+
+
 def _senza_schema(url: str) -> str:
     """L'indirizzo come lo vuole la grafica: senza https://, senza slash finale."""
     for prefisso in ("https://", "http://"):
@@ -272,7 +283,7 @@ def weekly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
             "periodo": periodo,
             "events_count": len(events),
             "formats": formats,
-            "signup_url": next((e.signup_url for e in events if e.signup_url), ""),
+            "signup_url": _iscrizioni(cfg, events),
         },
         extra_hashtags=[f"#{f.replace(' ', '')}" for f in formats],
     )
@@ -369,7 +380,7 @@ def format_spotlight(cfg: Config, day: dt.date | None = None,
     facts = [
         ("Quando", (main.start_time if main and main.start_time else "") or "Vedi bio"),
         ("Dove", (main.venue if main else "") or cfg.get("org.name", "")),
-        ("Iscrizione", (main.entry_fee if main else "") or "—"),
+        ("Iscrizione", format_fee(main.entry_fee if main else "") or "—"),
         ("Premi", (main.prize if main else "") or "—"),
     ]
     tagline = cfg.get(f"content.taglines.{fmt.lower()}", "")
@@ -391,7 +402,8 @@ def format_spotlight(cfg: Config, day: dt.date | None = None,
     caption = render_caption(
         cfg, "format_spotlight",
         {"day": day, "format": fmt, "events": events, "main": main,
-         "facts": facts, "tagline": tagline},
+         "facts": facts, "tagline": tagline,
+         "signup_url": _iscrizioni(cfg, events)},
         extra_hashtags=[f"#{fmt.replace(' ', '')}"],
     )
     return PostDraft(

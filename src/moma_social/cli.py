@@ -677,20 +677,10 @@ def cmd_schema(args) -> int:
     return EXIT_OK
 
 
-def _etichetta_evento(event) -> str:
-    """Come l'evento si chiamera' sulla grafica."""
-    if event.league:
-        if event.is_final:
-            return f"{event.league} · Finale"
-        if event.stage:
-            return f"{event.league} · Tappa {event.stage}"
-    return event.label
-
-
 def cmd_agenda(args) -> int:
     """Cosa c'e' in programma: utile per decidere a mano cosa postare."""
     cfg = config.load(args.config)
-    from .models import format_fee
+    from .models import event_label, format_fee
     from .repos import events_by_day, fetch_events
 
     day = resolve_date(args.date or "today", cfg.timezone)
@@ -714,7 +704,7 @@ def cmd_agenda(args) -> int:
         for event in group:
             # Si mostra quello che finira' sulla card, non la riga grezza:
             # se qui il titolo o la quota sono sbagliati, lo sono anche li'.
-            print(f"  {event.start_time or '  —  '}  {_etichetta_evento(event)}"
+            print(f"  {event.start_time or '  —  '}  {event_label(event)}"
                   f"  [{event.format}]"
                   f"{'  @' + event.venue if event.venue else ''}"
                   f"{'  ' + format_fee(event.entry_fee) if event.entry_fee else ''}")
