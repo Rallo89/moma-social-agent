@@ -265,3 +265,62 @@ def test_doctor_non_promuove_s3_senza_boto3(cfg, monkeypatch):
                         lambda nome, *a: None if nome == "boto3" else vero(nome, *a))
     with pytest.raises(ConfigError, match="boto3"):
         cli._check_media(cfg, "s3")
+
+
+BASE_FB = "https://graph.facebook.com/v21.0"
+
+
+def _token_lungo():
+    responses.add(responses.GET, f"{BASE_FB}/oauth/access_token",
+                  json={"access_token": "EAAlungo", "expires_in": 5184000})
+
+
+@responses.activate
+def test_ig_setup_stampa_i_due_valori(cfg, capsys):
+    _token_lungo()
+    responses.add(responses.GET, f"{BASE_FB}/me/accounts", json={"data": [
+        {"id": "10", "name": "Modena Magic",
+         "instagram_business_account": {"id": "1784", "username": "modenamagic"}},
+    ]})
+    esito = cli.main(["ig-setup", "--token", "breve",
+                      "--app-id", "1", "--app-secret", "2"])
+    out = capsys.readouterr().out
+    assert esito == cli.EXIT_OK
+    assert "IG_USER_ID=1784" in out
+    assert "IG_ACCESS_TOKEN=EAAlungo" in out
+    assert "@modenamagic" in out
+
+
+@responses.activate
+def test_ig_setup_spiega_la_pagina_senza_instagram(cfg, capsys):
+    """L'errore piu' probabile: Pagina c'e', collegamento no."""
+    _token_lungo()
+    responses.add(responses.GET, f"{BASE_FB}/me/accounts",
+                  json={"data": [{"id": "10", "name": "Modena Magic"}]})
+    assert cli.main(["ig-setup", "--token", "breve",
+                     "--app-id", "1", "--app-secret", "2"]) == cli.EXIT_ERROR
+    assert "professionale collegato" in capsys.readouterr().err
+
+
+@responses.activate
+def test_ig_setup_chiede_quale_pagina(cfg, capsys):
+    _token_lungo()
+    responses.add(responses.GET, f"{BASE_FB}/me/accounts", json={"data": [
+        {"id": "10", "name": "Modena Magic",
+         "instagram_business_account": {"id": "1", "username": "a"}},
+        {"id": "20", "name": "Uno Critico",
+         "instagram_business_account": {"id": "2", "username": "b"}},
+    ]})
+    assert cli.main(["ig-setup", "--token", "breve",
+                     "--app-id", "1", "--app-secret", "2"]) == cli.EXIT_ERROR
+    assert "--page" in capsys.readouterr().err
+
+
+@responses.activate
+def test_ig_setup_riporta_l_errore_di_meta(cfg, capsys):
+    responses.add(responses.GET, f"{BASE_FB}/oauth/access_token", json={
+        "error": {"message": "Invalid appsecret", "code": 101}})
+    assert cli.main(["ig-setup", "--token", "breve",
+                     "--app-id", "1", "--app-secret", "sbagliato"]) == cli.EXIT_ERROR
+    err = capsys.readouterr().err
+    assert "Scambio del token" in err and "Invalid appsecret" in err

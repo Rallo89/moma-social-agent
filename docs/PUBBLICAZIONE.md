@@ -141,29 +141,57 @@ Review serve per pubblicare su account di terzi.
 
 ### Ricavare i due valori
 
-Con il **Graph API Explorer** (Tools → Graph API Explorer):
+Nelle **Impostazioni dell'app → Di base** trovate **ID dell'app** e **Chiave
+segreta**. Metteteli nel `.env`:
 
-1. Selezionate l'app, chiedete i permessi qui sopra e generate un token.
-2. `GET /me/accounts` → l'`id` della vostra Pagina.
-3. `GET /<page-id>?fields=instagram_business_account` → **questo `id` è
-   `IG_USER_ID`**.
-4. Il token dell'Explorer dura un'ora. Scambiatelo con uno **long-lived**
-   (60 giorni):
+```
+FB_APP_ID=...
+FB_APP_SECRET=...
+```
 
-   ```
-   GET /oauth/access_token
-       ?grant_type=fb_exchange_token
-       &client_id=<app-id>
-       &client_secret=<app-secret>
-       &fb_exchange_token=<token-breve>
-   ```
+Poi, nel **Graph API Explorer** (Tools → Graph API Explorer):
 
-   Il risultato è **`IG_ACCESS_TOKEN`**.
+1. Selezionate la vostra app.
+2. Chiedete i permessi elencati sopra e generate il token.
+3. Copiatelo: dura **un'ora**, serve solo per il passo successivo.
+
+E lasciate fare il resto all'agente:
+
+```powershell
+.\.venv\Scripts\momasocial ig-setup --token "<il-token-di-un-ora>"
+```
+
+Fa tre cose in fila: scambia il token con uno da 60 giorni, chiede a Meta
+quali Pagine amministrate, e da quella collegata ricava l'id Instagram.
+Stampa le due righe pronte da incollare:
+
+```
+Token long-lived ottenuto, scade il 2026-11-09
+Pagina: Modena Magic
+Instagram: @modenamagic
+
+Da incollare nel .env e nei secret di GitHub:
+
+IG_USER_ID=17841400000000000
+IG_ACCESS_TOKEN=EAAG...
+```
+
+Se qualcosa non va, il comando dice **quale** dei tre passaggi è fallito
+invece di lasciarvi davanti a un JSON di Meta. I due errori più probabili:
+
+| Messaggio | Cosa manca |
+|---|---|
+| *Nessuna Pagina Facebook visibile* | il token non ha `pages_show_list`, oppure l'account non amministra Pagine |
+| *Nessuna delle Pagine ha un account Instagram professionale collegato* | il collegamento Pagina ↔ Instagram, o l'account non è ancora professionale |
+
+Amministrate più di una Pagina? Il comando le elenca e chiede quale, con
+`--page "Modena Magic"`.
 
 Il token **scade dopo 60 giorni**. Il workflow `token-check.yml` gira ogni
 lunedì e apre una issue quando mancano meno di 14 giorni: quando la vedete, è
 la cosa più urgente da fare, perché alla scadenza si fermano tutti i post
-insieme e in silenzio.
+insieme e in silenzio. Per rinnovarlo si rilancia `ig-setup` con un token
+fresco dall'Explorer.
 
 ---
 

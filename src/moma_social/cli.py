@@ -247,6 +247,103 @@ def cmd_media_test(args) -> int:
     return EXIT_OK
 
 
+def cmd_ig_setup(args) -> int:
+    """Ricava IG_USER_ID e un token long-lived da un token breve.
+
+    E' il passaggio piu' scomodo della configurazione: tre chiamate in
+    sequenza, ognuna con un modo diverso di fallire. Farlo qui permette di
+    dire quale delle tre e' andata storta, invece di lasciare l'utente davanti
+    a un JSON di errore di Meta.
+    """
+    import requests
+
+    cfg = config.load(args.config)
+    versione = cfg.get("instagram.api_version", "v21.0")
+    base = f"https://graph.facebook.com/{versione}"
+
+    app_id = args.app_id or os.environ.get("FB_APP_ID", "")
+    app_secret = args.app_secret or os.environ.get("FB_APP_SECRET", "")
+    if not (app_id and app_secret):
+        raise ConfigError(
+            "Servono l'ID e il segreto dell'app Meta: passali con --app-id e "
+            "--app-secret, oppure mettili nel .env come FB_APP_ID e "
+            "FB_APP_SECRET. Si trovano in Impostazioni dell'app > Di base."
+        )
+
+    def chiedi(percorso, params, cosa):
+        try:
+            risposta = requests.get(f"{base}/{percorso}", params=params, timeout=60)
+            dati = risposta.json()
+        except (requests.RequestException, ValueError) as exc:
+            raise ConfigError(f"{cosa}: Graph API irraggiungibile ({exc})") from exc
+        if "error" in dati:
+            errore = dati["error"]
+            raise ConfigError(f"{cosa}: {errore.get('message')} "
+                              f"(code {errore.get('code')})")
+        return dati
+
+    # 1. Il token dell'Explorer dura un'ora: si scambia con uno da 60 giorni.
+    scambio = chiedi("oauth/access_token", {
+        "grant_type": "fb_exchange_token",
+        "client_id": app_id,
+        "client_secret": app_secret,
+        "fb_exchange_token": args.token,
+    }, "Scambio del token")
+    token = scambio.get("access_token", "")
+    if not token:
+        raise ConfigError("Scambio del token: risposta senza access_token")
+    durata = scambio.get("expires_in")
+    if durata:
+        scadenza = (now(cfg.timezone) + dt.timedelta(seconds=int(durata))).date()
+        print(f"Token long-lived ottenuto, scade il {scadenza.isoformat()}")
+    else:
+        print("Token long-lived ottenuto (Meta non ha dichiarato una scadenza)")
+
+    # 2. L'id Instagram non si chiede a Instagram: si chiede alla Pagina.
+    pagine = chiedi("me/accounts", {
+        "fields": "name,instagram_business_account{id,username}",
+        "access_token": token,
+    }, "Elenco delle Pagine").get("data", [])
+    if not pagine:
+        raise ConfigError(
+            "Nessuna Pagina Facebook visibile. O l'account non ne amministra "
+            "nessuna, o al token manca il permesso pages_show_list."
+        )
+
+    collegate = [p for p in pagine if p.get("instagram_business_account")]
+    if not collegate:
+        nomi = ", ".join(p.get("name", "?") for p in pagine)
+        raise ConfigError(
+            f"Nessuna delle Pagine ({nomi}) ha un account Instagram "
+            "professionale collegato. Va collegato dalle impostazioni della "
+            "Pagina, e l'account Instagram dev'essere Business o Creator."
+        )
+    if args.page:
+        collegate = [p for p in collegate
+                     if args.page in (p.get("id"), p.get("name"))]
+        if not collegate:
+            raise ConfigError(f"Nessuna Pagina corrisponde a {args.page!r}")
+    if len(collegate) > 1:
+        print("\nPiu' di una Pagina ha un account Instagram collegato:")
+        for p in collegate:
+            ig = p["instagram_business_account"]
+            print(f"  {p.get('name')} (id {p.get('id')}) "
+                  f"-> @{ig.get('username')}")
+        raise ConfigError("Rilancia indicando quale, con --page <nome o id>")
+
+    pagina = collegate[0]
+    ig = pagina["instagram_business_account"]
+    print(f"Pagina: {pagina.get('name')}")
+    print(f"Instagram: @{ig.get('username')}")
+
+    print("\nDa incollare nel .env e nei secret di GitHub:\n")
+    print(f"IG_USER_ID={ig.get('id')}")
+    print(f"IG_ACCESS_TOKEN={token}")
+    print("\nIl token e' una credenziale: non finisce su git e non si "
+          "incolla in chat.")
+    return EXIT_OK
+
+
 def cmd_doctor(args) -> int:
     """Diagnosi completa: config, sorgenti dati, rendering, credenziali."""
     cfg = config.load(args.config)
@@ -523,6 +620,18 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_media_test)
     p.add_argument("--file", default="",
                    help="PNG da caricare (default: l'ultimo generato in out/)")
+
+    p = sub.add_parser("ig-setup",
+                       help="ricava IG_USER_ID e token long-lived da un token breve")
+    p.set_defaults(func=cmd_ig_setup)
+    p.add_argument("--token", required=True,
+                   help="token breve preso dal Graph API Explorer")
+    p.add_argument("--app-id", default="", dest="app_id",
+                   help="ID dell'app Meta (default: FB_APP_ID dal .env)")
+    p.add_argument("--app-secret", default="", dest="app_secret",
+                   help="segreto dell'app Meta (default: FB_APP_SECRET dal .env)")
+    p.add_argument("--page", default="",
+                   help="nome o id della Pagina, se ne amministrate piu' d'una")
 
     p = sub.add_parser("doctor", help="diagnosi di configurazione, dati e credenziali")
     p.set_defaults(func=cmd_doctor)
