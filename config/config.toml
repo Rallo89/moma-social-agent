@@ -174,7 +174,10 @@ publish_enabled = true
 # backend: "s3" (S3/R2/MinIO) | "imgbb" | "none" (solo dry-run/export locale)
 # ─────────────────────────────────────────────────────────────────────────────
 [media]
-backend     = "s3"
+# "none" finche' non e' stato scelto: cosi' il primo lancio dice cosa manca
+# invece di chiedere una dipendenza per un backend che magari non userete.
+# Vedi docs/PUBBLICAZIONE.md.
+backend     = "none"
 
 [media.s3]
 bucket      = "${MEDIA_BUCKET}"

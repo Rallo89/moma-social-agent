@@ -68,7 +68,15 @@ Piano gratuito da 10 GB, compatibile S3. Serve un account Cloudflare.
    non ha le ACL per oggetto, la visibilità si decide sul bucket. Su AWS S3
    invece va lasciato com'è. È l'errore che costa più tempo dei due.
 
-   Serve anche `pip install '.[s3]'`, che porta boto3.
+6. Installate boto3, che il backend S3 richiede e che non è nelle dipendenze
+   di base:
+
+   ```powershell
+   pip install ".[s3]"
+   ```
+
+   Le virgolette **doppie**: in PowerShell le quadre senza quoting sono
+   caratteri jolly, e `pip install .[s3]` non installa niente.
 
 ### Collaudo
 

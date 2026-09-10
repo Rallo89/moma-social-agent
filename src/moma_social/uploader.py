@@ -18,6 +18,16 @@ from .errors import ConfigError, PublishError
 
 TIMEOUT = 60
 
+# Messaggio unico, cosi' il doctor e l'upload dicono la stessa cosa. Le
+# virgolette doppie funzionano sia in bash sia in PowerShell, dove le quadre
+# senza quoting sono caratteri jolly.
+MANCA_BOTO3 = (
+    "Il backend media 's3' richiede boto3, che non e' installato:\n"
+    '    pip install ".[s3]"\n'
+    "Se invece volete partire senza infrastruttura, in config/config.toml "
+    'mettete [media] backend = "imgbb" e una IMGBB_API_KEY nel .env.'
+)
+
 
 def _key_for(prefix: str, path: Path) -> str:
     stamp = datetime.now(UTC).strftime("%Y/%m/%d")
@@ -28,7 +38,7 @@ def _upload_s3(cfg: Config, path: Path) -> str:
     try:
         import boto3
     except ImportError as exc:  # pragma: no cover
-        raise ConfigError("backend media 's3' richiede boto3: pip install '.[s3]'") from exc
+        raise ConfigError(MANCA_BOTO3) from exc
 
     section = cfg.section("media.s3")
     bucket = section.get("bucket")

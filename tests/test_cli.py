@@ -250,3 +250,18 @@ def test_media_test_promuove_un_hosting_corretto(cfg, monkeypatch, capsys, tmp_p
     monkeypatch.setattr("requests.get", lambda *a, **k: Risposta())
     assert modulo.main(["media-test", "--file", str(png)]) == cli.EXIT_OK
     assert "Instagram riuscirebbe" in capsys.readouterr().out
+
+
+def test_doctor_non_promuove_s3_senza_boto3(cfg, monkeypatch):
+    """Una spia verde che mente e' peggio di nessuna spia."""
+    import importlib.util
+
+    from moma_social.errors import ConfigError
+
+    cfg.data["media"]["backend"] = "s3"
+    cfg.data["media"]["s3"]["bucket"] = "moma-social"
+    vero = importlib.util.find_spec
+    monkeypatch.setattr(importlib.util, "find_spec",
+                        lambda nome, *a: None if nome == "boto3" else vero(nome, *a))
+    with pytest.raises(ConfigError, match="boto3"):
+        cli._check_media(cfg, "s3")

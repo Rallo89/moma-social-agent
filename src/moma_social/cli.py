@@ -350,6 +350,14 @@ def _classifica_da_provare(cfg, oggi, giorno, formato_forzato: str = ""):
 
 def _check_media(cfg, backend: str) -> str:
     if backend == "s3":
+        # Il bucket configurato non basta: senza boto3 l'upload fallisce lo
+        # stesso, e una spia verde che mente e' peggio di nessuna spia.
+        import importlib.util
+
+        from .uploader import MANCA_BOTO3
+
+        if importlib.util.find_spec("boto3") is None:
+            raise ConfigError(MANCA_BOTO3)
         if not cfg.get("media.s3.bucket"):
             raise ConfigError("media.s3.bucket vuoto (MEDIA_BUCKET)")
         return f"bucket {cfg.get('media.s3.bucket')}"
