@@ -110,6 +110,36 @@ def stage_from_title(titolo: str) -> tuple[str, bool]:
     return "", False
 
 
+def meta_breakdown(rows, massimo: int = 5, altri: str = "Altri",
+                   ignoto: str = "Non dichiarato") -> list[dict]:
+    """Quote degli archetipi giocati in una tappa, dal piu' diffuso.
+
+    Oltre i primi `massimo` si accorpa in "Altri": una torta con quindici
+    spicchi non si legge, e i colori distinguibili non sono infiniti. Chi non
+    ha dichiarato il mazzo finisce in una fetta sua, sempre in fondo, perche'
+    "non lo sappiamo" non e' un archetipo.
+    """
+    conteggio: dict[str, int] = {}
+    for riga in rows:
+        nome = (getattr(riga, "deck", "") or "").strip() or ignoto
+        conteggio[nome] = conteggio.get(nome, 0) + 1
+    if not conteggio:
+        return []
+
+    senza = conteggio.pop(ignoto, 0)
+    ordinati = sorted(conteggio.items(), key=lambda v: (-v[1], v[0]))
+    testa, coda = ordinati[:massimo], ordinati[massimo:]
+    if coda:
+        testa.append((altri, sum(n for _, n in coda)))
+    if senza:
+        testa.append((ignoto, senza))
+
+    totale = sum(n for _, n in testa)
+    return [{"nome": nome, "conta": n, "quota": n / totale,
+             "percento": round(n * 100 / totale)}
+            for nome, n in testa]
+
+
 def event_label(event, tappa: str = "Tappa {stage}", finale: str = "Finale") -> str:
     """Come l'evento si chiama nei testi: "Modern Fall 2026 · Tappa 2".
 

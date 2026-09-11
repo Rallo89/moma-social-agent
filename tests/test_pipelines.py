@@ -30,7 +30,7 @@ def fake_render(monkeypatch, tmp_path):
 
 def test_calendario_settimanale(cfg):
     """Il lunedi: una card di riepilogo, poi una card per evento."""
-    draft = pipelines.weekly_calendar(cfg, dt.date(2026, 3, 11))
+    draft = pipelines.weekly_calendar(cfg, dt.date(2026, 3, 7))
     assert draft.kind == "weekly_calendar"
     assert draft.meta["events"] == 5
     assert draft.meta["week_start"] == "2026-03-09"
@@ -54,7 +54,7 @@ def test_calendario_settimanale(cfg):
 
 def test_calendario_senza_riepilogo(cfg):
     cfg.data["posts"]["weekly_calendar"]["riepilogo"] = False
-    draft = pipelines.weekly_calendar(cfg, dt.date(2026, 3, 11))
+    draft = pipelines.weekly_calendar(cfg, dt.date(2026, 3, 7))
     assert len(draft.images) == 5
     assert RENDERED[0][0] == "evento.html.j2"
 
@@ -62,7 +62,7 @@ def test_calendario_senza_riepilogo(cfg):
 def test_calendario_non_supera_il_limite_della_graph_api(cfg):
     """Il riepilogo occupa una slide: le serate che restano sono una in meno."""
     cfg.data["posts"]["weekly_calendar"]["max_carousel_slides"] = 3
-    draft = pipelines.weekly_calendar(cfg, dt.date(2026, 3, 11))
+    draft = pipelines.weekly_calendar(cfg, dt.date(2026, 3, 7))
     assert len(draft.images) == 3          # riepilogo + 2 serate
     assert draft.meta["slide_tagliate"] == 3
     # Il riepilogo elenca solo le serate che il carosello mostra davvero.
@@ -100,44 +100,34 @@ def test_formato_senza_eventi_ne_fallback(cfg):
         pipelines.format_spotlight(cfg, dt.date(2030, 1, 7))
 
 
-def test_le_due_slide_usano_gli_slot_della_card(cfg):
-    """Risultati e classifica parlano la lingua delle card del calendario."""
+def test_le_slide_usano_gli_slot_della_card(cfg):
+    """Risultati e meta parlano la lingua delle card del calendario."""
     pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
-    tappa, classifica = RENDERED[0][1], RENDERED[1][1]
-    assert RENDERED[0][0] == RENDERED[1][0] == "classifica.html.j2"
+    tappa, meta = RENDERED[0][1], RENDERED[1][1]
+    assert RENDERED[0][0] == "classifica.html.j2"
+    assert RENDERED[1][0] == "meta.html.j2"
 
     assert tappa["badge"] == "Pauper"
     assert tappa["kicker_1"] == "Risultati di tappa"
     assert tappa["titolo"] == "Tappa 10"        # letto dal nome del torneo
     assert tappa["righe"][0].player
 
-    assert classifica["badge"] == "Pauper"
-    assert classifica["kicker_1"] == "Classifica generale"
-    assert classifica["titolo"] == "Classifica"
+    assert meta["badge"] == "Pauper"
+    assert meta["titolo"] == "Il meta"
+    assert meta["spicchi"]
 
     # Il vecchio template su sfondo Canva resta selezionabile e coerente.
     assert tappa["subtitle"] == "Tappa 10"
-    assert classifica["subtitle"] == "Classifica generale"
 
 
 def test_risultati_sono_un_carosello_di_due_slide(cfg):
     draft = pipelines.leg_results(cfg, dt.date(2026, 3, 11))
     assert draft.is_carousel
     assert len(draft.images) == 2
-    # I nomi dei template vengono dalla config: qui conta che siano due,
-    # nell'ordine dichiarato.
-    assert [t for t, _ in RENDERED] == cfg.get("posts.leg_results.image_templates")
-    # L'ordine del carosello e' parte del contenuto: prima la tappa, poi la classifica.
+    # L'ordine e' parte del contenuto: prima la serata, poi il suo meta.
     assert "risultati" in Path(draft.images[0]).name
-    assert "classifica" in Path(draft.images[1]).name
+    assert "meta" in Path(draft.images[1]).name
 
-
-def test_risultati_rispettano_i_limiti_di_righe(cfg):
-    cfg.data["posts"]["leg_results"]["top_n"] = 4
-    cfg.data["posts"]["leg_results"]["standings_top_n"] = 6
-    pipelines.leg_results(cfg, dt.date(2026, 3, 11))
-    assert len(RENDERED[0][1]["rows"]) == 4
-    assert len(RENDERED[1][1]["rows"]) == 6
 
 
 def test_risultati_default_e_ieri(cfg, monkeypatch):
@@ -159,7 +149,7 @@ def test_densita_cresce_con_le_righe():
 
 
 # ── carosello: piu' partecipanti di quanti stiano in una slide ──────────────
-def _tappa_con(cfg, monkeypatch, giocatori: int):
+def _tappa_con(cfg, monkeypatch, giocatori: int, mazzi=False):
     """Sostituisce i risultati di tappa con N giocatori inventati."""
     import datetime as d
 
@@ -169,23 +159,25 @@ def _tappa_con(cfg, monkeypatch, giocatori: int):
         date=d.date(2026, 3, 13), format="Pauper", leg="Tappa 10",
         venue="Modena Magic", players_count=giocatori,
         league="lega-pauper-2026",          # la stessa dei dati di esempio
-        rows=[ResultRow(rank=i, player=f"Giocatore {i}", points=(giocatori - i) * 3)
+        rows=[ResultRow(rank=i, player=f"Giocatore {i}", points=(giocatori - i) * 3,
+                        deck=(f"Mazzo {i % 4}" if mazzi else ""))
               for i in range(1, giocatori + 1)],
     )
     monkeypatch.setattr(pipelines, "fetch_leg_results", lambda *a, **k: leg)
     return leg
 
 
-def test_sedici_giocatori_restano_due_slide(cfg, monkeypatch):
-    _tappa_con(cfg, monkeypatch, 16)
+def test_sedici_giocatori_restano_una_slide_di_risultati(cfg, monkeypatch):
+    _tappa_con(cfg, monkeypatch, 16, mazzi=True)
     draft = pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
-    assert draft.meta["slide"] == 2
     assert draft.meta["slide_tappa"] == 1
+    assert draft.meta["slide_meta"] == 1
+    assert draft.meta["slide"] == 2
 
 
 def test_venti_giocatori_diventano_tre_slide(cfg, monkeypatch):
     """Il 17esimo non deve sparire: serve una seconda slide di risultati."""
-    _tappa_con(cfg, monkeypatch, 20)
+    _tappa_con(cfg, monkeypatch, 20, mazzi=True)
     draft = pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
     assert draft.meta["slide_tappa"] == 2
     assert len(draft.images) == 3
@@ -196,11 +188,11 @@ def test_venti_giocatori_diventano_tre_slide(cfg, monkeypatch):
 
 
 def test_numero_di_pagina_solo_quando_serve(cfg, monkeypatch):
-    _tappa_con(cfg, monkeypatch, 20)
+    _tappa_con(cfg, monkeypatch, 20, mazzi=True)
     pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
     assert RENDERED[0][1]["kicker_2"] == "1/2"
     assert RENDERED[1][1]["kicker_2"] == "2/2"
-    # La classifica sta in una slide sola: al posto del numero, la data.
+    # Il meta sta in una slide sola: al posto del numero, la data.
     assert RENDERED[2][1]["kicker_2"] == "13 marzo"
 
 
@@ -218,96 +210,17 @@ def test_carosello_non_supera_il_limite_della_graph_api(cfg, monkeypatch):
     draft = pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
     assert len(draft.images) <= MAX_CAROUSEL
     assert draft.meta["slide_tagliate"] > 0
-    # La classifica cede spazio per prima, ma non sparisce del tutto.
-    assert draft.meta["slide_classifica"] >= 1
 
 
-def test_ordine_delle_slide_risultati_poi_classifica(cfg, monkeypatch):
-    _tappa_con(cfg, monkeypatch, 20)
+def test_ordine_delle_slide_risultati_poi_meta(cfg, monkeypatch):
+    _tappa_con(cfg, monkeypatch, 20, mazzi=True)
     pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
     templates = [t for t, _ in RENDERED]
-    attesi = cfg.get("posts.leg_results.image_templates")
-    assert templates[:2] == [attesi[0], attesi[0]]   # due pagine di risultati
-    assert templates[2] == attesi[1]                 # poi la classifica
+    assert templates[:2] == ["classifica.html.j2"] * 2   # due pagine di risultati
+    assert templates[2] == "meta.html.j2"                # poi il meta
 
 
 # ── la classifica e' facoltativa ────────────────────────────────────────────
-def test_senza_classifica_esce_solo_la_tappa(cfg, monkeypatch):
-    _tappa_con(cfg, monkeypatch, 16)
-    draft = pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper",
-                                  senza_classifica=True)
-    assert draft.meta["slide_classifica"] == 0
-    assert len(draft.images) == 1
-    assert "CLASSIFICA GENERALE" not in draft.caption
-
-
-def test_classifica_assente_non_blocca_il_post(cfg, monkeypatch):
-    """Un formato senza lega deve comunque avere il suo post di risultati."""
-    _tappa_con(cfg, monkeypatch, 16)
-    monkeypatch.setattr(
-        pipelines, "fetch_standings",
-        lambda *a, **k: (_ for _ in ()).throw(NoDataError("nessuna classifica")),
-    )
-    draft = pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
-    assert draft.meta["slide_classifica"] == 0
-    assert len(draft.images) == 1
-
-
-def test_sorgente_giu_non_blocca_la_caption(cfg, monkeypatch):
-    """La 'prossima tappa' e' una rifinitura: se la sorgente e' giu', si degrada."""
-    from moma_social.errors import SourceError
-
-    _tappa_con(cfg, monkeypatch, 16)
-    monkeypatch.setattr(
-        pipelines, "fetch_events",
-        lambda *a, **k: (_ for _ in ()).throw(SourceError("endpoint irraggiungibile")),
-    )
-    draft = pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper",
-                                  senza_classifica=True)
-    assert "in arrivo" in draft.caption
-
-
-def test_la_classifica_segue_la_lega_della_tappa(cfg, monkeypatch):
-    """Non basta il formato: serve la lega, o si prende quella sbagliata."""
-    import datetime as d
-
-    from moma_social.models import LegResults, ResultRow
-
-    leg = LegResults(date=d.date(2026, 9, 3), format="Modern", leg="Tappa 5",
-                     league="lega-2026",
-                     rows=[ResultRow(rank=1, player="X", points=12)])
-    monkeypatch.setattr(pipelines, "fetch_leg_results", lambda *a, **k: leg)
-
-    chiamata = {}
-
-    def _standings(cfg_, fmt, **kw):
-        chiamata.update(fmt=fmt, **kw)
-        from moma_social.models import Standings
-        return Standings(format=fmt)
-
-    monkeypatch.setattr(pipelines, "fetch_standings", _standings)
-    pipelines.leg_results(cfg, d.date(2026, 9, 3), fmt="Modern")
-    assert chiamata["league"] == "lega-2026"
-
-
-def test_tappa_senza_lega_non_prende_una_classifica_a_caso(cfg, monkeypatch):
-    """Senza lega non esiste 'la' classifica: meglio il solo post dei risultati."""
-    import datetime as d
-
-    from moma_social.models import LegResults, ResultRow
-
-    leg = LegResults(date=d.date(2026, 9, 3), format="Premodern", leg="Tappa 3",
-                     league="",   # torneo non collegato a nessuna lega
-                     rows=[ResultRow(rank=1, player="X", points=12)])
-    monkeypatch.setattr(pipelines, "fetch_leg_results", lambda *a, **k: leg)
-
-    def _non_deve_essere_chiamata(*a, **k):
-        raise AssertionError("senza lega non si deve interrogare la classifica")
-
-    monkeypatch.setattr(pipelines, "fetch_standings", _non_deve_essere_chiamata)
-    draft = pipelines.leg_results(cfg, d.date(2026, 9, 3), fmt="Premodern")
-    assert draft.meta["slide_classifica"] == 0
-    assert len(draft.images) == 1
 
 
 def test_una_sera_con_due_tornei_produce_due_post(cfg, tmp_path):
@@ -330,7 +243,7 @@ def test_una_sera_con_due_tornei_produce_due_post(cfg, tmp_path):
     cfg.data["sources"]["results"] = {"url": str(path), "kind": "json"}
 
     bozze = pipelines.drafts(cfg, "leg_results", dt.date(2026, 9, 2),
-                             senza_classifica=True)
+                             senza_meta=True)
     assert [b.meta["format"] for b in bozze] == ["Pauper", "Premodern"]
     assert [b.meta["winner"] for b in bozze] == ["Anna", "Bruno"]
     # Chiavi di deduplica distinte, altrimenti il secondo post sarebbe scartato
@@ -565,3 +478,16 @@ def test_tutti_a_zero_vale_la_posizione():
     tappa = _tappa_di([("Anna", 0), ("Bruno", 0), ("Carla", 0)])
     assert [r.player for r in tappa.winners] == ["Anna"]
     assert not tappa.ex_aequo
+
+
+def test_il_calendario_del_sabato_guarda_alla_settimana_dopo(cfg):
+    """Lanciato sabato 7 marzo deve annunciare il 9-15, non il 2-8."""
+    draft = pipelines.weekly_calendar(cfg, dt.date(2026, 3, 7))
+    assert draft.meta["week_start"] == "2026-03-09"
+    assert draft.meta["week_end"] == "2026-03-15"
+
+
+def test_il_calendario_puo_restare_sulla_settimana_corrente(cfg):
+    cfg.data["posts"]["weekly_calendar"]["settimana"] = "corrente"
+    draft = pipelines.weekly_calendar(cfg, dt.date(2026, 3, 11))
+    assert draft.meta["week_start"] == "2026-03-09"

@@ -15,9 +15,6 @@
 {% set colonne = [righe[:per_colonna], righe[per_colonna:]] %}
 
 {% block stili %}
-  /* Il titolo cede spazio all'elenco: qui la notizia sono i nomi. */
-  .titolo.classifica { font-size: 110px; }
-
   .griglia {
     flex: 1; min-width: 0; display: flex; gap: 1.1em;
     font-size: 34px; align-items: flex-start;

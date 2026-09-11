@@ -136,7 +136,7 @@ def test_doctor_senza_eventi_ripiega_su_ieri(cfg):
 def test_settimana_genera_un_post_per_giornata(cfg, capsys):
     """Nei dati di esempio si gioca il 11 e il 12 marzo: due post, non sette."""
     assert cli.main(["results", "--date", "2026-03-11", "--settimana",
-                     "--no-publish", "--no-standings"]) == cli.EXIT_OK
+                     "--no-publish", "--no-meta"]) == cli.EXIT_OK
     out = capsys.readouterr().out
     assert "Settimana 9 - 15 marzo" in out
     assert "3 post su 7 giornate" in out      # 11, 12 e 13 marzo
@@ -167,7 +167,7 @@ def test_settimana_prosegue_dopo_una_giornata_fallita(cfg, monkeypatch, capsys):
 
     monkeypatch.setitem(pipelines.PIPELINES_MULTI, "leg_results", _a_volte_rotta)
     esito = cli.main(["results", "--date", "2026-03-11", "--settimana",
-                      "--no-publish", "--no-standings"])
+                      "--no-publish", "--no-meta"])
     catturato = capsys.readouterr()
     assert esito == cli.EXIT_ERROR                    # la giornata persa si dichiara
     # Il fallimento si conta a parte: non deve travestirsi da giorno di riposo.

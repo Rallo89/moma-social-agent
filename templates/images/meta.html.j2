@@ -1,0 +1,58 @@
+{#
+  Card sul meta della serata: quote degli archetipi, a spicchi.
+
+  Ogni fetta porta il proprio nome accanto al colore: l'identita' non e' mai
+  affidata al colore da solo, che e' anche il motivo per cui questa palette
+  puo' arrivare a sei voci restando leggibile a chi distingue male i colori.
+
+  Slot: kicker_1 kicker_2 · badge · titolo · spicchi · invito · link
+        spicchi = [{nome, conta, percento, colore, percorso}]
+#}
+{% extends "_carta.html.j2" %}
+
+{% block stili %}
+  .torta { display: flex; align-items: center; gap: 46px; flex: 1; min-width: 0; }
+  .torta svg { flex: none; width: 340px; height: 340px; }
+  /* Il filo fra le fette e' del colore del fondo: separa senza aggiungere
+     una linea che sembri un dato. */
+  .torta path { stroke: #14171a; stroke-width: 4; }
+
+  .legenda {
+    flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .42em;
+    font-size: 38px;
+  }
+  .voce-meta { display: flex; align-items: baseline; gap: .45em; min-width: 0; }
+  .pallino {
+    flex: none; width: .55em; height: .55em; border-radius: 50%;
+    transform: translateY(-.02em);
+  }
+  .voce-meta .nome {
+    flex: 1; min-width: 0; font-weight: 600; font-size: 1em;
+    letter-spacing: .02em; text-transform: uppercase;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .voce-meta .quanti {
+    flex: none; font-weight: 700; font-size: 1em; color: #d5dad6;
+  }
+{% endblock %}
+
+{% block corpo %}
+    {% if badge %}<div class="badge" data-fit="20">{{ badge }}</div>{% endif %}
+    <div class="titolo classifica" data-fit="60">{{ titolo }}</div>
+    <div class="torta">
+      <svg viewBox="0 0 400 400" role="img" aria-label="Quote degli archetipi">
+        {% for s in spicchi %}
+        <path d="{{ s.percorso }}" fill="{{ s.colore }}"></path>
+        {% endfor %}
+      </svg>
+      <div class="legenda" data-fit="14" data-fit-altezza="corpo">
+        {% for s in spicchi %}
+        <div class="voce-meta">
+          <span class="pallino" style="background: {{ s.colore }}"></span>
+          <span class="nome">{{ s.nome }}</span>
+          <span class="quanti">{{ s.percento }}%</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+{% endblock %}

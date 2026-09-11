@@ -1,7 +1,7 @@
 import datetime as dt
 
 from moma_social.captions import build_hashtags, render_caption
-from moma_social.repos import events_by_day, fetch_events, fetch_leg_results, fetch_standings
+from moma_social.repos import events_by_day, fetch_events, fetch_leg_results
 
 
 def test_hashtag_deduplicati_e_normalizzati(cfg):
@@ -32,13 +32,15 @@ def test_caption_calendario(cfg):
 
 def test_caption_risultati_cita_il_vincitore(cfg):
     leg = fetch_leg_results(cfg, dt.date(2026, 3, 11))
-    standings = fetch_standings(cfg, "Modern")
+    meta = [{"nome": "Boros Energy", "percento": 25},
+            {"nome": "Izzet Murktide", "percento": 17}]
     text = render_caption(cfg, "leg_results", {
-        "leg": leg, "rows": leg.rows[:8], "standings": standings,
-        "standings_rows": standings.rows[:10], "next_event_label": "giovedi",
+        "leg": leg, "rows": leg.rows[:8], "meta": meta,
+        "next_event_label": "giovedi",
     })
     assert "Marco Bianchi" in text
-    assert "CLASSIFICA GENERALE" in text
+    assert "IL META DELLA SERATA" in text
+    assert "Boros Energy — 25%" in text
 
 
 def test_caption_troncata_al_limite(cfg):
@@ -57,7 +59,7 @@ def test_caption_dichiara_il_pari_merito(cfg):
     """Due giocatori a pari punti: dichiararne uno solo vincitore e' scorretto."""
     import datetime as d
 
-    from moma_social.models import LegResults, ResultRow, Standings
+    from moma_social.models import LegResults, ResultRow
 
     leg = LegResults(
         date=d.date(2026, 9, 3), format="Modern", leg="Tappa 5", players_count=12,
@@ -66,8 +68,8 @@ def test_caption_dichiara_il_pari_merito(cfg):
               ResultRow(rank=3, player="Luca Nobili", points=9)],
     )
     testo = render_caption(cfg, "leg_results", {
-        "leg": leg, "rows": leg.rows, "standings": Standings(format="Modern"),
-        "standings_rows": [], "next_event_label": "mercoledi",
+        "leg": leg, "rows": leg.rows, "meta": [],
+        "next_event_label": "mercoledi",
     })
     assert "pari punti" in testo
     assert "Tianguang Liu e Marco Bianchi" in testo
@@ -77,7 +79,7 @@ def test_caption_dichiara_il_pari_merito(cfg):
 def test_caption_vincitore_unico(cfg):
     import datetime as d
 
-    from moma_social.models import LegResults, ResultRow, Standings
+    from moma_social.models import LegResults, ResultRow
 
     leg = LegResults(
         date=d.date(2026, 9, 3), format="Modern", leg="Tappa 5",
@@ -85,8 +87,8 @@ def test_caption_vincitore_unico(cfg):
               ResultRow(rank=2, player="Secondo", points=9)],
     )
     testo = render_caption(cfg, "leg_results", {
-        "leg": leg, "rows": leg.rows, "standings": Standings(format="Modern"),
-        "standings_rows": [], "next_event_label": "mercoledi",
+        "leg": leg, "rows": leg.rows, "meta": [],
+        "next_event_label": "mercoledi",
     })
     assert "Vince Primo con Boros (4-0)" in testo
     assert "pari punti" not in testo

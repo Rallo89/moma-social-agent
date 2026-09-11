@@ -1,6 +1,6 @@
 {# Caption del carosello risultati (giovedi e venerdi ore 03:00).
-   Variabili: org, leg (LegResults), rows (top N tappa), standings,
-   standings_rows (top N classifica), hashtags. Filtri: |data, |giorno #}
+   Variabili: org, leg (LegResults), rows (top N tappa), meta (quote degli
+   archetipi), next_event_label, hashtags. Filtri: |data, |giorno #}
 🏆 {{ leg.format|upper }} · {{ leg.leg or "Risultati di tappa" }} — {{ leg.date|data }}
 
 {% if leg.ex_aequo %}
@@ -17,13 +17,13 @@ Vince {{ leg.winner.player }}{% if leg.winner.deck %} con {{ leg.winner.deck }}{
 {{ loop.index }}. {{ r.player }}{% if r.deck %} — {{ r.deck }}{% endif +%}
 {% endfor %}
 
-{% if standings_rows %}
-📈 CLASSIFICA GENERALE {% if standings.season %}{{ standings.season }}{% endif +%}
-{% for r in standings_rows[:5] %}
-{{ r.rank }}. {{ r.player }} — {{ r.points }} pt {{ r.trend }}
+{% if meta %}
+🥧 IL META DELLA SERATA
+{% for f in meta[:3] %}
+{{ f.nome }} — {{ f.percento }}%
 {% endfor %}
 
-➡️ Scorri per la classifica completa. Prossima tappa: {{ next_event_label }}
+➡️ Scorri per la torta completa. Prossima tappa: {{ next_event_label }}
 {% else %}
 ➡️ Prossima tappa: {{ next_event_label }}
 {% endif %}

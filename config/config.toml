@@ -206,6 +206,9 @@ tournament_name = "Torneo {format}"
 leg_kicker         = "Risultati di tappa"   # occhiello della slide tappa
 standings_subtitle = "Classifica generale"  # occhiello della slide classifica
 standings_title    = "Classifica"           # titolo grande della slide classifica
+meta_titolo        = "Il meta"              # titolo della slide sugli archetipi
+meta_altri         = "Altri"
+meta_ignoto        = "Non dichiarato"
 hashtag_grafica = "#modenamagic"          # hashtag stampato in fondo alla slide
 hashtags_max    = 20
 caption_max     = 2200          # limite Instagram
@@ -292,6 +295,9 @@ ledger = "state/published.jsonl"
 # Il lunedi esce un carosello: una card per evento della settimana, cosi'
 # ogni appuntamento resta leggibile invece di stare in una riga minuscola.
 [posts.weekly_calendar]
+# "prossima": lanciato il sabato, annuncia la settimana che comincia.
+# "corrente": racconta la settimana che contiene la data di lancio.
+settimana           = "prossima"
 image_template      = "evento.html.j2"
 # Prima slide: tutta la settimana in un colpo d'occhio, poi una card per
 # serata. `riepilogo = false` la toglie e lascia il solo carosello di card.
@@ -324,7 +330,10 @@ height           = 1080
 [posts.leg_results]
 # Il template grafico dell'associazione e' quadrato e vale per entrambe le
 # slide del carosello: cambiano solo titolo, sottotitolo e righe.
-image_templates  = ["classifica.html.j2", "classifica.html.j2"]
+image_templates  = ["classifica.html.j2"]
+# Ultima slide del carosello: le quote degli archetipi della serata.
+image_template_meta = "meta.html.j2"
+meta_top_n       = 5            # oltre, si accorpa in "Altri"
 width            = 1080
 height           = 1080
 # Stessa grafica per entrambe le slide del carosello.

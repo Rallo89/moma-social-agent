@@ -12,14 +12,19 @@ import datetime as dt
 from .captions import render_caption
 from .config import Config
 from .errors import MtgSocialError, NoDataError
-from .models import PostDraft, Standings, format_fee, stage_from_title
+from .models import (
+    PostDraft,
+    Standings,
+    format_fee,
+    meta_breakdown,
+    stage_from_title,
+)
 from .render import post_size, render
 from .repos import (
     events_by_day,
     fetch_events,
     fetch_leg_results,
     fetch_leg_results_all,
-    fetch_standings,
     formats_on,
     same_format,
 )
@@ -232,6 +237,10 @@ def _card_riepilogo(cfg: Config, events: list, inizio: dt.date, fine: dt.date,
 # ── 1. Calendario settimanale (lunedi 10:00) ────────────────────────────────
 def weekly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
     day = day or resolve_date("today", cfg.timezone)
+    # Il post esce il sabato e annuncia la settimana che comincia: guarda
+    # avanti di sette giorni invece di raccontare quella che sta finendo.
+    if cfg.get("posts.weekly_calendar.settimana", "prossima") == "prossima":
+        day = day + dt.timedelta(days=7)
     start, end = week_bounds(day)
     events = fetch_events(cfg, start, end)
     days = events_by_day(events)
@@ -414,108 +423,120 @@ def format_spotlight(cfg: Config, day: dt.date | None = None,
     )
 
 
-# ── 3. Risultati di tappa + classifica (giovedi e venerdi 03:00) ────────────
+# ── Il meta della tappa, a spicchi ──────────────────────────────────────────
+# Palette categorica validata sul fondo scuro della card (#14171a): banda di
+# luminosita', soglia di croma, separazione per daltonismo e contrasto passano
+# tutti. L'ordine e' fisso e non si cicla — un nono archetipo non genera un
+# colore nuovo, entra in "Altri". Grigio per "Non dichiarato", che non e' un
+# archetipo e non deve sembrarlo.
+COLORI_META = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300"]
+# "Altri" e "Non dichiarato" non sono archetipi: due grigi, cosi' non
+# competono con le fette che un archetipo ce l'hanno.
+GRIGI_META = {"Altri": "#8a8f98", "Non dichiarato": "#4b5158"}
+
+
+def _spicchi(fette: list[dict], raggio: float = 190, centro: float = 200,
+             grigi: dict | None = None) -> list[dict]:
+    """Trasforma le quote in archi SVG, in senso orario da mezzogiorno."""
+    import math
+
+    spicchi, angolo = [], -math.pi / 2
+    for indice, fetta in enumerate(fette):
+        colore = (grigi or GRIGI_META).get(fetta["nome"],
+                                COLORI_META[indice % len(COLORI_META)])
+        fine = angolo + 2 * math.pi * fetta["quota"]
+        if fetta["quota"] >= 0.999:
+            # Un cerchio intero non si disegna con un arco: gli estremi
+            # coinciderebbero e il path resterebbe vuoto.
+            percorso = (f"M {centro} {centro - raggio} "
+                        f"A {raggio} {raggio} 0 1 1 {centro - 0.01} {centro - raggio} Z")
+        else:
+            x0, y0 = centro + raggio * math.cos(angolo), centro + raggio * math.sin(angolo)
+            x1, y1 = centro + raggio * math.cos(fine), centro + raggio * math.sin(fine)
+            grande = 1 if fetta["quota"] > 0.5 else 0
+            percorso = (f"M {centro} {centro} L {x0:.2f} {y0:.2f} "
+                        f"A {raggio} {raggio} 0 {grande} 1 {x1:.2f} {y1:.2f} Z")
+        spicchi.append({**fetta, "colore": colore, "percorso": percorso})
+        angolo = fine
+    return spicchi
+
+
+def _card_meta(cfg: Config, leg, kicker: str, suffisso: str) -> dict | None:
+    """Contesto della slide sul meta. None se non c'e' niente da mostrare."""
+    fette = meta_breakdown(
+        leg.rows,
+        massimo=cfg.get("posts.leg_results.meta_top_n", 5),
+        altri=cfg.get("content.meta_altri", "Altri"),
+        ignoto=cfg.get("content.meta_ignoto", "Non dichiarato"),
+    )
+    ignoto = cfg.get("content.meta_ignoto", "Non dichiarato")
+    dichiarati = [f for f in fette if f["nome"] != ignoto]
+    # Una torta di un colore solo con scritto "non dichiarato" non e' un grafico
+    # del meta: e' il promemoria che i mazzi non sono stati registrati.
+    if not dichiarati:
+        return None
+    return {
+        "kicker_1": kicker, "kicker_2": suffisso,
+        "badge": leg.format, "sopratitolo": "",
+        "titolo": cfg.get("content.meta_titolo", "Il meta"),
+        "spicchi": _spicchi(fette, grigi={
+            cfg.get("content.meta_altri", "Altri"): GRIGI_META["Altri"],
+            ignoto: GRIGI_META["Non dichiarato"],
+        }),
+        "link": _senza_schema(cfg.get("content.evento.link", "")),
+        "invito": cfg.get("content.evento.invito", "Iscriviti"),
+        "qr_image": cfg.get("content.evento.qr", ""),
+        "background": _background(cfg, "leg_results_meta"), "density": "",
+    }
+
+
+# ── 3. Risultati di tappa + meta della serata (giovedi e venerdi 03:00) ──────
 def leg_results(cfg: Config, day: dt.date | None = None, fmt: str = "",
-                senza_classifica: bool = False) -> PostDraft:
+                senza_meta: bool = False) -> PostDraft:
     """Carosello sulla prima tappa di `day` (default: ieri).
 
     Quando la serata ha ospitato piu' tornei servono piu' post: li produce
     tutti `leg_results_batch`.
     """
     day = day or resolve_date("yesterday", cfg.timezone)
-    return _post_di_tappa(cfg, day, fetch_leg_results(cfg, day, fmt),
-                          senza_classifica)
+    return _post_di_tappa(cfg, day, fetch_leg_results(cfg, day, fmt), senza_meta)
 
 
 def leg_results_batch(cfg: Config, day: dt.date | None = None, fmt: str = "",
-                      senza_classifica: bool = False) -> list[PostDraft]:
+                      senza_meta: bool = False) -> list[PostDraft]:
     """Un post per ogni torneo giocato quel giorno.
 
     Pauper e Premodern nella stessa serata sono due gare distinte, con due
-    vincitori e due classifiche: meritano due post, non uno che li fonde.
+    vincitori: meritano due post, non uno che li fonde.
     """
     day = day or resolve_date("yesterday", cfg.timezone)
-    return [_post_di_tappa(cfg, day, leg, senza_classifica)
+    return [_post_di_tappa(cfg, day, leg, senza_meta)
             for leg in fetch_leg_results_all(cfg, day, fmt)]
 
 
-def _post_di_tappa(cfg: Config, day: dt.date, leg, senza_classifica: bool) -> PostDraft:
-    """Carosello risultati + classifica generale di una singola tappa.
+def _post_di_tappa(cfg: Config, day: dt.date, leg, senza_meta: bool) -> PostDraft:
+    """Carosello di una tappa: i risultati, poi il meta della serata.
 
-    La classifica generale e' facoltativa: se manca — formato senza lega,
-    sorgente non ancora collegata, o `senza_classifica` — il post esce con le
-    sole slide dei risultati invece di non uscire affatto.
+    La classifica di lega non sta qui: si aggiorna una volta a settimana, in
+    un post suo, mentre questo racconta la serata appena finita.
     """
-    if senza_classifica:
-        standings = Standings(format=leg.format)
-    elif not leg.league:
-        # Torneo non collegato a nessuna lega: non esiste "la" classifica da
-        # accostargli. Meglio il solo post dei risultati che una classifica
-        # scelta a caso fra quelle dello stesso formato.
-        standings = Standings(format=leg.format)
-    else:
-        try:
-            standings = fetch_standings(cfg, leg.format, league=leg.league)
-        except NoDataError:
-            standings = Standings(format=leg.format)
-
     # top_n = 0 significa "tutti": con piu' partecipanti di quanti ne stiano in
     # una slide il post diventa un carosello, non un elenco troncato in silenzio.
     top_n = cfg.get("posts.leg_results.top_n", 0)
-    standings_top_n = cfg.get("posts.leg_results.standings_top_n", 16)
     rows = leg.rows[:top_n] if top_n else leg.rows
-    standings_rows = standings.rows[:standings_top_n] if standings_top_n else standings.rows
 
     per_slide = cfg.get("posts.leg_results.rows_per_slide", 16)
     # La Graph API accetta al massimo 10 elementi per carosello (l'app ne
     # permette 20, ma noi pubblichiamo via API).
     max_slide = min(cfg.get("posts.leg_results.max_carousel_slides", 10), 10)
 
-    pagine_tappa = _pagine(rows, per_slide)
-    pagine_classifica = _pagine(standings_rows, per_slide) if standings_rows else []
-    tagliate = 0
-    if len(pagine_tappa) + len(pagine_classifica) > max_slide:
-        # I risultati sono la notizia: la classifica cede spazio per prima.
-        spazio_classifica = max(1, max_slide - len(pagine_tappa)) if pagine_classifica else 0
-        tagliate = len(pagine_classifica) - spazio_classifica
-        pagine_classifica = pagine_classifica[:spazio_classifica]
-        if len(pagine_tappa) + len(pagine_classifica) > max_slide:
-            tagliate += len(pagine_tappa) - (max_slide - len(pagine_classifica))
-            pagine_tappa = pagine_tappa[:max_slide - len(pagine_classifica)]
-
     templates = cfg.require("posts.leg_results.image_templates")
     background = _background(cfg, "leg_results")
-    # Il nome del torneo compare nel titolo della grafica: "Torneo Pauper".
     torneo = cfg.get("content.tournament_name", "Torneo {format}").format(
         format=leg.format
     )
     hashtag = cfg.get("content.hashtag_grafica", "")
-
-    def _slide(template, kind, etichetta, pagina, indice, totale, contesto, titolo):
-        # Il numero di pagina compare solo quando ce n'e' piu' di una.
-        suffisso = f"{indice + 1}/{totale}" if totale > 1 else fmt_date(day)
-        nome = _stamp(cfg, etichetta, day, leg.format.lower().replace(" ", "-"))
-        return render(
-            cfg, template,
-            {# La cornice comune: gli stessi slot delle card del calendario.
-             "kicker_1": contesto, "kicker_2": suffisso,
-             "badge": leg.format, "sopratitolo": "", "titolo": titolo,
-             "righe": pagina,
-             "link": _senza_schema(cfg.get("content.evento.link", "")),
-             "invito": cfg.get("content.evento.invito", "Iscriviti"),
-             "qr_image": cfg.get("content.evento.qr", ""),
-             # Serviti al vecchio template su sfondo Canva, ancora disponibile:
-             # li' il sottotitolo diceva la tappa, non l'occhiello.
-             "leg": leg, "standings": standings, "title": torneo,
-             "hashtag": hashtag, "rows": pagina,
-             "row_style": cfg.get("posts.leg_results.row_style", "strip"),
-             "subtitle": ((titolo if kind == "leg_results" else contesto)
-                          + (f" · {indice + 1}/{totale}" if totale > 1 else "")),
-             "background": _background(cfg, kind) or background,
-             "density": _density(len(pagina))},
-            f"{nome}-{indice + 1}" if totale > 1 else nome,
-            size=post_size(cfg, kind),
-        )
+    kicker = cfg.get("content.leg_kicker", "Risultati di tappa")
 
     # "Modern Fall tappa 1" diventa "Tappa 1": lo stesso titolo standard delle
     # card del calendario, cosi' i due post si riconoscono come la stessa cosa.
@@ -528,24 +549,52 @@ def _post_di_tappa(cfg: Config, day: dt.date, leg, senza_classifica: bool) -> Po
     else:
         titolo_tappa = leg.leg or leg.format
 
-    immagini = [
-        _slide(templates[0], "leg_results", "risultati", pagina, i,
-               len(pagine_tappa),
-               cfg.get("content.leg_kicker", "Risultati di tappa"),
-               titolo_tappa)
-        for i, pagina in enumerate(pagine_tappa)
-    ] + [
-        _slide(templates[1], "leg_results_standings", "classifica", pagina, i,
-               len(pagine_classifica),
-               cfg.get("content.standings_subtitle", "Classifica generale"),
-               cfg.get("content.standings_title", "Classifica"))
-        for i, pagina in enumerate(pagine_classifica)
-    ]
+    # Il meta occupa una slide, quindi i risultati ne hanno una in meno.
+    meta = None if senza_meta else _card_meta(cfg, leg, kicker, fmt_date(day))
+    pagine_tappa = _pagine(rows, per_slide)
+    disponibili = max_slide - (1 if meta else 0)
+    tagliate = max(0, len(pagine_tappa) - disponibili)
+    pagine_tappa = pagine_tappa[:disponibili]
+
+    def _slide(pagina, indice, totale):
+        # Il numero di pagina compare solo quando ce n'e' piu' di una.
+        suffisso = f"{indice + 1}/{totale}" if totale > 1 else fmt_date(day)
+        nome = _stamp(cfg, "risultati", day, leg.format.lower().replace(" ", "-"))
+        return render(
+            cfg, templates[0],
+            {# La cornice comune: gli stessi slot delle card del calendario.
+             "kicker_1": kicker, "kicker_2": suffisso,
+             "badge": leg.format, "sopratitolo": "", "titolo": titolo_tappa,
+             "righe": pagina,
+             "link": _senza_schema(cfg.get("content.evento.link", "")),
+             "invito": cfg.get("content.evento.invito", "Iscriviti"),
+             "qr_image": cfg.get("content.evento.qr", ""),
+             # Serviti al vecchio template su sfondo Canva, ancora disponibile.
+             "leg": leg, "standings": Standings(format=leg.format),
+             "title": torneo, "hashtag": hashtag, "rows": pagina,
+             "row_style": cfg.get("posts.leg_results.row_style", "strip"),
+             "subtitle": (titolo_tappa
+                          + (f" · {indice + 1}/{totale}" if totale > 1 else "")),
+             "background": _background(cfg, "leg_results") or background,
+             "density": _density(len(pagina))},
+            f"{nome}-{indice + 1}" if totale > 1 else nome,
+            size=post_size(cfg, "leg_results"),
+        )
+
+    immagini = [_slide(pagina, i, len(pagine_tappa))
+                for i, pagina in enumerate(pagine_tappa)]
+    if meta:
+        immagini.append(render(
+            cfg,
+            cfg.get("posts.leg_results.image_template_meta", "meta.html.j2"),
+            meta,
+            _stamp(cfg, "meta", day, leg.format.lower().replace(" ", "-")),
+            size=post_size(cfg, "leg_results"),
+        ))
 
     caption = render_caption(
         cfg, "leg_results",
-        {"leg": leg, "rows": rows, "standings": standings,
-         "standings_rows": standings_rows,
+        {"leg": leg, "rows": rows, "meta": (meta or {}).get("spicchi", []),
          "next_event_label": _next_event_label(cfg, day, leg.format)},
         extra_hashtags=[f"#{leg.format.replace(' ', '')}"],
     )
@@ -557,7 +606,7 @@ def _post_di_tappa(cfg: Config, day: dt.date, leg, senza_classifica: bool) -> Po
               "players": leg.players_count,
               "winner": leg.winner.player if leg.winner else "",
               "slide": len(immagini), "slide_tappa": len(pagine_tappa),
-              "slide_classifica": len(pagine_classifica),
+              "slide_meta": 1 if meta else 0,
               "slide_tagliate": tagliate},
     )
 

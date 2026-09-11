@@ -145,8 +145,8 @@ def cmd_post(args) -> int:
     kwargs = {}
     if args.kind != "weekly_calendar" and args.format:
         kwargs["fmt"] = args.format
-    if args.kind == "leg_results" and getattr(args, "no_standings", False):
-        kwargs["senza_classifica"] = True
+    if args.kind == "leg_results" and getattr(args, "no_meta", False):
+        kwargs["senza_meta"] = True
 
     if getattr(args, "settimana", False):
         return _post_di_una_settimana(cfg, args.kind, kwargs, args, day)
@@ -740,8 +740,8 @@ def build_parser() -> argparse.ArgumentParser:
         p.add_argument("--settimana", action="store_true",
                        help="un post per ogni giornata di gioco della settimana di --date")
         if kind == "leg_results":
-            p.add_argument("--no-standings", action="store_true",
-                           help="solo le slide dei risultati, senza classifica")
+            p.add_argument("--no-meta", action="store_true", dest="no_meta",
+                           help="solo le slide dei risultati, senza il meta")
 
     p = sub.add_parser("gate", help="verifica che sia l'ora locale giusta (per i cron)")
     p.set_defaults(func=cmd_gate)

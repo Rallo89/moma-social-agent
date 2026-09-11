@@ -1,13 +1,14 @@
 name: Post calendario settimanale
 
-# Lunedi alle 10:00 Europe/Rome: il calendario di tutti gli eventi della settimana.
+# Sabato alle 10:00 Europe/Rome: il calendario della settimana CHE COMINCIA.
+# Esce in anticipo perche' chi legge possa segnarsi le date prima del lunedi'.
 on:
   schedule:
-    - cron: "0 8,9 * * 1"
+    - cron: "0 8,9 * * 6"
   workflow_dispatch:
     inputs:
       date:
-        description: "Data dentro la settimana da pubblicare (AAAA-MM-GG)"
+        description: "Data nella settimana PRECEDENTE a quella da pubblicare (AAAA-MM-GG)"
         required: false
       format:
         description: "Forza il formato di gioco (di norma si deduce dal calendario)"
@@ -37,7 +38,7 @@ jobs:
       - name: "Sono le 10:00 a Roma?"
         id: gate
         if: github.event_name == 'schedule'
-        run: momasocial gate --hour 10
+        run: momasocial gate --hour 10 --weekday 5
 
       - name: Genera e pubblica
         id: post

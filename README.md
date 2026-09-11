@@ -7,11 +7,11 @@ Cinque post a settimana piu' uno al mese, tutti automatici:
 
 | Quando (Europe/Rome) | Post | Contenuto |
 |---|---|---|
-| **Lunedi 10:00** | carosello | riepilogo della settimana + una card per serata |
+| **Sabato 10:00** | carosello | riepilogo della settimana CHE COMINCIA + una card per serata |
 | **Mercoledi 10:00** | immagine singola | formato in programma quel giorno |
 | **Giovedi 10:00** | immagine singola | formato in programma quel giorno |
-| **Giovedi 03:00** | carosello | risultati della tappa di mercoledi + classifica generale |
-| **Venerdi 03:00** | carosello | risultati della tappa di giovedi + classifica generale |
+| **Giovedi 03:00** | carosello | risultati della tappa di mercoledi + meta della serata |
+| **Venerdi 03:00** | carosello | risultati della tappa di giovedi + meta della serata |
 | **Il 30, 10:00** | carosello | calendario del mese successivo |
 
 I formati di mercoledi e giovedi non sono cablati: si deducono dagli eventi in
