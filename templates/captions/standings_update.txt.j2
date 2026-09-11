@@ -1,0 +1,15 @@
+{# Caption del post settimanale sulle classifiche di lega (lunedi ore 10).
+   Variabili: org, day, classifiche (lista di Standings), top_n, hashtags.
+   Filtri: |data, |giorno #}
+📈 CLASSIFICHE DI LEGA · {{ day|data }}
+
+{% for c in classifiche %}
+{{ c.season or c.format }}
+{% for r in c.rows[:3] %}
+{{ r.rank }}. {{ r.player }} — {{ r.points }} pt
+{% endfor %}
+
+{% endfor %}
+➡️ Scorri per la top {{ top_n }} di ogni lega.
+
+{{ hashtags }}

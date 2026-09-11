@@ -35,6 +35,22 @@
     transform: scale({{ width / ART }}, {{ height / ART }});
     transform-origin: top left;
   }
+  /* Il tema chiaro serve al post delle classifiche, che deve staccarsi dagli
+     altri nel feed. Non e' un tema del viewer: e' una scelta editoriale, e
+     vale per tutta la card. */
+  .art.chiaro { background: #f2f4f0; color: #14171a; }
+  .art.chiaro .velo {
+    background: linear-gradient(115deg, rgba(242,244,240,0) 42%, #f2f4f0 62%);
+  }
+  .art.chiaro .trama { opacity: .18; filter: invert(1); }
+  .art.chiaro .kicker { color: #6b7280; }
+  .art.chiaro .sopratitolo { color: #3f4650; }
+  .art.chiaro .voce .dettaglio { color: #6b7280; }
+  .art.chiaro .riga .punti { color: #14171a; }
+  .art.chiaro .invito .link { color: #3f4650; }
+  /* I due loghi sono bianchi o lime su fondo scuro: su carta chiara il primo
+     sparirebbe. Si inverte solo quello, che e' monocromatico. */
+  .art.chiaro .testa img { filter: invert(1); }
   .art {
     width: {{ ART }}px; height: {{ ART }}px; position: relative; overflow: hidden;
     background: #14171a; color: #f2f4f0;
@@ -131,7 +147,7 @@
 </style>
 </head>
 <body>
-<div class="scala"><div class="art">
+<div class="scala"><div class="art{% if tema|default("") == "chiaro" %} chiaro{% endif %}">
   {% set trama = "templates/images/assets/triangoli.png"|asset %}
   {% if trama %}<img class="trama" src="{{ trama }}" alt="">{% endif %}
   <div class="velo"></div>

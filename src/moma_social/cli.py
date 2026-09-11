@@ -725,6 +725,8 @@ def build_parser() -> argparse.ArgumentParser:
         ("weekly", "weekly_calendar", "post calendario settimanale (lunedi 10:00)"),
         ("monthly", "monthly_calendar",
          "post calendario del mese successivo (il 30, 10:00)"),
+        ("standings", "standings_update",
+         "carosello aggiornamento classifiche di lega (lunedi 10:00)"),
         ("format", "format_spotlight", "post formato del giorno (mer/gio 10:00)"),
         ("results", "leg_results", "carosello risultati + classifica (gio/ven 03:00)"),
     ):

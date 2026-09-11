@@ -225,6 +225,60 @@ def _tappa(day: dt.date, selected: list[dict], fmt: str,
 
 
 # ── Classifica generale ─────────────────────────────────────────────────────
+def fetch_standings_all(cfg: Config, stati: list[str] | None = None
+                        ) -> list[Standings]:
+    """Tutte le classifiche di lega, una per lega.
+
+    Serve al post settimanale di aggiornamento: li' non si parte da una tappa,
+    si guardano tutte le leghe insieme. `stati` restringe agli stati che
+    l'associazione considera in corso; vuoto significa tutte.
+    """
+    rows = load_rows(
+        cfg.section("sources.standings"), Path(cfg.root),
+        format="", season="", league="", date="", date_from="", date_to="",
+    )
+    ammessi = {s.strip().lower() for s in (stati or []) if s.strip()}
+
+    gruppi: dict[str, list[dict]] = {}
+    for row in rows:
+        stato = _clean(row.get("league_status"))
+        if ammessi and stato.lower() not in ammessi:
+            continue
+        gruppi.setdefault(_clean(row.get("league")), []).append(row)
+
+    classifiche = []
+    for righe in gruppi.values():
+        head = righe[0]
+        classifica = Standings(
+            format=_clean(head.get("format")),
+            season=_clean(head.get("season")),
+            league=_clean(head.get("league")),
+            status=_clean(head.get("league_status")),
+            rows=[
+                StandingRow(
+                    rank=_as_int(row.get("rank"), default=indice + 1),
+                    player=_clean(row.get("player")),
+                    points=_clean(row.get("points")),
+                    events_played=_clean(row.get("events_played")),
+                    delta=_clean(row.get("delta")),
+                    extra=row.get("_extra", {}),
+                )
+                for indice, row in enumerate(righe)
+            ],
+        )
+        classifica.rows.sort(key=lambda r: r.rank)
+        classifiche.append(classifica)
+
+    if not classifiche:
+        raise NoDataError(
+            "Nessuna classifica di lega da pubblicare"
+            + (f" fra gli stati {', '.join(sorted(ammessi))}" if ammessi else ""))
+    # Le piu' partecipate per prime: se il carosello va tagliato, cadono le
+    # leghe che interessano a meno gente.
+    classifiche.sort(key=lambda c: (-len(c.rows), c.season))
+    return classifiche
+
+
 def fetch_standings(cfg: Config, fmt: str, season: str = "",
                     league: str = "") -> Standings:
     """Classifica di un formato, ristretta a una lega quando si sa quale.

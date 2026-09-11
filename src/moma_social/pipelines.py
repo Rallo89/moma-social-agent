@@ -25,6 +25,7 @@ from .repos import (
     fetch_events,
     fetch_leg_results,
     fetch_leg_results_all,
+    fetch_standings_all,
     formats_on,
     same_format,
 )
@@ -364,6 +365,63 @@ def monthly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
     )
 
 
+# ── 1ter. Aggiornamento classifiche (lunedi 10:00) ──────────────────────────
+def standings_update(cfg: Config, day: dt.date | None = None) -> PostDraft:
+    """Una slide per lega, con la top 8 di ciascuna.
+
+    Le classifiche si muovono di poco in una serata: raccontarle una volta a
+    settimana, tutte insieme, dice piu' che appiccicarle in coda a ogni post
+    di risultati.
+    """
+    day = day or resolve_date("today", cfg.timezone)
+    stati = cfg.get("posts.standings_update.stati", []) or []
+    classifiche = fetch_standings_all(cfg, stati)
+
+    top_n = cfg.get("posts.standings_update.top_n", 8)
+    massimo = min(cfg.get("posts.standings_update.max_carousel_slides", 10), 10)
+    in_post = classifiche[:massimo]
+
+    template = cfg.get("posts.standings_update.image_template", "classifica.html.j2")
+    size = post_size(cfg, "standings_update")
+    kicker = cfg.get("content.standings_subtitle", "Classifica generale")
+    immagini = [
+        render(
+            cfg, template,
+            {"kicker_1": kicker,
+             "kicker_2": (f"{indice + 1}/{len(in_post)}" if len(in_post) > 1
+                          else fmt_date(day)),
+             "badge": classifica.format,
+             "sopratitolo": "",
+             "titolo": classifica.season or cfg.get("content.standings_title",
+                                                    "Classifica"),
+             "righe": classifica.rows[:top_n] if top_n else classifica.rows,
+             "tema": cfg.get("posts.standings_update.tema", "chiaro"),
+             "link": _senza_schema(cfg.get("content.evento.link", "")),
+             "invito": cfg.get("content.evento.invito", "Iscriviti"),
+             "qr_image": cfg.get("content.evento.qr", ""),
+             "background": _background(cfg, "standings_update"), "density": ""},
+            _stamp(cfg, "classifiche", day,
+                   f"{indice + 1:02d}-{classifica.format.lower().replace(' ', '-')}"),
+            size=size,
+        )
+        for indice, classifica in enumerate(in_post)
+    ]
+
+    caption = render_caption(
+        cfg, "standings_update",
+        {"day": day, "classifiche": in_post, "top_n": top_n},
+        extra_hashtags=[f"#{c.format.replace(' ', '')}" for c in in_post],
+    )
+    return PostDraft(
+        kind="standings_update",
+        images=[str(path) for path in immagini],
+        caption=caption,
+        meta={"day": day.isoformat(), "leghe": len(in_post),
+              "slide": len(immagini),
+              "slide_tagliate": len(classifiche) - len(in_post)},
+    )
+
+
 # ── 2. Formato del giorno (mercoledi e giovedi 10:00) ───────────────────────
 def format_spotlight(cfg: Config, day: dt.date | None = None,
                      fmt: str = "") -> PostDraft:
@@ -632,6 +690,7 @@ def _next_event_label(cfg: Config, after: dt.date, fmt: str) -> str:
 PIPELINES = {
     "weekly_calendar": weekly_calendar,
     "monthly_calendar": monthly_calendar,
+    "standings_update": standings_update,
     "format_spotlight": format_spotlight,
     "leg_results": leg_results,
 }

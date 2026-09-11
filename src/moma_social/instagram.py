@@ -20,6 +20,7 @@ I percorsi delle risorse sono gli stessi, cambia l'host: sta in
 
 from __future__ import annotations
 
+import json
 import time
 
 import requests
@@ -42,6 +43,9 @@ class InstagramClient:
         self.token = cfg.get("instagram.access_token", "")
         self.version = cfg.get("instagram.api_version", "v21.0")
         self.host = cfg.get("instagram.api_host", "graph.facebook.com")
+        # Profili da taggare come coautori del post (i "Collab" di Instagram).
+        # Devono accettare l'invito perche' il post compaia anche da loro.
+        self.collaborators = list(cfg.get("instagram.collaborators", []) or [])
 
     # -- infrastruttura --------------------------------------------------
     @property
@@ -107,19 +111,32 @@ class InstagramClient:
                  else "id,username,name,followers_count")
         return self._get(self.ig_user_id, {"fields": campi})
 
+    def _con_coautori(self, payload: dict) -> dict:
+        """I coautori si dichiarano sul contenitore che porta la caption.
+
+        Sulle singole slide di un carosello non hanno senso: il post e' uno.
+        """
+        if self.collaborators:
+            payload = {**payload, "collaborators": json.dumps(self.collaborators)}
+        return payload
+
     def create_item(self, image_url: str, *, caption: str = "",
                     is_carousel_item: bool = False) -> str:
         payload: dict = {"image_url": image_url}
         if is_carousel_item:
             payload["is_carousel_item"] = "true"
-        elif caption:
-            payload["caption"] = caption
+        else:
+            if caption:
+                payload["caption"] = caption
+            payload = self._con_coautori(payload)
         return self._post(f"{self.ig_user_id}/media", payload)["id"]
 
     def create_carousel(self, children: list[str], caption: str) -> str:
         return self._post(
             f"{self.ig_user_id}/media",
-            {"media_type": "CAROUSEL", "children": ",".join(children), "caption": caption},
+            self._con_coautori({"media_type": "CAROUSEL",
+                                "children": ",".join(children),
+                                "caption": caption}),
         )["id"]
 
     def wait_ready(self, container_id: str) -> None:
@@ -149,6 +166,27 @@ class InstagramClient:
         return self._post(f"{self.ig_user_id}/media_publish",
                           {"creation_id": creation_id})["id"]
 
+    def _crea(self, azione):
+        """Crea il contenitore, spiegando il caso dei coautori.
+
+        `collaborators` e' un campo giovane: se questa versione della API o
+        questo percorso di autenticazione non lo accetta, l'errore di Meta non
+        dice da dove viene e si finisce a cercarlo nell'immagine o nella
+        caption. Qui si nomina il parametro e la chiave da svuotare.
+        """
+        try:
+            return azione()
+        except PublishError as exc:
+            if self.collaborators and "collaborator" in str(exc).lower():
+                raise PublishError(
+                    f"{exc}\n\nIl post chiedeva i coautori "
+                    f"{', '.join(self.collaborators)}: e' il campo "
+                    "`collaborators`, e Meta l'ha rifiutato. Svuota "
+                    "instagram.collaborators in config/config.toml per "
+                    "pubblicare senza, e segnalalo."
+                ) from exc
+            raise
+
     def publish_post(self, image_urls: list[str], caption: str) -> str:
         """Pubblica immagine singola o carosello. Restituisce l'id del post."""
         if not image_urls:
@@ -160,13 +198,14 @@ class InstagramClient:
                 f"max_carousel_slides o aumenta rows_per_slide."
             )
         if len(image_urls) == 1:
-            container = self.create_item(image_urls[0], caption=caption)
+            container = self._crea(lambda: self.create_item(image_urls[0],
+                                                            caption=caption))
         else:
             children = []
             for url in image_urls:
                 child = self.create_item(url, is_carousel_item=True)
                 self.wait_ready(child)
                 children.append(child)
-            container = self.create_carousel(children, caption)
+            container = self._crea(lambda: self.create_carousel(children, caption))
         self.wait_ready(container)
         return self.publish(container)

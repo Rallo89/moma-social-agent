@@ -491,3 +491,48 @@ def test_il_calendario_puo_restare_sulla_settimana_corrente(cfg):
     cfg.data["posts"]["weekly_calendar"]["settimana"] = "corrente"
     draft = pipelines.weekly_calendar(cfg, dt.date(2026, 3, 11))
     assert draft.meta["week_start"] == "2026-03-09"
+
+
+def _classifiche(cfg, tmp_path, leghe):
+    import json
+    righe = []
+    for lega, fmt, stato, n in leghe:
+        righe += [{"formato": fmt, "lega": lega, "lega_id": lega.lower(),
+                   "stato_lega": stato, "posizione": i, "giocatore": f"G{i}",
+                   "punti": 90 - i * 3, "tappe": 5} for i in range(1, n + 1)]
+    f = tmp_path / "classifiche.json"
+    f.write_text(json.dumps(righe), encoding="utf-8")
+    cfg.data["sources"]["standings"] = {"url": str(f), "kind": "json", "map": {
+        "format": "formato", "season": "lega", "league": "lega_id",
+        "league_status": "stato_lega", "rank": "posizione",
+        "player": "giocatore", "points": "punti", "events_played": "tappe"}}
+
+
+def test_una_slide_per_lega_con_la_top_otto(cfg, tmp_path):
+    _classifiche(cfg, tmp_path, [("Modern Fall 2026", "Modern", "aperta", 14),
+                                 ("Pauper Fall 2026", "Pauper", "aperta", 20)])
+    draft = pipelines.standings_update(cfg, dt.date(2026, 9, 14))
+    assert draft.meta["leghe"] == 2
+    assert len(draft.images) == 2
+    # Le piu' partecipate per prime: se il carosello va tagliato cadono le
+    # leghe che interessano a meno gente.
+    assert RENDERED[0][1]["titolo"] == "Pauper Fall 2026"
+    assert len(RENDERED[0][1]["righe"]) == 8
+    assert RENDERED[0][1]["tema"] == "chiaro"
+
+
+def test_le_leghe_chiuse_restano_fuori(cfg, tmp_path):
+    """Un carosello che annuncia la classifica di una stagione finita."""
+    _classifiche(cfg, tmp_path, [("Modern Fall 2026", "Modern", "aperta", 10),
+                                 ("Modern Spring 2025", "Modern", "chiusa", 12)])
+    cfg.data["posts"]["standings_update"]["stati"] = ["aperta"]
+    draft = pipelines.standings_update(cfg, dt.date(2026, 9, 14))
+    assert draft.meta["leghe"] == 1
+    assert RENDERED[0][1]["titolo"] == "Modern Fall 2026"
+
+
+def test_nessuna_lega_da_pubblicare_non_e_un_guasto(cfg, tmp_path):
+    _classifiche(cfg, tmp_path, [("Modern Spring 2025", "Modern", "chiusa", 12)])
+    cfg.data["posts"]["standings_update"]["stati"] = ["aperta"]
+    with pytest.raises(NoDataError, match="Nessuna classifica"):
+        pipelines.standings_update(cfg, dt.date(2026, 9, 14))

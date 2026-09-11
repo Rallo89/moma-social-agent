@@ -156,6 +156,7 @@ rank          = "posizione"
 player        = "giocatore"
 points        = "punti"
 events_played = "tappe"
+league_status = "stato_lega"  # decide quali leghe entrano nel post del lunedi
 # `delta` non e' calcolabile: la webapp non conserva lo storico delle posizioni,
 # quindi le frecce di tendenza restano vuote.
 
@@ -168,6 +169,11 @@ api_version    = "v21.0"
 # l'account Instagram e basta. "graph.facebook.com" = Facebook Login, che
 # richiede una Pagina Facebook collegata. Le chiamate sono identiche.
 api_host       = "graph.instagram.com"
+# Profili da taggare come coautori del post (i "Collab" di Instagram). Devono
+# accettare l'invito, altrimenti il post resta solo sul nostro profilo.
+# Campo giovane della API: se Meta lo rifiuta, l'errore lo dice e basta
+# svuotare questa lista. Esempio: ["unocritico"]
+collaborators  = []
 # Kill switch globale: se false ogni pipeline si ferma prima della pubblicazione
 # e lascia solo i file in out/ (utile per pausa senza toccare i workflow).
 publish_enabled = true
@@ -319,6 +325,22 @@ width               = 1080
 height              = 1080
 rows_per_slide      = 8
 max_carousel_slides = 10
+
+# Lunedi: una slide per lega con la top 8, a colori invertiti per staccarsi
+# dagli altri post nel feed.
+[posts.standings_update]
+image_template      = "classifica.html.j2"
+caption_template    = "standings_update.txt.j2"
+hashtags            = ["#classifica", "#lega"]
+width               = 1080
+height              = 1080
+tema                = "chiaro"
+top_n               = 8
+max_carousel_slides = 10
+# Stati di `leagues.status` da pubblicare. Vuoto = tutte, che va bene finche'
+# non sappiamo quali valori usa il database: con le stagioni vecchie ancora
+# dentro, il carosello annuncerebbe classifiche chiuse da un anno.
+stati               = []
 
 [posts.format_spotlight]
 image_template   = "evento.html.j2"

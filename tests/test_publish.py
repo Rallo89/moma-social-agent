@@ -215,3 +215,47 @@ def test_lo_stesso_client_parla_con_entrambi_gli_host(cfg):
     altro.check()
     assert "name" not in campi(responses.calls[1])
     assert "username" in campi(responses.calls[1])
+
+
+@responses.activate
+def test_i_coautori_vanno_solo_sul_contenitore_con_la_caption(cfg):
+    """Le singole slide non hanno coautori: il post e' uno."""
+    from urllib.parse import parse_qs
+
+    cfg.data["instagram"]["ig_user_id"] = "999"
+    cfg.data["instagram"]["access_token"] = "TOKEN"
+    cfg.data["instagram"]["collaborators"] = ["unocritico"]
+    client = InstagramClient(cfg)
+
+    responses.add(responses.POST, f"{client.base}/999/media", json={"id": "c1"})
+    responses.add(responses.GET, f"{client.base}/c1",
+                  json={"status_code": "FINISHED"})
+    responses.add(responses.POST, f"{client.base}/999/media", json={"id": "c2"})
+    responses.add(responses.GET, f"{client.base}/c2",
+                  json={"status_code": "FINISHED"})
+    responses.add(responses.POST, f"{client.base}/999/media", json={"id": "pad"})
+    responses.add(responses.GET, f"{client.base}/pad",
+                  json={"status_code": "FINISHED"})
+    responses.add(responses.POST, f"{client.base}/999/media_publish",
+                  json={"id": "post"})
+
+    client.publish_post(["https://a/1.png", "https://a/2.png"], "caption")
+    corpi = [parse_qs(c.request.body) for c in responses.calls
+             if c.request.method == "POST" and c.request.url.endswith("/media")]
+    figli = [b for b in corpi if "is_carousel_item" in b]
+    padre = [b for b in corpi if "media_type" in b]
+    assert all("collaborators" not in b for b in figli)
+    assert padre and padre[0]["collaborators"] == ['["unocritico"]']
+
+
+@responses.activate
+def test_un_rifiuto_dei_coautori_dice_dove_guardare(cfg):
+    """Senza questo, l'errore di Meta manda a cercare nell'immagine."""
+    cfg.data["instagram"]["ig_user_id"] = "999"
+    cfg.data["instagram"]["access_token"] = "TOKEN"
+    cfg.data["instagram"]["collaborators"] = ["unocritico"]
+    client = InstagramClient(cfg)
+    responses.add(responses.POST, f"{client.base}/999/media", json={
+        "error": {"code": 100, "message": "Invalid parameter: collaborators"}})
+    with pytest.raises(PublishError, match="instagram.collaborators"):
+        client.publish_post(["https://a/1.png"], "caption")

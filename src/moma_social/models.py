@@ -274,6 +274,8 @@ class Standings:
     format: str
     season: str = ""
     league: str = ""
+    # Stato della lega a database: serve a non pubblicare le stagioni chiuse.
+    status: str = ""
     rows: list[StandingRow] = field(default_factory=list)
 
 
