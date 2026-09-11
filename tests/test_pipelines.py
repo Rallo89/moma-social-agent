@@ -519,7 +519,7 @@ def test_una_slide_per_lega_con_la_top_otto(cfg, tmp_path):
     # leghe che interessano a meno gente.
     assert RENDERED[0][1]["titolo"] == "Pauper Fall 2026"
     assert len(RENDERED[0][1]["righe"]) == 8
-    assert RENDERED[0][1]["tema"] == "chiaro"
+    assert RENDERED[0][1]["tema"] == "verde"
 
 
 def test_le_leghe_chiuse_restano_fuori(cfg, tmp_path):

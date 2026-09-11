@@ -334,7 +334,7 @@ caption_template    = "standings_update.txt.j2"
 hashtags            = ["#classifica", "#lega"]
 width               = 1080
 height              = 1080
-tema                = "chiaro"
+tema                = "verde"
 top_n               = 8
 max_carousel_slides = 10
 # Stati di `leagues.status` da pubblicare. Il database ne usa due, "aperto" e

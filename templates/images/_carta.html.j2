@@ -51,6 +51,36 @@
   /* I due loghi sono bianchi o lime su fondo scuro: su carta chiara il primo
      sparirebbe. Si inverte solo quello, che e' monocromatico. */
   .art.chiaro .testa img { filter: invert(1); }
+
+  /* Variante verde per le classifiche generali: il lime del marchio come
+     fondo pieno, tutto il resto in nero. Gli accenti lime qui non servono —
+     su lime non si vedono — e il loro lavoro lo fa il nero. */
+  .art.verde { background: #a9d227; color: #14171a; }
+  .art.verde .velo {
+    background: linear-gradient(115deg, rgba(169,210,39,0) 42%, #a9d227 62%);
+  }
+  .art.verde .trama { opacity: .16; filter: invert(1); }
+  /* I grigi del tema scuro qui non funzionano: su lime schiariscono invece
+     di spegnersi. Si usa il nero trasparente, e non sotto .68 — piu' in la'
+     il contrasto scende sotto 4.5:1 e il testo piccolo si perde nel fondo. */
+  .art.verde .kicker { color: rgba(20,23,26,.72); }
+  .art.verde .sopratitolo { color: rgba(20,23,26,.72); }
+  .art.verde .voce .etichetta { color: #14171a; }
+  .art.verde .voce .dettaglio { color: rgba(20,23,26,.72); }
+  .art.verde .filo { background: #14171a; }
+  .art.verde .riga .pos { color: rgba(20,23,26,.68); }
+  .art.verde .riga .punti { color: #14171a; }
+  .art.verde .invito .titolino { color: #14171a; }
+  .art.verde .invito .link { color: rgba(20,23,26,.72); }
+  /* Il badge era lime su scuro: sul fondo lime resterebbe solo il testo.
+     Scambiando i due colori la targhetta resta una targhetta. */
+  .art.verde .badge { background: #14171a; color: #a9d227; }
+  /* Un logo e' bianco, l'altro e' lime: su questo fondo il primo abbaglia e
+     il secondo sparisce. brightness(0) li porta entrambi al nero pieno senza
+     toccare la trasparenza, cosa che invert(1) non farebbe (il lime
+     diventerebbe viola). */
+  .art.verde .testa img,
+  .art.verde .piede img.partner { filter: brightness(0); }
   .art {
     width: {{ ART }}px; height: {{ ART }}px; position: relative; overflow: hidden;
     background: #14171a; color: #f2f4f0;
@@ -147,7 +177,10 @@
 </style>
 </head>
 <body>
-<div class="scala"><div class="art{% if tema|default("") == "chiaro" %} chiaro{% endif %}">
+{# I temi ammessi si elencano qui: `tema` viene da config e senza questa
+   lista finirebbe come classe CSS qualsiasi cosa ci sia scritto. #}
+{% set temi = ["chiaro", "verde"] %}
+<div class="scala"><div class="art{% if tema|default("") in temi %} {{ tema }}{% endif %}">
   {% set trama = "templates/images/assets/triangoli.png"|asset %}
   {% if trama %}<img class="trama" src="{{ trama }}" alt="">{% endif %}
   <div class="velo"></div>
