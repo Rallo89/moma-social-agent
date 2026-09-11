@@ -509,8 +509,9 @@ def _classifiche(cfg, tmp_path, leghe):
 
 
 def test_una_slide_per_lega_con_la_top_otto(cfg, tmp_path):
-    _classifiche(cfg, tmp_path, [("Modern Fall 2026", "Modern", "aperta", 14),
-                                 ("Pauper Fall 2026", "Pauper", "aperta", 20)])
+    _classifiche(cfg, tmp_path, [("Modern Fall 2026", "Modern", "aperto", 14),
+                                 ("Pauper Fall 2026", "Pauper", "aperto", 20)])
+    # Nessun filtro esplicito: vale quello di config/config.toml.
     draft = pipelines.standings_update(cfg, dt.date(2026, 9, 14))
     assert draft.meta["leghe"] == 2
     assert len(draft.images) == 2
@@ -523,16 +524,16 @@ def test_una_slide_per_lega_con_la_top_otto(cfg, tmp_path):
 
 def test_le_leghe_chiuse_restano_fuori(cfg, tmp_path):
     """Un carosello che annuncia la classifica di una stagione finita."""
-    _classifiche(cfg, tmp_path, [("Modern Fall 2026", "Modern", "aperta", 10),
-                                 ("Modern Spring 2025", "Modern", "chiusa", 12)])
-    cfg.data["posts"]["standings_update"]["stati"] = ["aperta"]
+    _classifiche(cfg, tmp_path, [("Modern Fall 2026", "Modern", "aperto", 10),
+                                 ("Modern Spring 2025", "Modern", "chiuso", 12)])
+    cfg.data["posts"]["standings_update"]["stati"] = ["aperto"]
     draft = pipelines.standings_update(cfg, dt.date(2026, 9, 14))
     assert draft.meta["leghe"] == 1
     assert RENDERED[0][1]["titolo"] == "Modern Fall 2026"
 
 
 def test_nessuna_lega_da_pubblicare_non_e_un_guasto(cfg, tmp_path):
-    _classifiche(cfg, tmp_path, [("Modern Spring 2025", "Modern", "chiusa", 12)])
-    cfg.data["posts"]["standings_update"]["stati"] = ["aperta"]
+    _classifiche(cfg, tmp_path, [("Modern Spring 2025", "Modern", "chiuso", 12)])
+    cfg.data["posts"]["standings_update"]["stati"] = ["aperto"]
     with pytest.raises(NoDataError, match="Nessuna classifica"):
         pipelines.standings_update(cfg, dt.date(2026, 9, 14))

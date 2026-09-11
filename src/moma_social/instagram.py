@@ -45,7 +45,13 @@ class InstagramClient:
         self.host = cfg.get("instagram.api_host", "graph.facebook.com")
         # Profili da taggare come coautori del post (i "Collab" di Instagram).
         # Devono accettare l'invito perche' il post compaia anche da loro.
-        self.collaborators = list(cfg.get("instagram.collaborators", []) or [])
+        # La API vuole gli username nudi: una "@" copiata dal profilo la
+        # rifiuterebbe senza spiegare perche', quindi la togliamo qui.
+        self.collaborators = [
+            u.strip().lstrip("@")
+            for u in (cfg.get("instagram.collaborators", []) or [])
+            if u and u.strip().strip("@")
+        ]
 
     # -- infrastruttura --------------------------------------------------
     @property

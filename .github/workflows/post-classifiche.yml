@@ -1,0 +1,85 @@
+name: Post classifiche di lega
+
+# Lunedi alle 10:00 Europe/Rome: un carosello con una slide per lega aperta,
+# la top 8 di ciascuna. Apre la settimana ricordando a che punto sono le leghe.
+on:
+  schedule:
+    - cron: "0 8,9 * * 1"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Giorno di riferimento (AAAA-MM-GG, default oggi)"
+        required: false
+      dry_run:
+        description: "Genera senza pubblicare"
+        type: boolean
+        default: false
+
+concurrency:
+  group: post-classifiche
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  pubblica:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup
+
+      # I cron sono in UTC e non seguono l'ora legale: se ne schedulano due e
+      # solo quello che a Roma corrisponde a 10:00 prosegue.
+      - name: "Sono le 10:00 di lunedi a Roma?"
+        id: gate
+        if: github.event_name == 'schedule'
+        run: momasocial gate --hour 10 --weekday 0
+
+      - name: Genera e pubblica
+        id: post
+        if: github.event_name != 'schedule' || steps.gate.outputs.run == 'true'
+        env:
+          # Gli input del dispatch passano dall'ambiente e vengono quotati in
+          # bash: non vanno interpolati nella riga di comando.
+          POST_DATE: ${{ inputs.date }}
+          POST_DRY_RUN: ${{ inputs.dry_run }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          MEDIA_BUCKET: ${{ secrets.MEDIA_BUCKET }}
+          MEDIA_PUBLIC_BASE: ${{ vars.MEDIA_PUBLIC_BASE }}
+          IMGBB_API_KEY: ${{ secrets.IMGBB_API_KEY }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          EVENTS_API_TOKEN: ${{ secrets.EVENTS_API_TOKEN }}
+          RESULTS_API_TOKEN: ${{ secrets.RESULTS_API_TOKEN }}
+        run: |
+          args=()
+          if [ -n "${POST_DATE:-}" ]; then args+=(--date "$POST_DATE"); fi
+          if [ "${POST_DRY_RUN:-}" = "true" ]; then args+=(--dry-run); fi
+
+          set +e
+          momasocial standings "${args[@]}"
+          code=$?
+          set -e
+          # 78 = nessuna lega aperta: esito legittimo, il post si salta.
+          if [ $code -eq 78 ]; then
+            echo "::notice::Nessuna lega aperta da pubblicare: post saltato."
+            exit 0
+          fi
+          exit $code
+
+      - name: Archivia immagini e caption
+        if: steps.post.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: post-classifiche-${{ github.run_id }}
+          path: out/
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Aggiorna il registro pubblicazioni
+        if: steps.post.outcome == 'success'
+        uses: ./.github/actions/commit-ledger

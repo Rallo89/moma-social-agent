@@ -172,8 +172,8 @@ api_host       = "graph.instagram.com"
 # Profili da taggare come coautori del post (i "Collab" di Instagram). Devono
 # accettare l'invito, altrimenti il post resta solo sul nostro profilo.
 # Campo giovane della API: se Meta lo rifiuta, l'errore lo dice e basta
-# svuotare questa lista. Esempio: ["unocritico"]
-collaborators  = []
+# svuotare questa lista.
+collaborators  = ["uno.critico"]
 # Kill switch globale: se false ogni pipeline si ferma prima della pubblicazione
 # e lascia solo i file in out/ (utile per pausa senza toccare i workflow).
 publish_enabled = true
@@ -337,10 +337,10 @@ height              = 1080
 tema                = "chiaro"
 top_n               = 8
 max_carousel_slides = 10
-# Stati di `leagues.status` da pubblicare. Vuoto = tutte, che va bene finche'
-# non sappiamo quali valori usa il database: con le stagioni vecchie ancora
-# dentro, il carosello annuncerebbe classifiche chiuse da un anno.
-stati               = []
+# Stati di `leagues.status` da pubblicare. Il database ne usa due, "aperto" e
+# "chiuso": teniamo solo le leghe aperte, perche' le 35 chiuse sono stagioni
+# gia' archiviate. Lista vuota = tutte.
+stati               = ["aperto"]
 
 [posts.format_spotlight]
 image_template   = "evento.html.j2"

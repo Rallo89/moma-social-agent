@@ -259,3 +259,9 @@ def test_un_rifiuto_dei_coautori_dice_dove_guardare(cfg):
         "error": {"code": 100, "message": "Invalid parameter: collaborators"}})
     with pytest.raises(PublishError, match="instagram.collaborators"):
         client.publish_post(["https://a/1.png"], "caption")
+
+
+def test_la_chiocciola_nel_coautore_non_arriva_a_meta(cfg):
+    """Si copia l'username dal profilo e viene con la "@" davanti."""
+    cfg.data["instagram"]["collaborators"] = ["@uno.critico", "  ", "moma "]
+    assert InstagramClient(cfg).collaborators == ["uno.critico", "moma"]
