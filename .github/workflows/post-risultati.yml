@@ -1,11 +1,15 @@
 name: Post risultati di tappa
 
 # Giovedi e venerdi alle 03:00 Europe/Rome: carosello con i risultati della
-# tappa giocata la sera prima e la classifica generale aggiornata.
+# tappa giocata la sera prima e il meta della serata.
+# I cron di GitHub sono a sforzo migliore, non a orario: su questo repo hanno
+# girato anche con sette ore di ritardo. Si tenta ogni ora dentro una finestra
+# e `--recupera` lascia passare il primo scatto utile; i successivi trovano la
+# pubblicazione gia' a registro e si fermano da soli.
 on:
   schedule:
-    - cron: "0 1,2 * * 4"
-    - cron: "0 1,2 * * 5"
+    - cron: "0 1-10 * * 4"
+    - cron: "0 1-10 * * 5"
   workflow_dispatch:
     inputs:
       date:
@@ -34,12 +38,11 @@ jobs:
 
       - uses: ./.github/actions/setup
 
-      # I cron sono in UTC e non seguono l'ora legale: se ne schedulano due e
-      # solo quello che a Roma corrisponde a 03:00 prosegue.
-      - name: "Sono le 03:00 a Roma?"
+      # Primo scatto utile della finestra: gli altri si fermano al registro.
+      - name: "A Roma sono almeno le 03:00?"
         id: gate
         if: github.event_name == 'schedule'
-        run: momasocial gate --hour 3
+        run: momasocial gate --hour 3 --recupera
 
       - name: Genera e pubblica
         id: post
@@ -58,8 +61,9 @@ jobs:
           AWS_REGION: ${{ vars.AWS_REGION }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          EVENTS_API_TOKEN: ${{ secrets.EVENTS_API_TOKEN }}
-          RESULTS_API_TOKEN: ${{ secrets.RESULTS_API_TOKEN }}
+          # Le tre viste su Supabase leggono tutte con questa chiave: senza,
+          # le intestazioni partono vuote e il post muore su un 401.
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: |
           args=()
           if [ -n "${POST_DATE:-}" ]; then args+=(--date "$POST_DATE"); fi

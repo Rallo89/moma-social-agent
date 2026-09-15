@@ -29,8 +29,11 @@ from .timeutil import fmt_date, resolve_date, weekday_it
 
 # Nomi cercati nel PATH. msedge c'e' sempre su Windows ed e' Chromium:
 # per fare uno screenshot va bene quanto Chrome.
+# Google Chrome prima di chromium: sui runner GitHub `chromium` e' il pacchetto
+# snap, che confinato dentro Actions non arriva mai a scrivere lo screenshot e
+# fa scadere il timeout. Chrome, che sull'immagine c'e' gia', funziona.
 CHROMIUM_NAMES = (
-    "chromium", "chromium-browser", "google-chrome", "google-chrome-stable",
+    "google-chrome", "google-chrome-stable", "chromium", "chromium-browser",
     "chrome", "msedge", "microsoft-edge",
 )
 

@@ -20,6 +20,11 @@ calendario. I due post notturni leggono la tappa **della sera prima**, quando i
 risultati sono stati caricati a fine serata. Il post mensile gira l'ultimo
 giorno utile: a febbraio il 30 non esiste, quindi esce il 28.
 
+Gli orari sono un "non prima di", non una promessa: i cron di GitHub sono a
+sforzo migliore e arrivano anche con ore di ritardo. Ogni workflow ritenta a
+ogni ora dentro una finestra, pubblica al primo scatto utile e si ferma da
+solo sui successivi, che trovano la pubblicazione gia' a registro.
+
 ## Come funziona
 
 ```

@@ -26,13 +26,17 @@ jobs:
       # vero dai dati di esempio e si controlla che il PNG esca della misura
       # giusta, invece di scoprirlo il lunedi mattina.
       - name: Smoke test del rendering
+        env:
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: |
           momasocial weekly --date 2026-03-11 --no-publish
           momasocial results --date 2026-03-11 --no-publish
           python - <<'PY'
           import struct, sys
           from pathlib import Path
-          pngs = sorted(Path("out").glob("*.png"))
+          # I PNG stanno in una cartella per giorno di lancio
+          # (render.cartella_per_giorno), non nella radice di out/.
+          pngs = sorted(Path("out").rglob("*.png"))
           assert len(pngs) >= 3, f"attesi almeno 3 PNG, trovati {len(pngs)}"
           for png in pngs:
               w, h = struct.unpack(">II", png.read_bytes()[16:24])

@@ -1,10 +1,14 @@
 name: Post formato del giorno
 
 # Mercoledi e giovedi alle 10:00 Europe/Rome: il formato in programma quel giorno.
+# I cron di GitHub sono a sforzo migliore, non a orario: su questo repo hanno
+# girato anche con sette ore di ritardo. Si tenta ogni ora dentro una finestra
+# e `--recupera` lascia passare il primo scatto utile; i successivi trovano la
+# pubblicazione gia' a registro e si fermano da soli.
 on:
   schedule:
-    - cron: "0 8,9 * * 3"
-    - cron: "0 8,9 * * 4"
+    - cron: "0 8-17 * * 3"
+    - cron: "0 8-17 * * 4"
   workflow_dispatch:
     inputs:
       date:
@@ -33,12 +37,11 @@ jobs:
 
       - uses: ./.github/actions/setup
 
-      # I cron sono in UTC e non seguono l'ora legale: se ne schedulano due e
-      # solo quello che a Roma corrisponde a 10:00 prosegue.
-      - name: "Sono le 10:00 a Roma?"
+      # Primo scatto utile della finestra: gli altri si fermano al registro.
+      - name: "A Roma sono almeno le 10:00?"
         id: gate
         if: github.event_name == 'schedule'
-        run: momasocial gate --hour 10
+        run: momasocial gate --hour 10 --recupera
 
       - name: Genera e pubblica
         id: post
@@ -57,8 +60,9 @@ jobs:
           AWS_REGION: ${{ vars.AWS_REGION }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          EVENTS_API_TOKEN: ${{ secrets.EVENTS_API_TOKEN }}
-          RESULTS_API_TOKEN: ${{ secrets.RESULTS_API_TOKEN }}
+          # Le tre viste su Supabase leggono tutte con questa chiave: senza,
+          # le intestazioni partono vuote e il post muore su un 401.
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: |
           args=()
           if [ -n "${POST_DATE:-}" ]; then args+=(--date "$POST_DATE"); fi

@@ -51,7 +51,7 @@ Se l'endpoint richiede un token:
 
 ```toml
 [sources.events.headers]
-Authorization = "Bearer ${EVENTS_API_TOKEN}"
+Authorization = "Bearer ${SUPABASE_KEY}"
 ```
 
 Verifica:
@@ -168,7 +168,7 @@ sono a posto. Secrets e variabili da impostare in
 | `MEDIA_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | secret | hosting S3 |
 | `MEDIA_PUBLIC_BASE`, `AWS_REGION` | variable | hosting S3 |
 | `IMGBB_API_KEY` | secret | hosting imgbb (in alternativa a S3) |
-| `EVENTS_API_TOKEN`, `RESULTS_API_TOKEN` | secret | sorgenti protette da token |
+| `SUPABASE_KEY` | secret | le tre viste su Supabase (chiave **anon**, mai la `service_role`) |
 
 Serve anche il permesso di scrittura per i workflow
 (*Settings → Actions → General → Workflow permissions → Read and write*):

@@ -38,14 +38,25 @@ def load_dotenv(path: Path | None = None) -> None:
         os.environ.setdefault(key.strip(), value.strip().strip("'\""))
 
 
-def _expand(value: Any) -> Any:
-    """Sostituisce ${VAR} ricorsivamente. Una var mancante diventa stringa vuota."""
+def _expand(value: Any, mancanti: set[str] | None = None) -> Any:
+    """Sostituisce ${VAR} ricorsivamente. Una var mancante diventa stringa vuota.
+
+    I nomi rimasti vuoti finiscono in `mancanti`: una chiave assente non e' un
+    errore (di Canva o di S3 se ne fa a meno), ma su un runner senza .env
+    diventa un header vuoto e un 401 che non nomina la sua causa. Chi chiama
+    decide se e' il caso di dirlo.
+    """
     if isinstance(value, str):
-        return ENV_RE.sub(lambda m: os.environ.get(m.group(1), ""), value)
+        def sostituisci(m: re.Match) -> str:
+            trovato = os.environ.get(m.group(1), "")
+            if not trovato and mancanti is not None:
+                mancanti.add(m.group(1))
+            return trovato
+        return ENV_RE.sub(sostituisci, value)
     if isinstance(value, dict):
-        return {k: _expand(v) for k, v in value.items()}
+        return {k: _expand(v, mancanti) for k, v in value.items()}
     if isinstance(value, list):
-        return [_expand(v) for v in value]
+        return [_expand(v, mancanti) for v in value]
     return value
 
 
@@ -62,10 +73,13 @@ def _deep_merge(base: dict, override: dict) -> dict:
 class Config:
     """Accesso per path puntato: cfg.get('instagram.ig_user_id')."""
 
-    def __init__(self, data: dict, path: Path | None = None):
+    def __init__(self, data: dict, path: Path | None = None,
+                 mancanti: set[str] | None = None):
         self.data = data
         self.path = path
         self.root = project_root()
+        # Variabili d'ambiente citate nel config e rimaste vuote.
+        self.env_mancanti = sorted(mancanti or ())
 
     # -- lettura ---------------------------------------------------------
     def get(self, dotted: str, default: Any = None) -> Any:
@@ -114,4 +128,5 @@ def load(path: str | Path | None = None) -> Config:
     if local.exists():
         data = _deep_merge(data, tomllib.loads(local.read_text(encoding="utf-8")))
 
-    return Config(_expand(data), main)
+    mancanti: set[str] = set()
+    return Config(_expand(data, mancanti), main, mancanti)

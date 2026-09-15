@@ -169,13 +169,21 @@ def cmd_post(args) -> int:
 def cmd_gate(args) -> int:
     """Cancello orario per i cron GitHub (che girano in UTC, senza DST).
 
-    Ogni workflow schedula *due* cron (ora legale e ora solare) e delega a
-    questo comando la decisione: gira solo se in Europe/Rome sono davvero
-    le ore richieste. Cosi' il post esce sempre alle 10:00 locali, tutto l'anno.
+    I cron si schedulano in UTC e l'ora legale li sposta di un'ora: e' questo
+    comando a decidere, guardando che ore sono davvero in Europe/Rome.
+
+    Con `--recupera` l'ora richiesta diventa un "non prima di". Serve perche'
+    i cron di GitHub sono a sforzo migliore e non a orario: su questo repo
+    hanno girato con quattro, sei, anche sette ore di ritardo. Preteso l'orario
+    esatto non passava nessuno scatto, i workflow risultavano verdi e non
+    usciva un post. Il doppione lo impedisce il registro delle pubblicazioni,
+    non il cancello: il primo scatto della giornata pubblica, gli altri
+    trovano la chiave gia' usata e si fermano.
     """
     cfg = config.load(args.config)
     local = now(cfg.timezone)
-    ok = local.hour == args.hour
+    recupera = getattr(args, "recupera", False)
+    ok = local.hour >= args.hour if recupera else local.hour == args.hour
     if args.weekday is not None:
         ok = ok and local.weekday() == args.weekday
     if getattr(args, "day_of_month", None) is not None:
@@ -183,8 +191,9 @@ def cmd_gate(args) -> int:
     print(f"{local.isoformat()} (ora locale {cfg.timezone}) -> run={'true' if ok else 'false'}")
     _github_output(run=str(ok).lower(), local_time=local.strftime("%Y-%m-%d %H:%M"))
     if not ok:
+        atteso = f"dalle {args.hour:02d}:00" if recupera else f"le {args.hour:02d}:00"
         _summary(f"⏱️ Scatto ignorato: in {cfg.timezone} sono le {local:%H:%M}, "
-                 f"atteso {args.hour:02d}:00")
+                 f"atteso {atteso}")
     return EXIT_OK
 
 
@@ -509,6 +518,20 @@ def cmd_doctor(args) -> int:
             checks.append((label, "fail", f"{type(exc).__name__}: {exc}"))
 
     check("Config caricata", lambda: cfg.path)
+
+    # Un ${VAR} non impostato non fa rumore: diventa stringa vuota e il guasto
+    # arriva dopo, come 401 della sorgente o credenziale rifiutata. Qui si
+    # nomina prima. E' un warn e non un fail: di CANVA_* o delle chiavi S3 si
+    # fa a meno, dipende da cosa e' acceso in config.
+    def variabili():
+        if cfg.env_mancanti:
+            raise ConfigError("citate in config ma non impostate: "
+                              + ", ".join(cfg.env_mancanti))
+        return "tutte impostate"
+    try:
+        checks.append(("Variabili d'ambiente", "ok", variabili()))
+    except ConfigError as exc:
+        checks.append(("Variabili d'ambiente", "warn", str(exc)))
     check("Chromium", lambda: _find_chromium(cfg.get("render.chromium_path", "")))
 
     oggi = resolve_date("today", cfg.timezone)
@@ -751,6 +774,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--weekday", type=int, default=None, help="0=lunedi ... 6=domenica")
     p.add_argument("--day-of-month", type=int, default=None, dest="day_of_month",
                    help="giorno del mese; nei mesi piu' corti vale l'ultimo")
+    p.add_argument("--recupera", action="store_true",
+                   help="--hour diventa 'non prima di': lascia passare anche uno "
+                        "scatto in ritardo, tanto il doppione lo blocca il registro")
 
     p = sub.add_parser("media-test",
                        help="carica un PNG sull'hosting e verifica che sia scaricabile")

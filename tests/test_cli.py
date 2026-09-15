@@ -55,6 +55,31 @@ def test_gate_giorno_sbagliato(monkeypatch, capsys):
     assert "run=false" in capsys.readouterr().out
 
 
+def test_gate_in_recupero_passa_anche_in_ritardo(monkeypatch, capsys):
+    """Il caso vero: il cron delle 10:00 e' partito alle 16:32.
+
+    Senza --recupera il workflow restava verde senza pubblicare niente, ed e'
+    esattamente quello che e' successo per giorni senza che si vedesse.
+    """
+    monkeypatch.setattr(cli, "now", lambda tz: dt.datetime(2026, 3, 9, 16, 32))
+    cli.main(["gate", "--hour", "10", "--weekday", "0", "--recupera"])
+    assert "run=true" in capsys.readouterr().out
+
+
+def test_gate_in_recupero_non_anticipa(monkeypatch, capsys):
+    """"Non prima di" resta un limite: alle 9 il post non esce."""
+    monkeypatch.setattr(cli, "now", lambda tz: dt.datetime(2026, 3, 9, 9, 0))
+    cli.main(["gate", "--hour", "10", "--weekday", "0", "--recupera"])
+    assert "run=false" in capsys.readouterr().out
+
+
+def test_gate_in_recupero_non_sconfina_nel_giorno_dopo(monkeypatch, capsys):
+    """Martedi alle 11 non e' un lunedi in ritardo: e' un altro giorno."""
+    monkeypatch.setattr(cli, "now", lambda tz: dt.datetime(2026, 3, 10, 11, 0))
+    cli.main(["gate", "--hour", "10", "--weekday", "0", "--recupera"])
+    assert "run=false" in capsys.readouterr().out
+
+
 def test_gate_scrive_github_output(monkeypatch, tmp_path, capsys):
     output = tmp_path / "gh_output"
     monkeypatch.setenv("GITHUB_OUTPUT", str(output))

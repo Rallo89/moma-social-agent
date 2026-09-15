@@ -34,7 +34,8 @@ def ledger_path(cfg: Config) -> Path:
 
 def dedupe_key(draft: PostDraft) -> str:
     meta = draft.meta
-    scope = meta.get("day") or meta.get("week_start") or ""
+    scope = (meta.get("day") or meta.get("week_start")
+             or meta.get("month_start") or "")
     # Il nome del torneo entra nella chiave perche' due leghe dello stesso
     # formato possono giocare la stessa sera: sono due post, non un doppione.
     torneo = meta.get("leg", "")

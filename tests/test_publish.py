@@ -36,6 +36,17 @@ def test_dedupe_key_stabile(draft):
     assert dedupe_key(draft) == "leg_results:2026-03-11:Modern"
 
 
+def test_il_calendario_mensile_ha_una_chiave_per_mese():
+    """Senza `month_start` la chiave sarebbe costante: pubblicato ottobre,
+    novembre risulterebbe gia' uscito e non uscirebbe mai."""
+    from moma_social.pipelines import PostDraft
+    def mensile(mese):
+        return PostDraft(kind="monthly_calendar", images=[], caption="",
+                         meta={"month_start": mese})
+    assert dedupe_key(mensile("2026-10-01")) != dedupe_key(mensile("2026-11-01"))
+    assert "2026-10-01" in dedupe_key(mensile("2026-10-01"))
+
+
 def test_dry_run_non_chiama_la_rete(cfg, draft):
     entry = publish_draft(cfg, draft, dry_run=True)
     assert entry["status"] == "dry-run"

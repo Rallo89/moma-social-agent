@@ -123,9 +123,20 @@ def _fetch_http(url: str, spec: dict, params: dict) -> list[dict]:
         # Un 401 non e' "irraggiungibile": e' una chiave sbagliata, e il corpo
         # della risposta di solito lo dice. Va riportato, altrimenti si perde
         # l'unica informazione utile.
+        nota = ""
+        if response.status_code in (401, 403):
+            # Un ${VAR} non impostato diventa stringa vuota: l'intestazione
+            # parte comunque, vuota, e il server risponde "chiave non valida".
+            # Senza questa riga si cerca la chiave sbagliata invece di quella
+            # che manca — che su un runner e' un secret non configurato.
+            vuote = sorted(k for k, v in headers.items() if not v)
+            if vuote:
+                nota = (f"\nL'intestazione {', '.join(vuote)} e' vuota: la "
+                        "variabile d'ambiente citata in config non e' "
+                        "impostata (in GitHub Actions, un secret mancante).")
         raise SourceError(
             f"La sorgente ha risposto {response.status_code} ({url}): "
-            f"{response.text[:300]}"
+            f"{response.text[:300]}{nota}"
         )
 
     kind = _detect_kind(url, spec.get("kind", "auto"),
