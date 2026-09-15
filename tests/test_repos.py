@@ -2,7 +2,7 @@ import datetime as dt
 
 import pytest
 
-from moma_social.errors import NoDataError
+from moma_social.errors import NoDataError, SourceError
 from moma_social.repos import (
     fetch_events,
     fetch_leg_results,
@@ -69,9 +69,18 @@ def test_risultati_formato_sbagliato(cfg):
 
 
 def test_classifica_ordinata(cfg):
-    standings = fetch_standings(cfg, "Modern")
+    # Il campione ha due stagioni Modern, una aperta e una chiusa: senza la
+    # lega la richiesta le prende insieme e la guardia sulle posizioni
+    # ripetute scatta, come deve.
+    standings = fetch_standings(cfg, "Modern", league="lega-modern-2026")
     assert standings.season == "2025/26"
     assert [r.rank for r in standings.rows] == sorted(r.rank for r in standings.rows)
+
+
+def test_due_stagioni_dello_stesso_formato_non_si_mescolano(cfg):
+    """La guardia che ha evitato di pubblicare una classifica inventata."""
+    with pytest.raises(SourceError, match="posizioni ripetute"):
+        fetch_standings(cfg, "Modern")
 
 
 def test_classifica_formato_inesistente(cfg):

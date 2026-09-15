@@ -23,24 +23,38 @@ jobs:
           pytest -q
 
       # Il rendering e' la parte che si rompe in silenzio: si genera un post
-      # vero dai dati di esempio e si controlla che il PNG esca della misura
-      # giusta, invece di scoprirlo il lunedi mattina.
+      # vero e si controlla che il PNG esca della misura giusta, invece di
+      # scoprirlo il lunedi mattina.
+      #
+      # Le sorgenti puntano ai campioni in data/samples/: la CI non interroga
+      # il database dell'associazione. Con la chiave vera ogni push toccherebbe
+      # la produzione, e senza la chiave la CI sarebbe rossa per un motivo che
+      # col codice non c'entra.
       - name: Smoke test del rendering
-        env:
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: |
-          momasocial weekly --date 2026-03-11 --no-publish
-          momasocial results --date 2026-03-11 --no-publish
+          python scripts/config_ci.py
+          momasocial weekly    --date 2026-03-04 --no-publish
+          momasocial results   --date 2026-03-11 --no-publish
+          momasocial standings --date 2026-03-16 --no-publish
           python - <<'PY'
-          import struct, sys
+          import struct, tomllib
           from pathlib import Path
-          # I PNG stanno in una cartella per giorno di lancio
-          # (render.cartella_per_giorno), non nella radice di out/.
+
+          # Le misure attese si leggono da config invece di stare scritte qui:
+          # cambiare formato al feed non deve far fallire la CI per finta.
+          cfg = tomllib.loads(Path("config/config.toml").read_text())
+          scala = cfg["render"].get("scale", 2)
+          misure = {(cfg["render"]["width"] * scala, cfg["render"]["height"] * scala)}
+          for post in cfg.get("posts", {}).values():
+              if "width" in post and "height" in post:
+                  misure.add((post["width"] * scala, post["height"] * scala))
+
+          # I PNG stanno in una cartella per giorno di lancio, non nella radice.
           pngs = sorted(Path("out").rglob("*.png"))
-          assert len(pngs) >= 3, f"attesi almeno 3 PNG, trovati {len(pngs)}"
+          assert len(pngs) >= 10, f"attesi almeno 10 PNG, trovati {len(pngs)}"
           for png in pngs:
               w, h = struct.unpack(">II", png.read_bytes()[16:24])
-              assert (w, h) == (2160, 2700), f"{png.name}: {w}x{h} invece di 2160x2700"
+              assert (w, h) in misure, f"{png.name}: {w}x{h} non e' fra {misure}"
               print(f"ok {png.name} {w}x{h}")
           PY
 

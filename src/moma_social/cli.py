@@ -32,13 +32,28 @@ EXIT_NO_DATA = 78  # skip pulito: nessun dato, non e' un fallimento
 
 
 def _github_output(**values) -> None:
-    """Espone i risultati agli step successivi del workflow."""
+    """Espone i risultati agli step successivi del workflow.
+
+    I valori a piu' righe vanno col delimitatore: un `chiave=valore` con
+    dentro un a capo fa rifiutare tutto il file ad Actions ("Invalid format"),
+    e a quel punto si perde anche il motivo dello scarto - che e' proprio la
+    cosa che si stava cercando di riportare.
+    """
     path = os.environ.get("GITHUB_OUTPUT")
     if not path:
         return
     with open(path, "a", encoding="utf-8") as handle:
         for key, value in values.items():
-            handle.write(f"{key}={value}\n")
+            testo = str(value)
+            if "\n" in testo or "\r" in testo:
+                # Il delimitatore non deve comparire nel valore, o chiuderebbe
+                # il blocco a meta'.
+                fine = "__FINE__"
+                while fine in testo:
+                    fine += "_"
+                handle.write(f"{key}<<{fine}\n{testo}\n{fine}\n")
+            else:
+                handle.write(f"{key}={testo}\n")
 
 
 def _summary(text: str) -> None:

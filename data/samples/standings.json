@@ -7,7 +7,8 @@
   "points": 57,
   "events_played": 2,
   "delta": 1,
-  "league": "lega-modern-2026"
+  "league": "lega-modern-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Modern",
@@ -17,7 +18,8 @@
   "points": 55,
   "events_played": 3,
   "delta": 1,
-  "league": "lega-modern-2026"
+  "league": "lega-modern-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Modern",
@@ -27,7 +29,8 @@
   "points": 49,
   "events_played": 2,
   "delta": 3,
-  "league": "lega-modern-2026"
+  "league": "lega-modern-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Modern",
@@ -37,7 +40,8 @@
   "points": 44,
   "events_played": 4,
   "delta": 1,
-  "league": "lega-modern-2026"
+  "league": "lega-modern-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Modern",
@@ -47,7 +51,8 @@
   "points": 41,
   "events_played": 4,
   "delta": 2,
-  "league": "lega-modern-2026"
+  "league": "lega-modern-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Modern",
@@ -57,7 +62,8 @@
   "points": 39,
   "events_played": 2,
   "delta": 0,
-  "league": "lega-modern-2026"
+  "league": "lega-modern-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Modern",
@@ -67,7 +73,8 @@
   "points": 32,
   "events_played": 4,
   "delta": 0,
-  "league": "lega-modern-2026"
+  "league": "lega-modern-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Modern",
@@ -77,7 +84,8 @@
   "points": 30,
   "events_played": 3,
   "delta": 0,
-  "league": "lega-modern-2026"
+  "league": "lega-modern-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Modern",
@@ -87,7 +95,8 @@
   "points": 24,
   "events_played": 4,
   "delta": -1,
-  "league": "lega-modern-2026"
+  "league": "lega-modern-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Modern",
@@ -97,7 +106,8 @@
   "points": 21,
   "events_played": 2,
   "delta": 0,
-  "league": "lega-modern-2026"
+  "league": "lega-modern-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Modern",
@@ -107,7 +117,8 @@
   "points": 18,
   "events_played": 2,
   "delta": 1,
-  "league": "lega-modern-2026"
+  "league": "lega-modern-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Modern",
@@ -117,7 +128,8 @@
   "points": 12,
   "events_played": 4,
   "delta": 0,
-  "league": "lega-modern-2026"
+  "league": "lega-modern-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pioneer",
@@ -127,7 +139,8 @@
   "points": 57,
   "events_played": 4,
   "delta": 0,
-  "league": "lega-pioneer-2026"
+  "league": "lega-pioneer-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pioneer",
@@ -137,7 +150,8 @@
   "points": 52,
   "events_played": 4,
   "delta": -1,
-  "league": "lega-pioneer-2026"
+  "league": "lega-pioneer-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pioneer",
@@ -147,7 +161,8 @@
   "points": 51,
   "events_played": 3,
   "delta": -3,
-  "league": "lega-pioneer-2026"
+  "league": "lega-pioneer-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pioneer",
@@ -157,7 +172,8 @@
   "points": 46,
   "events_played": 4,
   "delta": 1,
-  "league": "lega-pioneer-2026"
+  "league": "lega-pioneer-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pioneer",
@@ -167,7 +183,8 @@
   "points": 40,
   "events_played": 4,
   "delta": 3,
-  "league": "lega-pioneer-2026"
+  "league": "lega-pioneer-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pioneer",
@@ -177,7 +194,8 @@
   "points": 37,
   "events_played": 3,
   "delta": 0,
-  "league": "lega-pioneer-2026"
+  "league": "lega-pioneer-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pioneer",
@@ -187,7 +205,8 @@
   "points": 35,
   "events_played": 3,
   "delta": 2,
-  "league": "lega-pioneer-2026"
+  "league": "lega-pioneer-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pioneer",
@@ -197,7 +216,8 @@
   "points": 28,
   "events_played": 4,
   "delta": -2,
-  "league": "lega-pioneer-2026"
+  "league": "lega-pioneer-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pioneer",
@@ -207,7 +227,8 @@
   "points": 26,
   "events_played": 4,
   "delta": -2,
-  "league": "lega-pioneer-2026"
+  "league": "lega-pioneer-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pioneer",
@@ -217,7 +238,8 @@
   "points": 23,
   "events_played": 4,
   "delta": -3,
-  "league": "lega-pioneer-2026"
+  "league": "lega-pioneer-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pioneer",
@@ -227,7 +249,8 @@
   "points": 16,
   "events_played": 2,
   "delta": -1,
-  "league": "lega-pioneer-2026"
+  "league": "lega-pioneer-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pioneer",
@@ -237,7 +260,8 @@
   "points": 15,
   "events_played": 4,
   "delta": 1,
-  "league": "lega-pioneer-2026"
+  "league": "lega-pioneer-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pauper",
@@ -247,7 +271,8 @@
   "points": 81,
   "events_played": 9,
   "delta": 0,
-  "league": "lega-pauper-2026"
+  "league": "lega-pauper-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pauper",
@@ -257,7 +282,8 @@
   "points": 76,
   "events_played": 9,
   "delta": 1,
-  "league": "lega-pauper-2026"
+  "league": "lega-pauper-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pauper",
@@ -267,7 +293,8 @@
   "points": 72,
   "events_played": 8,
   "delta": 1,
-  "league": "lega-pauper-2026"
+  "league": "lega-pauper-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pauper",
@@ -277,7 +304,8 @@
   "points": 69,
   "events_played": 7,
   "delta": -3,
-  "league": "lega-pauper-2026"
+  "league": "lega-pauper-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pauper",
@@ -287,7 +315,8 @@
   "points": 65,
   "events_played": 6,
   "delta": 3,
-  "league": "lega-pauper-2026"
+  "league": "lega-pauper-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pauper",
@@ -297,7 +326,8 @@
   "points": 59,
   "events_played": 7,
   "delta": 0,
-  "league": "lega-pauper-2026"
+  "league": "lega-pauper-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pauper",
@@ -307,7 +337,8 @@
   "points": 56,
   "events_played": 10,
   "delta": -1,
-  "league": "lega-pauper-2026"
+  "league": "lega-pauper-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pauper",
@@ -317,7 +348,8 @@
   "points": 51,
   "events_played": 8,
   "delta": -3,
-  "league": "lega-pauper-2026"
+  "league": "lega-pauper-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pauper",
@@ -327,7 +359,8 @@
   "points": 49,
   "events_played": 9,
   "delta": 2,
-  "league": "lega-pauper-2026"
+  "league": "lega-pauper-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pauper",
@@ -337,7 +370,8 @@
   "points": 44,
   "events_played": 10,
   "delta": 1,
-  "league": "lega-pauper-2026"
+  "league": "lega-pauper-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pauper",
@@ -347,7 +381,8 @@
   "points": 39,
   "events_played": 9,
   "delta": 0,
-  "league": "lega-pauper-2026"
+  "league": "lega-pauper-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pauper",
@@ -357,7 +392,8 @@
   "points": 34,
   "events_played": 6,
   "delta": -3,
-  "league": "lega-pauper-2026"
+  "league": "lega-pauper-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pauper",
@@ -367,7 +403,8 @@
   "points": 32,
   "events_played": 10,
   "delta": 2,
-  "league": "lega-pauper-2026"
+  "league": "lega-pauper-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pauper",
@@ -377,7 +414,8 @@
   "points": 26,
   "events_played": 7,
   "delta": -2,
-  "league": "lega-pauper-2026"
+  "league": "lega-pauper-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pauper",
@@ -387,7 +425,8 @@
   "points": 24,
   "events_played": 10,
   "delta": 1,
-  "league": "lega-pauper-2026"
+  "league": "lega-pauper-2026",
+  "league_status": "aperto"
  },
  {
   "format": "Pauper",
@@ -397,6 +436,139 @@
   "points": 18,
   "events_played": 6,
   "delta": -3,
-  "league": "lega-pauper-2026"
+  "league": "lega-pauper-2026",
+  "league_status": "aperto"
+ },
+ {
+  "format": "Modern",
+  "season": "2024/25",
+  "rank": 1,
+  "player": "Chiara Gallo",
+  "points": 37,
+  "events_played": 2,
+  "delta": 1,
+  "league": "lega-modern-2025",
+  "league_status": "chiuso"
+ },
+ {
+  "format": "Modern",
+  "season": "2024/25",
+  "rank": 2,
+  "player": "Ilaria Fontana",
+  "points": 35,
+  "events_played": 3,
+  "delta": 1,
+  "league": "lega-modern-2025",
+  "league_status": "chiuso"
+ },
+ {
+  "format": "Modern",
+  "season": "2024/25",
+  "rank": 3,
+  "player": "Sara Conti",
+  "points": 29,
+  "events_played": 2,
+  "delta": 3,
+  "league": "lega-modern-2025",
+  "league_status": "chiuso"
+ },
+ {
+  "format": "Modern",
+  "season": "2024/25",
+  "rank": 4,
+  "player": "Matteo Barbieri",
+  "points": 24,
+  "events_played": 4,
+  "delta": 1,
+  "league": "lega-modern-2025",
+  "league_status": "chiuso"
+ },
+ {
+  "format": "Modern",
+  "season": "2024/25",
+  "rank": 5,
+  "player": "Andrea Costa",
+  "points": 21,
+  "events_played": 4,
+  "delta": 2,
+  "league": "lega-modern-2025",
+  "league_status": "chiuso"
+ },
+ {
+  "format": "Modern",
+  "season": "2024/25",
+  "rank": 6,
+  "player": "Davide Greco",
+  "points": 19,
+  "events_played": 2,
+  "delta": 0,
+  "league": "lega-modern-2025",
+  "league_status": "chiuso"
+ },
+ {
+  "format": "Modern",
+  "season": "2024/25",
+  "rank": 7,
+  "player": "Federica Lombardi",
+  "points": 12,
+  "events_played": 4,
+  "delta": 0,
+  "league": "lega-modern-2025",
+  "league_status": "chiuso"
+ },
+ {
+  "format": "Modern",
+  "season": "2024/25",
+  "rank": 8,
+  "player": "Giulia Rossi",
+  "points": 10,
+  "events_played": 3,
+  "delta": 0,
+  "league": "lega-modern-2025",
+  "league_status": "chiuso"
+ },
+ {
+  "format": "Modern",
+  "season": "2024/25",
+  "rank": 9,
+  "player": "Marco Bianchi",
+  "points": 4,
+  "events_played": 4,
+  "delta": -1,
+  "league": "lega-modern-2025",
+  "league_status": "chiuso"
+ },
+ {
+  "format": "Modern",
+  "season": "2024/25",
+  "rank": 10,
+  "player": "Paolo Rizzo",
+  "points": 1,
+  "events_played": 2,
+  "delta": 0,
+  "league": "lega-modern-2025",
+  "league_status": "chiuso"
+ },
+ {
+  "format": "Modern",
+  "season": "2024/25",
+  "rank": 11,
+  "player": "Luca Ferrari",
+  "points": -2,
+  "events_played": 2,
+  "delta": 1,
+  "league": "lega-modern-2025",
+  "league_status": "chiuso"
+ },
+ {
+  "format": "Modern",
+  "season": "2024/25",
+  "rank": 12,
+  "player": "Elena Moretti",
+  "points": -8,
+  "events_played": 4,
+  "delta": 0,
+  "league": "lega-modern-2025",
+  "league_status": "chiuso"
  }
 ]
