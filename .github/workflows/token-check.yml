@@ -1,20 +1,23 @@
 name: Controllo token Instagram
 
 # Il token dura 60 giorni. Alla scadenza si fermano tutti i post insieme e in
-# silenzio, quindi lo si controlla ogni lunedi'.
+# silenzio: questo controllo e' l'unica cosa che sta fra quella scadenza e un
+# feed che smette di aggiornarsi senza che nessuno se ne accorga.
 #
-# Sul percorso Instagram Login non esiste un modo di sapere quanto gli resta
-# da vivere: si puo' solo chiedere se apre ancora l'account. Per questo il
-# primo del mese arriva comunque un promemoria a rinnovarlo — con un token da
-# 60 giorni rinnovato ogni mese, la scadenza non si raggiunge mai.
+# Su Instagram Login Meta non dice quanta vita resti a un token: dice solo se
+# apre ancora l'account. Il conto lo teniamo noi in state/token.json, da
+# quando abbiamo visto quel token per la prima volta (vedi tokenstate.py).
+# Per questo il controllo gira ogni giorno e non una volta a settimana: con
+# l'avviso a sette giorni, un controllo settimanale poteva darne uno solo.
 on:
   schedule:
-    - cron: "0 7 * * 1"
-    - cron: "0 7 1 * *"
+    - cron: "0 7 * * *"
   workflow_dispatch:
 
 permissions:
-  contents: read
+  # Serve a ricommittare state/token.json: senza, ogni run ripartirebbe da
+  # zero, il token sembrerebbe sempre nuovo e l'avviso non arriverebbe mai.
+  contents: write
   issues: write
 
 jobs:
@@ -30,35 +33,68 @@ jobs:
         id: check
         env:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
-        run: momasocial token-status
+        run: momasocial token-status --soglia 7
+
+      - name: Ricorda questo token
+        if: always()
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- state/token.json; then
+            echo "Stesso token dell'ultimo controllo."
+            exit 0
+          fi
+          git config user.name  "moma-social bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state/token.json
+          git commit -m "chore(social): token Instagram visto il $(date -u +%F)"
+          for tentativo in 1 2 3; do
+            if git push; then exit 0; fi
+            git pull --rebase --autostash
+          done
+          echo "::warning::state/token.json non ricommittato: il prossimo controllo"
+          echo "::warning::ripartira' da zero e l'avviso di scadenza slittera'."
 
       - name: Apri una issue se serve
-        if: steps.check.outputs.state != 'ok' || github.event.schedule == '0 7 1 * *'
+        if: steps.check.outputs.state != 'ok'
         uses: actions/github-script@v7
         with:
           script: |
             const state = '${{ steps.check.outputs.state }}';
             const days = '${{ steps.check.outputs.days }}';
-            const promemoria = state === 'ok';
-            const title = promemoria
-              ? 'Token Instagram: rinnovo mensile'
-              : 'Token Instagram: rinnovo necessario';
+            const expires = '${{ steps.check.outputs.expires }}';
             const existing = await github.rest.issues.listForRepo({
               owner: context.repo.owner, repo: context.repo.repo,
               state: 'open', labels: 'instagram-token',
             });
             if (existing.data.length) return;
-            const comando = 'Rinnovalo con `momasocial ig-refresh`, poi aggiorna'
-              + ' il secret `IG_ACCESS_TOKEN`.\n\nProcedura completa in'
-              + ' `docs/PUBBLICAZIONE.md`.';
+
+            const comando = '### Come rinnovarlo\n\n'
+              + '1. Dalla tua macchina: `momasocial ig-refresh`\n'
+              + '2. Copia il token nuovo in *Settings → Secrets and variables →'
+              + ' Actions → `IG_ACCESS_TOKEN`*\n'
+              + '3. Aggiorna anche il tuo `.env` locale\n\n'
+              + 'Il controllo si accorge da solo del token nuovo e fa ripartire'
+              + ' il conto dei 60 giorni.\n\n'
+              + 'Procedura completa in `docs/PUBBLICAZIONE.md`.';
+
             const body = state === 'invalid'
-              ? 'Il token Instagram non e\' piu\' valido: **i post automatici sono fermi**.\n\n'
+              ? '@' + context.repo.owner + ' il token Instagram non apre piu\''
+                + ' l\'account: **i post automatici sono fermi da adesso**.\n\n'
                 + comando
-              : promemoria
-                ? 'Promemoria mensile: il token dura 60 giorni e su Instagram Login non'
-                  + ' si puo\' sapere quanto gliene resta.\n\n' + comando
-                : `Il token Instagram scade fra **${days} giorni**.\n\n` + comando;
+              : '@' + context.repo.owner + ' il token Instagram scade fra **'
+                + days + ' giorni** (intorno al ' + expires + ').\n\n'
+                + 'Dopo quella data i post smettono di uscire, tutti insieme e'
+                + ' senza errori visibili.\n\n' + comando;
+
             await github.rest.issues.create({
               owner: context.repo.owner, repo: context.repo.repo,
-              title, body, labels: ['instagram-token'],
+              title: state === 'invalid'
+                ? 'Token Instagram scaduto: i post sono fermi'
+                : `Token Instagram: scade fra ${days} giorni`,
+              body,
+              labels: ['instagram-token'],
+              // L'assegnazione e' cio' che fa partire la mail: le notifiche
+              // "partecipante" sono attive per impostazione predefinita,
+              // quelle di semplice osservazione spesso no.
+              assignees: [context.repo.owner],
             });

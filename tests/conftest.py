@@ -23,6 +23,9 @@ def cfg(tmp_path, monkeypatch):
     loaded = config.load()
     loaded.data["render"]["output_dir"] = str(tmp_path / "out")
     loaded.data["publish"]["ledger"] = str(tmp_path / "published.jsonl")
+    # Il conto dei giorni del token scrive su file: fuori da tmp_path
+    # sporcherebbe lo stato vero del repo a ogni giro di test.
+    loaded.data["instagram"]["token_state"] = str(tmp_path / "token.json")
     for nome in ("events", "results", "standings"):
         loaded.data["sources"][nome] = {
             "url": f"data/samples/{nome}.json",

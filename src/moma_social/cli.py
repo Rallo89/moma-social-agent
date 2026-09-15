@@ -14,7 +14,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import __version__, config
+from . import __version__, config, tokenstate
 from .errors import ConfigError, MtgSocialError, NoDataError
 from .pipelines import drafts
 from .publish import publish_draft
@@ -481,6 +481,7 @@ def cmd_token_status(args) -> int:
         raise ConfigError("Nessun token da controllare (IG_ACCESS_TOKEN)")
     host = cfg.get("instagram.api_host", "graph.facebook.com")
     versione = cfg.get("instagram.api_version", "v21.0")
+    scadenza = ""
 
     if "graph.instagram.com" in host:
         # Qui non esiste un debug_token: si puo' solo chiedere se il token
@@ -493,7 +494,19 @@ def cmd_token_status(args) -> int:
         except ConfigError as exc:
             stato, giorni, nota = "invalid", 0, str(exc)
         else:
-            stato, giorni, nota = "ok", -1, f"@{io.get('username')}"
+            # La scadenza non la sa Meta: la contiamo noi da quando abbiamo
+            # visto questo token per la prima volta.
+            eta = tokenstate.aggiorna(
+                cfg.resolve_path(cfg.get("instagram.token_state",
+                                         "state/token.json")), token)
+            giorni = eta["giorni_rimasti"]
+            scadenza = eta["scadenza"]
+            stato = "expiring" if giorni <= args.soglia else "ok"
+            nota = f"@{io.get('username')}, scade il {scadenza}"
+            if eta["nuovo"]:
+                # Il conto parte da oggi anche se il token era gia' vecchio:
+                # dirlo evita di fidarsi di una data che nessuno ha verificato.
+                nota += " (mai visto prima: la scadenza e' stimata da oggi)"
     else:
         dati = _chiedi_meta(f"https://graph.facebook.com/{versione}/debug_token",
                             {"input_token": token, "access_token": token},
@@ -509,7 +522,7 @@ def cmd_token_status(args) -> int:
             nota = f"scade fra {giorni} giorni"
 
     print(f"{stato}: {nota}")
-    _github_output(state=stato, days=str(giorni))
+    _github_output(state=stato, days=str(giorni), expires=scadenza, note=nota)
     return EXIT_OK
 
 
@@ -817,8 +830,8 @@ def build_parser() -> argparse.ArgumentParser:
                        help="il token Instagram e' ancora valido? per quanto?")
     p.set_defaults(func=cmd_token_status)
     p.add_argument("--token", default="", help="default: quello configurato")
-    p.add_argument("--soglia", type=int, default=14,
-                   help="giorni sotto i quali dichiararlo in scadenza")
+    p.add_argument("--soglia", type=int, default=7,
+                   help="giorni rimasti sotto i quali dichiararlo in scadenza")
 
     p = sub.add_parser("ig-refresh",
                        help="allunga di 60 giorni il token (solo Instagram Login)")

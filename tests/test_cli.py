@@ -424,6 +424,26 @@ def test_token_status_instagram_valido(cfg, capsys):
 
 
 @responses.activate
+def test_token_status_avvisa_prima_della_scadenza(cfg, capsys):
+    """Sette giorni prima parte l'avviso: dopo, il feed si ferma in silenzio."""
+    import datetime as dt
+    import json
+    from pathlib import Path
+
+    from moma_social import tokenstate
+
+    cfg.data["instagram"]["access_token"] = "IGQ"
+    visto = dt.date.today() - dt.timedelta(days=tokenstate.DURATA_GIORNI - 7)
+    Path(cfg.data["instagram"]["token_state"]).write_text(
+        json.dumps({"impronta": tokenstate.impronta("IGQ"),
+                    "visto_il": visto.isoformat()}), encoding="utf-8")
+    responses.add(responses.GET, f"{BASE_IG}/v21.0/me",
+                  json={"id": "1", "username": "modenamagic"})
+    assert cli.main(["token-status"]) == cli.EXIT_OK
+    assert "expiring" in capsys.readouterr().out
+
+
+@responses.activate
 def test_token_status_instagram_scaduto(cfg, capsys):
     responses.add(responses.GET, f"{BASE_IG}/v21.0/me",
                   json={"error_message": "Session has expired"})
