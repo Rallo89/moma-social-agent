@@ -100,6 +100,59 @@ def test_formato_senza_eventi_ne_fallback(cfg):
         pipelines.format_spotlight(cfg, dt.date(2030, 1, 7))
 
 
+def _serata_a_due_formati(cfg, tmp_path):
+    """Il 16 settembre 2026: Pauper e Premodern la stessa sera."""
+    import json
+    righe = [
+        {"date": "2026-09-16", "title": "Lega Pauper Fall tappa 2",
+         "format": "Pauper", "start_time": "21:00", "entry_fee": "7"},
+        {"date": "2026-09-16", "title": "Lega Premodern Fall tappa 2",
+         "format": "Premodern", "start_time": "21:00", "entry_fee": "10"},
+    ]
+    f = tmp_path / "eventi.json"
+    f.write_text(json.dumps(righe), encoding="utf-8")
+    cfg.data["sources"]["events"] = {"url": str(f), "kind": "json"}
+
+
+def test_due_formati_la_stessa_sera_sono_due_post(cfg, tmp_path):
+    """Il caso vero: usciva solo Pauper, e Premodern spariva in silenzio.
+
+    Non c'era una scelta dietro: `formats_on(events)[0]` prendeva il primo
+    formato nell'ordine in cui il database aveva restituito le righe.
+    """
+    _serata_a_due_formati(cfg, tmp_path)
+    bozze = pipelines.drafts(cfg, "format_spotlight", dt.date(2026, 9, 16))
+    assert [b.meta["format"] for b in bozze] == ["Pauper", "Premodern"]
+
+
+def test_i_due_post_della_sera_non_si_deduplicano_a_vicenda(cfg, tmp_path):
+    """Chiavi distinte, o il secondo verrebbe scartato come doppione."""
+    from moma_social.publish import dedupe_key
+    _serata_a_due_formati(cfg, tmp_path)
+    bozze = pipelines.drafts(cfg, "format_spotlight", dt.date(2026, 9, 16))
+    assert len({dedupe_key(b) for b in bozze}) == 2
+
+
+def test_ogni_post_porta_la_quota_del_suo_torneo(cfg, tmp_path):
+    """Sette euro il Pauper, dieci il Premodern: la card non li puo' scambiare."""
+    _serata_a_due_formati(cfg, tmp_path)
+    bozze = pipelines.drafts(cfg, "format_spotlight", dt.date(2026, 9, 16))
+    def iscrizione(contesto):
+        return next(v["valore"] for v in contesto["voci"]
+                    if v["etichetta"] == "Iscrizione")
+
+    quote = {b.meta["format"]: iscrizione(RENDERED[i][1])
+             for i, b in enumerate(bozze)}
+    assert quote == {"Pauper": "7 €", "Premodern": "10 €"}
+
+
+def test_un_formato_forzato_resta_un_post_solo(cfg, tmp_path):
+    _serata_a_due_formati(cfg, tmp_path)
+    bozze = pipelines.drafts(cfg, "format_spotlight", dt.date(2026, 9, 16),
+                             fmt="Premodern")
+    assert [b.meta["format"] for b in bozze] == ["Premodern"]
+
+
 def test_le_slide_usano_gli_slot_della_card(cfg):
     """Risultati e meta parlano la lingua delle card del calendario."""
     pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")

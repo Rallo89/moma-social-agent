@@ -442,6 +442,41 @@ def format_spotlight(cfg: Config, day: dt.date | None = None,
     if events:
         fmt = fmt or formats_on(events)[0]
         events = [e for e in events if not e.format or same_format(e.format, fmt)]
+    return _post_formato(cfg, day, fmt, events)
+
+
+def format_spotlight_batch(cfg: Config, day: dt.date | None = None,
+                           fmt: str = "") -> list[PostDraft]:
+    """Un post per ogni formato in programma quel giorno.
+
+    Pauper e Premodern la stessa sera sono due serate distinte, con due quote
+    e due orari: raccontarne una sola non e' una scelta editoriale, e' l'ordine
+    in cui il database ha restituito le righe.
+
+    Il taglio e' il formato e non il singolo torneo: due leghe dello stesso
+    formato nella stessa sera restano un annuncio solo, come gia' fa il
+    calendario settimanale coi tavoli multipli di un Limited.
+    """
+    day = day or resolve_date("today", cfg.timezone)
+    # Con --format si chiede un formato preciso: e' un post solo, ed e' la
+    # strada che prende anche il ripiego da configurazione quando la sorgente
+    # non ha eventi.
+    if fmt:
+        return [format_spotlight(cfg, day, fmt)]
+    try:
+        events = fetch_events(cfg, day, day)
+    except NoDataError:
+        return [format_spotlight(cfg, day)]
+
+    formati = formats_on(_una_card_per_tappa(events))
+    if not formati:
+        return [format_spotlight(cfg, day)]
+    return [_post_formato(cfg, day, f,
+                          [e for e in events if same_format(e.format, f)])
+            for f in formati]
+
+
+def _post_formato(cfg: Config, day: dt.date, fmt: str, events: list) -> PostDraft:
     main = events[0] if events else None
 
     facts = [
@@ -698,6 +733,7 @@ PIPELINES = {
 # Alcune giornate valgono piu' di un post: qui le pipeline che lo sanno fare.
 PIPELINES_MULTI = {
     "leg_results": leg_results_batch,
+    "format_spotlight": format_spotlight_batch,
 }
 
 
