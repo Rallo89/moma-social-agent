@@ -422,7 +422,7 @@ def standings_update(cfg: Config, day: dt.date | None = None) -> PostDraft:
     )
 
 
-# ── 2. Formato del giorno (mercoledi e giovedi 10:00) ───────────────────────
+# ── 2. Formato del giorno (mercoledi e giovedi 04:00) ───────────────────────
 def format_spotlight(cfg: Config, day: dt.date | None = None,
                      fmt: str = "") -> PostDraft:
     day = day or resolve_date("today", cfg.timezone)

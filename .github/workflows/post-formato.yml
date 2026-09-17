@@ -1,14 +1,15 @@
 name: Post formato del giorno
 
-# Mercoledi e giovedi alle 10:00 Europe/Rome: il formato in programma quel giorno.
+# Mercoledi e giovedi alle 04:00 Europe/Rome: il formato in programma quel giorno.
+# Di notte, cosi' la mattina il post e' gia' in cima al feed.
 # I cron di GitHub sono a sforzo migliore, non a orario: su questo repo hanno
 # girato anche con sette ore di ritardo. Si tenta ogni ora dentro una finestra
 # e `--recupera` lascia passare il primo scatto utile; i successivi trovano la
 # pubblicazione gia' a registro e si fermano da soli.
 on:
   schedule:
-    - cron: "0 8-17 * * 3"
-    - cron: "0 8-17 * * 4"
+    - cron: "0 2-11 * * 3"
+    - cron: "0 2-11 * * 4"
   workflow_dispatch:
     inputs:
       date:
@@ -38,10 +39,10 @@ jobs:
       - uses: ./.github/actions/setup
 
       # Primo scatto utile della finestra: gli altri si fermano al registro.
-      - name: "A Roma sono almeno le 10:00?"
+      - name: "A Roma sono almeno le 04:00?"
         id: gate
         if: github.event_name == 'schedule'
-        run: momasocial gate --hour 10 --recupera
+        run: momasocial gate --hour 4 --recupera
 
       - name: Genera e pubblica
         id: post
