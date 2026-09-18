@@ -6,15 +6,23 @@
   tutto quello che le card hanno in comune: fondo, trama, occhiello, blocco
   dati col filo lime, piede. Cambia solo il centro, nel blocco `corpo`.
 
-  L'artboard e' disegnato a 1080x1080. Per qualunque altra dimensione si scala
-  l'intero blocco invece di ricalcolare ogni misura: cosi' le proporzioni
-  restano quelle approvate.
+  L'artboard e' disegnato a 1080 di larghezza. Per qualunque altra dimensione
+  si scala l'intero blocco invece di ricalcolare ogni misura: cosi' corpi,
+  spaziature e proporzioni restano quelli approvati.
+
+  L'altezza dell'artboard segue le proporzioni richieste (1080x1350 per un 4:5)
+  e la scala e' uniforme. Scalare i due assi separatamente sarebbe stato piu'
+  corto da scrivere e avrebbe stirato tutto del 25%: caratteri schiacciati,
+  loghi deformati e la torta del meta diventata un'ellisse. Su un formato piu'
+  alto i millimetri in piu' vanno al centro della card, che e' `flex: 1`;
+  testa e piede restano dove il grafico li ha messi.
 
   Chi la estende:
     evento.html.j2     una serata sola, in grande
     settimana.html.j2  tutte le serate della settimana, in elenco
 #}
 {% set ART = 1080 %}
+{% set ART_H = (ART * height / width)|round|int %}
 <!doctype html>
 <html lang="it">
 <head>
@@ -31,8 +39,8 @@
   }
   .scala {
     position: absolute; top: 0; left: 0;
-    width: {{ ART }}px; height: {{ ART }}px;
-    transform: scale({{ width / ART }}, {{ height / ART }});
+    width: {{ ART }}px; height: {{ ART_H }}px;
+    transform: scale({{ width / ART }});
     transform-origin: top left;
   }
   /* Il tema chiaro serve al post delle classifiche, che deve staccarsi dagli
@@ -82,7 +90,7 @@
   .art.verde .testa img,
   .art.verde .piede img.partner { filter: brightness(0); }
   .art {
-    width: {{ ART }}px; height: {{ ART }}px; position: relative; overflow: hidden;
+    width: {{ ART }}px; height: {{ ART_H }}px; position: relative; overflow: hidden;
     background: #14171a; color: #f2f4f0;
     display: flex; flex-direction: column;
     font-family: 'Barlow Condensed', sans-serif;

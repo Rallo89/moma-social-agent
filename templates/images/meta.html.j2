@@ -11,7 +11,11 @@
 {% extends "_carta.html.j2" %}
 
 {% block stili %}
-  .torta { display: flex; align-items: center; gap: 46px; flex: 1; min-width: 0; }
+  /* Niente `flex: 1`: la torta sta dentro `corpo`, che e' una colonna, e
+     crescendo si prenderebbe tutta l'altezza in piu' di un formato 4:5,
+     spingendo badge e titolo contro il logo. Alta quanto il suo contenuto,
+     la centra `corpo` insieme al resto. */
+  .torta { display: flex; align-items: center; gap: 46px; min-width: 0; }
   .torta svg { flex: none; width: 340px; height: 340px; }
   /* Il filo fra le fette e' del colore del fondo: separa senza aggiungere
      una linea che sembri un dato. */

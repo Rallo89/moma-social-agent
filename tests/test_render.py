@@ -41,6 +41,33 @@ def test_png_ha_la_misura_del_feed(cfg, contesto_calendario):
     assert _size(path) == (width, height)
 
 
+def test_la_card_non_si_stira_sul_formato_alto(cfg):
+    """L'artboard segue le proporzioni e la scala resta uniforme.
+
+    Con `scale(x, y)` a due valori un 4:5 avrebbe stirato tutto del 25% in
+    verticale: caratteri schiacciati, loghi deformati, la torta del meta
+    diventata un'ellisse. E' il tipo di guasto che una misura di PNG giusta
+    non vede, perche' il file e' esattamente 1080x1350 comunque.
+    """
+    import re
+
+    from moma_social.render import build_html
+
+    html = build_html(cfg, "classifica.html.j2", {
+        "width": 1080, "height": 1350,
+        "kicker_1": "CLASSIFICA", "kicker_2": "1/1", "badge": "MODERN",
+        "sopratitolo": "", "titolo": "2025/26",
+        "righe": [{"rank": 1, "player": "Anna", "points": 9}],
+        "link": "esempio.it", "invito": "Iscriviti", "qr_image": "",
+        "tema": "verde"})
+    scala = re.search(r"transform: scale\(([^)]*)\)", html).group(1)
+    assert "," not in scala, f"scala non uniforme: scale({scala})"
+
+    altezza = int(re.search(r"\.scala \{[^}]*height: (\d+)px", html, re.S).group(1))
+    larghezza = int(re.search(r"\.scala \{[^}]*width: (\d+)px", html, re.S).group(1))
+    assert altezza / larghezza == 1350 / 1080
+
+
 def test_html_salvato_accanto_al_png(cfg, contesto_calendario):
     path = render(cfg, "weekly_calendar.html.j2", contesto_calendario, "test-calendario")
     assert path.with_suffix(".html").exists()
@@ -92,10 +119,12 @@ def test_filtro_asset_e_totale(cfg):
 
 
 def test_dimensione_globale_di_default(cfg):
+    """Tutti i post seguono la misura globale: nessuno la ridichiara."""
     from moma_social.render import post_size
 
-    assert post_size(cfg, "leg_results") == (1080, 1080)   # dichiarata dal post
-    assert post_size(cfg, "inesistente") == (1080, 1350)   # default globale
+    for kind in ("weekly_calendar", "monthly_calendar", "standings_update",
+                 "format_spotlight", "leg_results", "inesistente"):
+        assert post_size(cfg, kind) == (1080, 1350), kind
 
 
 def test_dimensione_specifica_del_post(cfg):

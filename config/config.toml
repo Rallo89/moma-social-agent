@@ -315,8 +315,6 @@ image_template_riepilogo = "settimana.html.j2"
 riepilogo           = true
 caption_template    = "weekly_calendar.txt.j2"
 hashtags            = ["#tornei", "#calendario"]
-width               = 1080
-height              = 1080
 max_carousel_slides = 10        # la Graph API non ne accetta di piu'
 
 # Il 30 di ogni mese (l'ultimo giorno nei mesi piu' corti) esce il calendario
@@ -325,8 +323,6 @@ max_carousel_slides = 10        # la Graph API non ne accetta di piu'
 image_template      = "settimana.html.j2"
 caption_template    = "monthly_calendar.txt.j2"
 hashtags            = ["#tornei", "#calendario"]
-width               = 1080
-height              = 1080
 rows_per_slide      = 8
 max_carousel_slides = 10
 
@@ -336,8 +332,6 @@ max_carousel_slides = 10
 image_template      = "classifica.html.j2"
 caption_template    = "standings_update.txt.j2"
 hashtags            = ["#classifica", "#lega"]
-width               = 1080
-height              = 1080
 tema                = "verde"
 top_n               = 8
 max_carousel_slides = 10
@@ -350,8 +344,6 @@ stati               = ["aperto"]
 image_template   = "evento.html.j2"
 caption_template = "format_spotlight.txt.j2"
 hashtags         = ["#torneomagic"]
-width            = 1080
-height           = 1080
 
 [posts.leg_results]
 # Il template grafico dell'associazione e' quadrato e vale per entrambe le
@@ -360,8 +352,6 @@ image_templates  = ["classifica.html.j2"]
 # Ultima slide del carosello: le quote degli archetipi della serata.
 image_template_meta = "meta.html.j2"
 meta_top_n       = 5            # oltre, si accorpa in "Altri"
-width            = 1080
-height           = 1080
 # Stessa grafica per entrambe le slide del carosello.
 background       = "templates/images/assets/sfondo_classifica.png"
 caption_template = "leg_results.txt.j2"
@@ -385,5 +375,3 @@ max_carousel_slides = 10
 # colori brand, senza rompersi.
 [posts.leg_results_standings]
 background = "templates/images/assets/sfondo_classifica.png"
-width      = 1080
-height     = 1080
