@@ -26,6 +26,8 @@ def cfg(tmp_path, monkeypatch):
     # Il conto dei giorni del token scrive su file: fuori da tmp_path
     # sporcherebbe lo stato vero del repo a ogni giro di test.
     loaded.data["instagram"]["token_state"] = str(tmp_path / "token.json")
+    # La pausa fra i due tentativi di pubblicazione non va aspettata davvero.
+    loaded.data["instagram"]["riprova_dopo_secondi"] = 0
     for nome in ("events", "results", "standings"):
         loaded.data["sources"][nome] = {
             "url": f"data/samples/{nome}.json",

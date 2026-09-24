@@ -276,3 +276,57 @@ def test_la_chiocciola_nel_coautore_non_arriva_a_meta(cfg):
     """Si copia l'username dal profilo e viene con la "@" davanti."""
     cfg.data["instagram"]["collaborators"] = ["@uno.critico", "  ", "moma "]
     assert InstagramClient(cfg).collaborators == ["uno.critico", "moma"]
+
+
+@responses.activate
+def test_una_slide_rifiutata_dice_quale_e_cosa_ce_a_quell_indirizzo(cfg):
+    """"Formato non supportato" da solo non basta a cercare il guasto.
+
+    Il 23 settembre un carosello si e' fermato su questo errore e il log non
+    diceva ne' quale delle tre slide, ne' se il problema fosse l'immagine o
+    l'hosting che non l'aveva servita.
+    """
+    cfg.data["instagram"]["ig_user_id"] = "999"
+    cfg.data["instagram"]["access_token"] = "TOKEN"
+    client = InstagramClient(cfg)
+    responses.add(responses.POST, f"{client.base}/999/media", json={
+        "error": {"code": 36001, "error_subcode": 2207084,
+                  "message": "The image format is not supported."}})
+    # Quello che l'hosting serve davvero: una pagina di errore, non un PNG.
+    responses.add(responses.GET, "https://hosting/2.png", status=404,
+                  body="<html>not found</html>",
+                  content_type="text/html")
+
+    with pytest.raises(PublishError) as errore:
+        client.publish_post(["https://hosting/1.png", "https://hosting/2.png"],
+                            "caption")
+    testo = str(errore.value)
+    assert "slide 1 di 2" in testo.lower()
+    assert "https://hosting/1.png" in testo
+
+
+@responses.activate
+def test_meta_riprova_una_volta_prima_di_arrendersi(cfg):
+    """Lo stesso carosello, un'ora dopo, e' passato con le stesse immagini."""
+    cfg.data["instagram"]["ig_user_id"] = "999"
+    cfg.data["instagram"]["access_token"] = "TOKEN"
+    client = InstagramClient(cfg)
+    monkey = {"chiamate": 0}
+
+    def risposta(request):
+        monkey["chiamate"] += 1
+        if monkey["chiamate"] == 1:
+            return (200, {}, json.dumps({"error": {
+                "code": 36001, "error_subcode": 2207084,
+                "message": "The image format is not supported."}}))
+        return (200, {}, json.dumps({"id": "CONTAINER"}))
+
+    responses.add_callback(responses.POST, f"{client.base}/999/media",
+                           callback=risposta, content_type="application/json")
+    responses.add(responses.GET, f"{client.base}/CONTAINER",
+                  json={"status_code": "FINISHED"})
+    responses.add(responses.POST, f"{client.base}/999/media_publish",
+                  json={"id": "POST"})
+
+    assert client.publish_post(["https://hosting/1.png"], "caption") == "POST"
+    assert monkey["chiamate"] == 2

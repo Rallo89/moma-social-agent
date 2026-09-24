@@ -26,4 +26,16 @@ class RenderError(MtgSocialError):
 
 
 class PublishError(MtgSocialError):
-    """La pubblicazione su Instagram e' fallita."""
+    """La pubblicazione su Instagram e' fallita.
+
+    `code` e `subcode` sono quelli di Meta, quando la risposta li porta: senza
+    di loro l'unico modo di distinguere un errore su cui vale la pena
+    riprovare da uno definitivo sarebbe leggere il messaggio, che Meta cambia
+    quando gli pare.
+    """
+
+    def __init__(self, message: str, *, code: int | None = None,
+                 subcode: int | None = None):
+        super().__init__(message)
+        self.code = code
+        self.subcode = subcode

@@ -82,7 +82,7 @@ jobs:
           exit $code
 
       - name: Archivia immagini e caption
-        if: steps.post.outcome == 'success'
+        if: steps.post.conclusion != 'skipped'
         uses: actions/upload-artifact@v4
         with:
           name: post-formato-${{ github.run_id }}
@@ -90,6 +90,9 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
 
+      # Anche quando il post fallisce: il registro porta la riga con l'errore,
+      # ed e' l'unica traccia che resta di un guasto notturno dopo che i log
+      # della run sono scaduti.
       - name: Aggiorna il registro pubblicazioni
-        if: steps.post.outcome == 'success'
+        if: steps.post.conclusion != 'skipped'
         uses: ./.github/actions/commit-ledger

@@ -35,6 +35,14 @@ POLL_ATTEMPTS = 20
 # via API vale il secondo limite.
 MAX_CAROUSEL = 10
 
+# 36001/2207084 e' quello che Meta restituisce quando non riesce a *leggere*
+# l'immagine. Dice "formato non supportato", ma lo dice anche quando il
+# formato e' quello di sempre e a non aver funzionato e' stato lo scaricamento
+# dall'hosting. Il 23 settembre ha fermato un carosello che un'ora dopo, con
+# immagini identiche, e' passato: per questo si riprova una volta.
+SCARICAMENTO_FALLITO = {2207084, 2207003, 2207052}
+RIPROVA_DOPO = 15
+
 
 class InstagramClient:
     def __init__(self, cfg: Config):
@@ -47,6 +55,8 @@ class InstagramClient:
         # Devono accettare l'invito perche' il post compaia anche da loro.
         # La API vuole gli username nudi: una "@" copiata dal profilo la
         # rifiuterebbe senza spiegare perche', quindi la togliamo qui.
+        self.riprova_dopo = cfg.get("instagram.riprova_dopo_secondi",
+                                    RIPROVA_DOPO)
         self.collaborators = [
             u.strip().lstrip("@")
             for u in (cfg.get("instagram.collaborators", []) or [])
@@ -103,7 +113,8 @@ class InstagramClient:
             error = data["error"]
             raise PublishError(
                 f"Graph API error {error.get('code')}/{error.get('error_subcode', '-')}: "
-                f"{error.get('message')}"
+                f"{error.get('message')}",
+                code=error.get("code"), subcode=error.get("error_subcode"),
             )
         response.raise_for_status()
         return data
@@ -193,6 +204,56 @@ class InstagramClient:
                 ) from exc
             raise
 
+    def _cosa_ce_a_quell_indirizzo(self, url: str) -> str:
+        """Cosa trova chi scarica quell'URL, detto da noi e non da Meta.
+
+        Meta, quando l'immagine non le torna, risponde sempre la stessa cosa:
+        "formato non supportato". Non dice se ha scaricato un PNG che non le
+        piace, una pagina di errore dell'hosting o niente del tutto — e sono
+        tre guasti diversi, con tre rimedi diversi. Questo lo scarica e lo
+        guarda.
+        """
+        try:
+            risposta = requests.get(url, timeout=TIMEOUT, stream=True)
+            inizio = next(risposta.iter_content(64), b"")
+            tipo = risposta.headers.get("content-type", "?")
+            peso = risposta.headers.get("content-length", "?")
+            stato = risposta.status_code
+            risposta.close()
+        except requests.RequestException as exc:
+            return f"non si scarica nemmeno da qui ({exc})"
+        if inizio.startswith(b"\x89PNG"):
+            contenuto = "un PNG"
+        elif inizio.startswith(b"\xff\xd8\xff"):
+            contenuto = "un JPEG"
+        else:
+            contenuto = f"non un'immagine ({inizio[:24]!r})"
+        return f"HTTP {stato}, content-type {tipo}, {peso} byte, ed e' {contenuto}"
+
+    def _contenitore(self, azione, url: str, quale: str):
+        """Crea un contenitore, riprovando una volta se Meta non ha scaricato.
+
+        Il secondo tentativo e' per il caso transitorio: l'hosting ha
+        singhiozzato e Meta ha rinunciato. Se fallisce anche quello, l'errore
+        smette di essere "formato non supportato" e diventa una frase che dice
+        quale slide, a che indirizzo, e cosa c'e' davvero a quell'indirizzo.
+        """
+        try:
+            return azione()
+        except PublishError as exc:
+            if exc.subcode in SCARICAMENTO_FALLITO:
+                time.sleep(self.riprova_dopo)
+                try:
+                    return azione()
+                except PublishError as riprovato:
+                    exc = riprovato
+            raise PublishError(
+                f"{quale} rifiutata da Meta.\n{exc}\n"
+                f"Immagine: {url}\n"
+                f"A quell'indirizzo c'e': {self._cosa_ce_a_quell_indirizzo(url)}",
+                code=exc.code, subcode=exc.subcode,
+            ) from exc
+
     def publish_post(self, image_urls: list[str], caption: str) -> str:
         """Pubblica immagine singola o carosello. Restituisce l'id del post."""
         if not image_urls:
@@ -204,12 +265,15 @@ class InstagramClient:
                 f"max_carousel_slides o aumenta rows_per_slide."
             )
         if len(image_urls) == 1:
-            container = self._crea(lambda: self.create_item(image_urls[0],
-                                                            caption=caption))
+            container = self._crea(lambda: self._contenitore(
+                lambda: self.create_item(image_urls[0], caption=caption),
+                image_urls[0], "L'immagine"))
         else:
             children = []
-            for url in image_urls:
-                child = self.create_item(url, is_carousel_item=True)
+            for numero, url in enumerate(image_urls, 1):
+                child = self._contenitore(
+                    lambda url=url: self.create_item(url, is_carousel_item=True),
+                    url, f"La slide {numero} di {len(image_urls)}")
                 self.wait_ready(child)
                 children.append(child)
             container = self._crea(lambda: self.create_carousel(children, caption))
