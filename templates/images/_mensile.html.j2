@@ -1,0 +1,134 @@
+{# Cornice dedicata al calendario mensile, in formato 4:5. #}
+{% set ART = 1080 %}
+{% set ART_H = (ART * height / width)|round|int %}
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: {{ width }}px {{ height }}px; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: {{ width }}px; height: {{ height }}px; overflow: hidden; }
+  .scala {
+    width: {{ ART }}px; height: {{ ART_H }}px;
+    transform: scale({{ width / ART }}); transform-origin: top left;
+  }
+  .art {
+    position: relative; width: {{ ART }}px; height: {{ ART_H }}px;
+    overflow: hidden; background: #25292d; color: #fff;
+    font-family: Arial, 'Liberation Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .triangoli {
+    position: absolute; z-index: 0; display: block;
+    height: auto; pointer-events: none; opacity: .74;
+  }
+  .copertina .triangoli {
+    width: 650px; left: 230px; top: -300px; transform: rotate(90deg);
+  }
+  .elenco .triangoli {
+    width: 680px; left: 200px; top: {{ ART_H - 550 }}px;
+    transform: rotate(-90deg);
+  }
+  .loghi {
+    position: absolute; z-index: 2; top: 50px; right: 72px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  .loghi .critico {
+    width: 205px; height: auto; filter: brightness(0) invert(1);
+  }
+  .loghi .modena { width: 150px; height: auto; }
+  .piede {
+    position: absolute; z-index: 3; bottom: 52px; left: 110px; right: 78px;
+    min-height: 91px; display: flex; align-items: flex-end;
+    justify-content: space-between; gap: 25px;
+  }
+  .iscrizioni { display: flex; align-items: flex-end; gap: 16px; min-width: 0; }
+  .qr { width: 82px; height: 82px; flex: none; background: white; }
+  .qr img { display: block; width: 82px; height: 82px; }
+  .invito { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .invito .titolo {
+    color: #a9d227; font-weight: 800; font-size: 26px;
+    text-transform: uppercase; letter-spacing: .05em;
+  }
+  .invito .link {
+    color: #fff; font-size: 21px; white-space: nowrap;
+    text-shadow: 0 1px 4px #25292d;
+  }
+  .numero { color: #d5dad6; font-size: 18px; letter-spacing: .12em; }
+  .copertina-contenuto {
+    position: absolute; z-index: 2; top: {{ (ART_H * 0.42)|round|int }}px;
+    left: 110px;
+  }
+  .copertina-titolo {
+    margin: 0; font-size: 180px; font-weight: 900;
+    line-height: .84; letter-spacing: -.045em;
+    text-transform: uppercase;
+    text-shadow: -4px 4px #e522ce, 4px -3px #2fe0e5;
+  }
+  .copertina-titolo span { display: block; }
+  .copertina-mese {
+    margin-top: 25px; font-size: 80px; line-height: 1;
+    font-weight: 800; text-transform: uppercase; color: #f28c28;
+    text-shadow: -3px 3px #e522ce, 3px -2px #2fe0e5;
+  }
+  .elenco-contenuto {
+    position: absolute; z-index: 2; top: 206px; left: 110px;
+    right: 78px; bottom: 255px; overflow: hidden;
+  }
+  .giorno { margin-bottom: 35px; }
+  .giorno .quando {
+    color: #fff; font-size: 39px; line-height: 1.14;
+    font-weight: 400; margin-bottom: 3px;
+  }
+  .torneo {
+    display: flex; align-items: baseline; gap: 12px;
+    min-width: 0; line-height: 1.14; margin: 4px 0;
+    font-size: 40px;
+  }
+  .torneo .formato { color: #f28c28; flex: none; font-weight: 800; }
+  .torneo .pallino { color: #fff; flex: none; font-weight: 700; }
+  .torneo .nome {
+    color: #a9d227; min-width: 0; flex: 0 1 auto; font-weight: 700;
+    white-space: nowrap; overflow: hidden;
+  }
+</style>
+</head>
+<body>
+<div class="scala"><main class="art {% block classe %}{% endblock %}">
+  {% set trama = "templates/images/assets/triangoli.png"|asset %}
+  {% if trama %}<img class="triangoli" src="{{ trama }}" alt="">{% endif %}
+  <header class="loghi">
+    {% set critico = "templates/images/assets/unocritico.png"|asset %}
+    {% if critico %}<img class="critico" src="{{ critico }}" alt="Uno Critico">{% endif %}
+    {% set modena = "templates/images/assets/logo-modena-magic.png"|asset %}
+    {% if modena %}<img class="modena" src="{{ modena }}" alt="Modena Magic">{% endif %}
+  </header>
+  {% block contenuto %}{% endblock %}
+  <footer class="piede">
+    <div class="iscrizioni">
+      {% set qr = qr_image|default("")|asset %}
+      {% if qr %}<div class="qr"><img src="{{ qr }}" alt="QR iscrizioni"></div>{% endif %}
+      <div class="invito">
+        <span class="titolo">{{ invito }}</span>
+        <span class="link">{{ link }}</span>
+      </div>
+    </div>
+    {% if pagina is defined and pagine > 1 %}<span class="numero">{{ pagina }}/{{ pagine }}</span>{% endif %}
+  </footer>
+</main></div>
+<script>
+  function adattaNomi() {
+    document.querySelectorAll('.torneo .nome').forEach(function (el) {
+      var corpo = parseFloat(getComputedStyle(el).fontSize);
+      while (el.scrollWidth > el.clientWidth + 1 && corpo > 24) {
+        corpo -= 1;
+        el.style.fontSize = corpo + 'px';
+      }
+    });
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(adattaNomi);
+  else window.addEventListener('load', adattaNomi);
+</script>
+</body>
+</html>

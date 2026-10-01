@@ -530,9 +530,14 @@ def test_calendario_mensile_guarda_al_mese_dopo(cfg):
     assert draft.kind == "monthly_calendar"
     assert draft.meta["month_start"] == "2026-03-01"
     assert draft.meta["month_end"] == "2026-03-31"
+    assert len(draft.images) == 2  # copertina + un elenco
     template, contesto = RENDERED[0]
-    assert template == "settimana.html.j2"
-    assert contesto["badge"] == "marzo 2026"
+    assert template == "mensile_copertina.html.j2"
+    assert contesto["mese"] == "marzo"
+    template, contesto = RENDERED[1]
+    assert template == "mensile_elenco.html.j2"
+    assert len(contesto["giorni"]) == 5
+    assert contesto["giorni"][0]["quando"] == "9 marzo ore 21.00"
 
 
 def test_calendario_mensile_impagina_invece_di_rimpicciolire(cfg):
@@ -541,9 +546,77 @@ def test_calendario_mensile_impagina_invece_di_rimpicciolire(cfg):
                                      "kind": "auto"}
     cfg.data["posts"]["monthly_calendar"]["rows_per_slide"] = 2
     draft = pipelines.monthly_calendar(cfg, dt.date(2026, 2, 28))
-    assert len(draft.images) == 3          # 5 eventi, 2 per slide
-    assert RENDERED[0][1]["kicker_2"] == "1/3"
-    assert len(RENDERED[0][1]["serate"]) == 2
+    assert len(draft.images) == 4          # copertina + 3 pagine
+    assert RENDERED[1][1]["pagina"] == 1
+    assert RENDERED[1][1]["pagine"] == 3
+    assert sum(len(giorno["tornei"]) for _, contesto in RENDERED[1:]
+               for giorno in contesto["giorni"]) == 5
+
+
+def test_didascalia_mensile_raggruppa_per_formato_e_ripete_le_date(cfg):
+    from moma_social.models import Event
+
+    eventi = [
+        Event(dt.date(2026, 8, 19), "Modern C", "Modern", "21:00"),
+        Event(dt.date(2026, 8, 12), "Modern A", "Modern", "21:00"),
+        Event(dt.date(2026, 8, 12), "Modern B", "Modern", "21:00"),
+        Event(dt.date(2026, 8, 10), "Pauper A", "Pauper", "20:30"),
+    ]
+    gruppi = pipelines._gruppi_mensili(cfg, eventi)
+    assert [gruppo["formato"] for gruppo in gruppi] == ["Modern", "Pauper"]
+    assert [riga["nome"] for riga in gruppi[0]["tornei"]] == [
+        "Modern A", "Modern B", "Modern C"]
+    assert [riga["data"] for riga in gruppi[0]["tornei"]] == [
+        "12/08", "12/08", "19/08"]
+    assert gruppi[1]["tornei"][0]["ora"] == "20:30"
+    assert gruppi[0]["icona"] == "⚡"
+
+
+def test_calendario_mensile_ripete_la_data_se_continua(cfg):
+    from moma_social.models import Event
+
+    eventi = [Event(dt.date(2026, 8, 12), f"Tappa {numero}", "Modern", "21:00")
+              for numero in range(1, 6)]
+    giorni = pipelines._giorni_mensili(cfg, eventi)
+    pagine = pipelines._pagine_mensili(giorni, 2)
+    assert [pagina[0]["quando"] for pagina in pagine] == [
+        "12 agosto ore 21.00"] * 3
+    assert [len(pagina[0]["tornei"]) for pagina in pagine] == [2, 2, 1]
+
+
+def test_calendario_mensile_riunisce_tornei_della_stessa_ora(cfg):
+    from moma_social.models import Event
+
+    eventi = [
+        Event(dt.date(2026, 8, 12), "Tappa 1 Modern", "Modern", "21:00",
+              stage="1"),
+        Event(dt.date(2026, 8, 12), "Tappa 2 Pauper", "Pauper", "21:00",
+              stage="2"),
+        Event(dt.date(2026, 8, 12), "Draft", "Limited", "18:00"),
+    ]
+    giorni = pipelines._giorni_mensili(cfg, eventi)
+    assert [giorno["quando"] for giorno in giorni] == [
+        "12 agosto ore 18.00", "12 agosto ore 21.00"]
+    assert giorni[1]["tornei"] == [
+        {"formato": "MODERN", "nome": "Tappa 1 Modern"},
+        {"formato": "PAUPER", "nome": "Tappa 2 Pauper"},
+    ]
+
+
+def test_calendario_mensile_ometti_prefisso_torneo_dal_nome(cfg):
+    from moma_social.models import Event
+
+    eventi = [Event(dt.date(2026, 8, 12), "Torneo Modern Open", "Modern")]
+    assert pipelines._giorni_mensili(cfg, eventi)[0]["tornei"] == [
+        {"formato": "MODERN", "nome": "Modern Open"}]
+
+
+def test_calendario_mensile_conta_la_copertina_nel_limite(cfg):
+    cfg.data["posts"]["monthly_calendar"]["rows_per_slide"] = 1
+    cfg.data["posts"]["monthly_calendar"]["max_carousel_slides"] = 3
+    draft = pipelines.monthly_calendar(cfg, dt.date(2026, 2, 28))
+    assert len(draft.images) == 3
+    assert draft.meta["slide_tagliate"] == 3
 
 
 def _tappa_di(punti_e_nomi):

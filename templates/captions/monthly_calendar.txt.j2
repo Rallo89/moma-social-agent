@@ -3,22 +3,22 @@
    Variabili disponibili:
      org.name / org.handle / org.site
      mese             -> "ottobre 2026"
-     days             -> lista di (data, [eventi]) ordinata
+     gruppi           -> sezioni alfabetiche per formato, con tornei in ordine
      events_count     -> numero totale eventi del mese
      formats          -> lista formati distinti
      hashtags         -> stringa gia' composta e deduplicata
-   Filtri: |data ("11 marzo"), |giorno ("Mercoledi")
    ─────────────────────────────────────────────────────────────────────────── #}
 🗓️ {{ mese|upper }} DI {{ org.name|upper }}
 
 {{ events_count }} appuntament{{ "o" if events_count == 1 else "i" }} da segnare in agenda.
 
-{% for day, events in days %}
-{% for e in events %}
-{{ day|giorno }} {{ day|data }}{% if e|ora %} · {{ e|ora }}{% endif %} — {{ e|etichetta }}{% if e.format and e.format not in e|etichetta %} ({{ e.format }}){% endif +%}
-{% endfor %}
+{% for gruppo in gruppi %}
+{{ gruppo.icona }} {{ gruppo.formato|upper }}
+{% for torneo in gruppo.tornei %}
+{{ torneo.data }} {{ torneo.ora }} {{ torneo.nome }}
 {% endfor %}
 
+{% endfor %}
 {% if formats %}
 🎴 Formati in programma: {{ formats|join(" · ") }}
 {% endif %}

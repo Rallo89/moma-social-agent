@@ -237,6 +237,100 @@ def _card_riepilogo(cfg: Config, events: list, inizio: dt.date, fine: dt.date,
     }
 
 
+def _gruppi_mensili(cfg: Config, events: list) -> list[dict]:
+    """Sezioni alfabetiche per formato della didascalia Instagram."""
+    icone = {
+        "modern": "⚡", "pauper": "🃏", "limited": "🎁",
+        "legacy": "⏳", "commander": "👑", "pioneer": "🧭",
+        "premodern": "🔄", "standard": "⭐", "vintage": "🏆",
+    }
+    formati = sorted(formats_on(events), key=str.casefold)
+    gruppi = []
+    for formato in formati:
+        tornei = sorted(
+            (evento for evento in events if same_format(evento.format, formato)),
+            key=lambda evento: (evento.date, evento.start_time or "99:99"),
+        )
+        gruppi.append({
+            "formato": formato,
+            "icona": icone.get(formato.casefold().strip(), "🎴"),
+            "tornei": [{
+                "data": f"{evento.date.day:02d}/{evento.date.month:02d}",
+                "ora": evento.start_time or cfg.get("content.evento.ora_default", ""),
+                "nome": evento.title or f"Torneo {formato}",
+            } for evento in tornei],
+        })
+    senza_formato = sorted(
+        (evento for evento in events if not evento.format),
+        key=lambda evento: (evento.date, evento.start_time or "99:99"),
+    )
+    if senza_formato:
+        gruppi.append({
+            "formato": "Altri eventi", "icona": "🎴",
+            "tornei": [{
+                "data": f"{evento.date.day:02d}/{evento.date.month:02d}",
+                "ora": evento.start_time or cfg.get("content.evento.ora_default", ""),
+                "nome": evento.title or evento.label,
+            } for evento in senza_formato],
+        })
+    return gruppi
+
+
+def _giorni_mensili(cfg: Config, events: list) -> list[dict]:
+    """Nella grafica, data e ora aprono una sezione con i tornei di quella sera."""
+    sezioni: dict[tuple[dt.date, str], list] = {}
+    for evento in sorted(events, key=lambda e: (e.date, e.start_time or "99:99")):
+        ora = evento.start_time or cfg.get("content.evento.ora_default", "")
+        sezioni.setdefault((evento.date, ora), []).append(evento)
+
+    giorni = []
+    for (data, ora), tornei in sezioni.items():
+        righe = []
+        for evento in tornei:
+            nome = (evento.title or "").strip()
+            if nome.casefold().startswith("torneo "):
+                nome = nome[7:].strip()
+            if not nome:
+                nome = ("Finale" if evento.is_final else
+                        f"Tappa {evento.stage}" if evento.stage else "Evento")
+            righe.append({"formato": evento.format.upper(), "nome": nome})
+        giorni.append({
+            "quando": f"{fmt_date(data)} ore {ora.replace(':', '.')}",
+            "tornei": righe,
+        })
+    return giorni
+
+
+def _pagine_mensili(giorni: list[dict], righe_per_pagina: int) -> list[list[dict]]:
+    """Impagina le date senza tagliare i tornei; ripete la data se serve."""
+    limite = max(1, int(righe_per_pagina))
+    pagine: list[list[dict]] = []
+    pagina: list[dict] = []
+    righe = 0
+
+    def chiudi() -> None:
+        nonlocal pagina, righe
+        if pagina:
+            pagine.append(pagina)
+        pagina, righe = [], 0
+
+    for giorno in giorni:
+        rimanenti = giorno["tornei"]
+        if pagina and (len(pagina) == 5 or righe + len(rimanenti) > limite):
+            chiudi()
+        while rimanenti:
+            if righe == limite or len(pagina) == 5:
+                chiudi()
+            quanti = min(limite - righe, len(rimanenti))
+            pagina.append({**giorno, "tornei": rimanenti[:quanti]})
+            righe += quanti
+            rimanenti = rimanenti[quanti:]
+            if rimanenti:
+                chiudi()
+    chiudi()
+    return pagine
+
+
 # ── 1. Calendario settimanale (lunedi 10:00) ────────────────────────────────
 def weekly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
     day = day or resolve_date("today", cfg.timezone)
@@ -323,37 +417,40 @@ def monthly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
     events = _una_card_per_tappa(fetch_events(cfg, inizio, fine))
     mese = fmt_month(inizio)
 
-    # Un mese ha piu' serate di quante ne stiano leggibili in una slide: si
-    # impagina invece di rimpicciolire il testo finche' non si legge piu'.
-    per_slide = cfg.get("posts.monthly_calendar.rows_per_slide", 8)
-    max_slide = min(cfg.get("posts.monthly_calendar.max_carousel_slides", 10), 10)
-    pagine = _pagine(events, per_slide)[:max_slide]
+    giorni = _giorni_mensili(cfg, events)
+    tutte_le_pagine = _pagine_mensili(
+        giorni, cfg.get("posts.monthly_calendar.rows_per_slide", 8))
+    max_slide = max(1, min(cfg.get("posts.monthly_calendar.max_carousel_slides", 10), 10))
+    pagine = tutte_le_pagine[:max_slide - 1]
 
-    template = cfg.get("posts.monthly_calendar.image_template", "settimana.html.j2")
+    template = cfg.get("posts.monthly_calendar.image_template", "mensile_elenco.html.j2")
+    copertina = cfg.get("posts.monthly_calendar.image_template_cover",
+                        "mensile_copertina.html.j2")
     size = post_size(cfg, "monthly_calendar")
-    immagini = [
+    comuni = {
+        "mese": mese.split()[0],
+        "link": _senza_schema(cfg.get("content.evento.link", "")),
+        "invito": cfg.get("content.evento.invito", "Iscriviti"),
+        "qr_image": cfg.get("content.evento.qr", ""),
+    }
+    immagini = [render(
+        cfg, copertina, comuni,
+        _stamp(cfg, "mese", inizio, "00-copertina"), size=size,
+    )]
+    immagini += [
         render(
             cfg, template,
-            {"kicker_1": cfg.get("content.evento.kicker_mensile",
-                                 "Calendario del mese"),
-             "kicker_2": (f"{indice + 1}/{len(pagine)}" if len(pagine) > 1
-                          else cfg.get("org.city", "")),
-             "badge": mese,
-             "titolo": cfg.get("content.evento.titolo_mese", "Il mese"),
-             "serate": [_serata(cfg, evento) for evento in pagina],
-             "link": _senza_schema(cfg.get("content.evento.link", "")),
-             "invito": cfg.get("content.evento.invito", "Iscriviti"),
-             "qr_image": cfg.get("content.evento.qr", ""),
-             "background": _background(cfg, "monthly_calendar"), "density": ""},
-            _stamp(cfg, "mese", inizio,
-                   f"{indice + 1:02d}" if len(pagine) > 1 else ""),
+            {**comuni, "giorni": pagina,
+             "pagina": indice + 1, "pagine": len(pagine)},
+            _stamp(cfg, "mese", inizio, f"{indice + 1:02d}-elenco"),
             size=size,
         )
         for indice, pagina in enumerate(pagine)
     ]
     caption = render_caption(
         cfg, "monthly_calendar",
-        {"days": events_by_day(events), "mese": mese, "periodo": mese,
+        {"gruppi": _gruppi_mensili(cfg, events),
+         "mese": mese, "periodo": mese,
          "events_count": len(events), "formats": formats_on(events),
          "signup_url": cfg.get("content.evento.link", "")},
         extra_hashtags=[f"#{f.replace(' ', '')}" for f in formats_on(events)],
@@ -364,7 +461,7 @@ def monthly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
         caption=caption,
         meta={"month_start": inizio.isoformat(), "month_end": fine.isoformat(),
               "events": len(events), "slide": len(immagini),
-              "slide_tagliate": max(0, len(_pagine(events, per_slide)) - len(pagine))},
+              "slide_tagliate": len(tutte_le_pagine) - len(pagine)},
     )
 
 

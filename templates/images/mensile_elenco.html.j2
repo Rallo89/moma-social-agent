@@ -1,0 +1,22 @@
+{% extends "_mensile.html.j2" %}
+{% block classe %}elenco{% endblock %}
+{% block contenuto %}
+  <div class="elenco-contenuto">
+    {% for giorno in giorni %}
+    <section class="giorno">
+      <div class="quando">{{ giorno.quando }}</div>
+      <div class="tornei">
+        {% for torneo in giorno.tornei %}
+        <div class="torneo">
+          {% if torneo.formato %}
+          <span class="formato">{{ torneo.formato }}</span>
+          <span class="pallino" aria-hidden="true">•</span>
+          {% endif %}
+          <span class="nome">{{ torneo.nome }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+  </div>
+{% endblock %}

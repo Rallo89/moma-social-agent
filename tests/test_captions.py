@@ -30,6 +30,24 @@ def test_caption_calendario(cfg):
     assert "\n\nMERCOLEDÌ" in text
 
 
+def test_caption_mensile_raggruppa_formati_e_conserva_la_chiusura(cfg):
+    from moma_social.pipelines import _gruppi_mensili
+
+    events = fetch_events(cfg, dt.date(2026, 3, 1), dt.date(2026, 3, 31))
+    gruppi = _gruppi_mensili(cfg, events)
+    text = render_caption(cfg, "monthly_calendar", {
+        "gruppi": gruppi, "mese": "marzo 2026", "periodo": "marzo 2026",
+        "events_count": len(events), "formats": [g["formato"] for g in gruppi],
+        "signup_url": cfg.get("content.evento.link"),
+    })
+    assert text.index("👑 COMMANDER") < text.index("🎁 LIMITED")
+    assert text.index("🎁 LIMITED") < text.index("⚡ MODERN")
+    assert "14/03 15:00 Prerelease" in text
+    assert "15/03 16:00 Draft domenicale" in text
+    assert "Iscrizioni e regolamenti:" in text
+    assert "Ci vediamo ai tavoli! 🔥" in text
+
+
 def test_caption_risultati_cita_il_vincitore(cfg):
     leg = fetch_leg_results(cfg, dt.date(2026, 3, 11))
     meta = [{"nome": "Boros Energy", "percento": 25},

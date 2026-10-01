@@ -238,8 +238,6 @@ badge             = "{format}"
 titolo_tappa      = "Tappa {stage}"
 titolo_finale     = "Finale"
 titolo_settimana  = "La settimana"            # card di riepilogo del lunedi
-titolo_mese       = "Il mese"                 # card del calendario mensile
-kicker_mensile    = "Calendario del mese"
 ora_default       = "21:00"                   # nell'elenco della settimana
 # Usato solo quando non c'e' nessun evento in sorgente (post da fallback).
 titolo            = "{weekday} {format}"
@@ -319,9 +317,10 @@ hashtags            = ["#tornei", "#calendario"]
 max_carousel_slides = 10        # la Graph API non ne accetta di piu'
 
 # Il 30 di ogni mese (l'ultimo giorno nei mesi piu' corti) esce il calendario
-# del mese successivo: un elenco impaginato, non una card per evento.
+# del mese successivo: copertina e appuntamenti raggruppati per data/ora.
 [posts.monthly_calendar]
-image_template      = "settimana.html.j2"
+image_template_cover = "mensile_copertina.html.j2"
+image_template       = "mensile_elenco.html.j2"
 caption_template    = "monthly_calendar.txt.j2"
 hashtags            = ["#tornei", "#calendario"]
 rows_per_slide      = 8
