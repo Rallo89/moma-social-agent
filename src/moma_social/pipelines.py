@@ -8,6 +8,8 @@ caption -> restituisce un PostDraft. La pubblicazione e' un passo separato
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
+import json
 
 from .captions import render_caption
 from .config import Config
@@ -267,7 +269,8 @@ def weekly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
             cfg.get("posts.weekly_calendar.image_template_riepilogo",
                     "settimana.html.j2"),
             {**_card_riepilogo(cfg, in_post, start, end, periodo),
-             "background": _background(cfg, "weekly_calendar"), "density": ""},
+             "background": _background(cfg, "weekly_calendar"), "density": "",
+             "tema": cfg.get("posts.weekly_calendar.tema", "arancione")},
             _stamp(cfg, "calendario", start, "00-riepilogo"),
             size=size,
         ))
@@ -279,7 +282,7 @@ def weekly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
                             kicker_2=(f"{indice + 1}/{len(in_post)}"
                                       if len(in_post) > 1 else periodo)),
              "background": _background(cfg, "weekly_calendar"),
-             "density": ""},
+             "density": "", "tema": cfg.get("posts.weekly_calendar.tema", "arancione")},
             _stamp(cfg, "calendario", start,
                    f"{indice + 1:02d}-{(evento.format or 'evento').lower().replace(' ', '-')}"),
             size=size,
@@ -613,6 +616,14 @@ def _post_di_tappa(cfg: Config, day: dt.date, leg, senza_meta: bool) -> PostDraf
     La classifica di lega non sta qui: si aggiorna una volta a settimana, in
     un post suo, mentre questo racconta la serata appena finita.
     """
+    # Le bozze della serata vengono renderizzate prima di pubblicarne una.
+    # Formato e data da soli farebbero sovrascrivere le slide di due tornei
+    # dello stesso formato. Nome e lega identificano gli stessi gruppi usati
+    # dal repository; il digest mantiene corto e stabile il nome del file.
+    identita = json.dumps([leg.format, leg.leg, leg.league], ensure_ascii=False)
+    suffisso = hashlib.sha256(identita.encode("utf-8")).hexdigest()[:12]
+    nome_tappa = f"{leg.format.lower().replace(' ', '-')}-{suffisso}"
+
     # top_n = 0 significa "tutti": con piu' partecipanti di quanti ne stiano in
     # una slide il post diventa un carosello, non un elenco troncato in silenzio.
     top_n = cfg.get("posts.leg_results.top_n", 0)
@@ -652,7 +663,7 @@ def _post_di_tappa(cfg: Config, day: dt.date, leg, senza_meta: bool) -> PostDraf
     def _slide(pagina, indice, totale):
         # Il numero di pagina compare solo quando ce n'e' piu' di una.
         suffisso = f"{indice + 1}/{totale}" if totale > 1 else fmt_date(day)
-        nome = _stamp(cfg, "risultati", day, leg.format.lower().replace(" ", "-"))
+        nome = _stamp(cfg, "risultati", day, nome_tappa)
         return render(
             cfg, templates[0],
             {# La cornice comune: gli stessi slot delle card del calendario.
@@ -681,7 +692,7 @@ def _post_di_tappa(cfg: Config, day: dt.date, leg, senza_meta: bool) -> PostDraf
             cfg,
             cfg.get("posts.leg_results.image_template_meta", "meta.html.j2"),
             meta,
-            _stamp(cfg, "meta", day, leg.format.lower().replace(" ", "-")),
+            _stamp(cfg, "meta", day, nome_tappa),
             size=post_size(cfg, "leg_results"),
         ))
 

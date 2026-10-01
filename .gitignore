@@ -10,3 +10,5 @@ out/
 config/config.local.toml
 config/canva-tokens.json
 config/canva-tokens.tmp
+calendario.png
+calendario2.png

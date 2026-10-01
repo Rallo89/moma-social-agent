@@ -1,10 +1,10 @@
 {#
   Cornice comune delle card — da "Template Evento Dark" (Claude Design).
 
-  Il disegno e' autoriale: colori, corpi, spaziature e asset vengono
-  dall'artboard originale (templates/calendar/) e non si toccano. Qui sta
+  Il disegno deriva dall'artboard originale (templates/calendar/). Qui sta
   tutto quello che le card hanno in comune: fondo, trama, occhiello, blocco
-  dati col filo lime, piede. Cambia solo il centro, nel blocco `corpo`.
+  dati col filo lime, piede. La trama occupa il lato destro a tutta altezza.
+  Cambia solo il centro, nel blocco `corpo`.
 
   L'artboard e' disegnato a 1080 di larghezza. Per qualunque altra dimensione
   si scala l'intero blocco invece di ricalcolare ogni misura: cosi' corpi,
@@ -48,7 +48,7 @@
      vale per tutta la card. */
   .art.chiaro { background: #f2f4f0; color: #14171a; }
   .art.chiaro .velo {
-    background: linear-gradient(115deg, rgba(242,244,240,0) 42%, #f2f4f0 62%);
+    background: linear-gradient(295deg, rgba(242,244,240,0) 42%, #f2f4f0 62%);
   }
   .art.chiaro .trama { opacity: .18; filter: invert(1); }
   .art.chiaro .kicker { color: #6b7280; }
@@ -65,7 +65,7 @@
      su lime non si vedono — e il loro lavoro lo fa il nero. */
   .art.verde { background: #a9d227; color: #14171a; }
   .art.verde .velo {
-    background: linear-gradient(115deg, rgba(169,210,39,0) 42%, #a9d227 62%);
+    background: linear-gradient(295deg, rgba(169,210,39,0) 42%, #a9d227 62%);
   }
   .art.verde .trama { opacity: .16; filter: invert(1); }
   /* I grigi del tema scuro qui non funzionano: su lime schiariscono invece
@@ -89,6 +89,27 @@
      diventerebbe viola). */
   .art.verde .testa img,
   .art.verde .piede img.partner { filter: brightness(0); }
+  /* Nella weekly l'arancione diventa il fondo. I testi principali e il badge
+     prendono il grigio scuro; le etichette sono bianche e il filo resta verde.
+     Gli altri post conservano i loro temi. */
+  .art.arancione { background: #f28c28; color: #14171a; }
+  .art.arancione .velo {
+    background: linear-gradient(295deg, rgba(242,140,40,0) 42%, #f28c28 62%);
+  }
+  .art.arancione .trama { opacity: .4; filter: brightness(0) invert(1); }
+  .art.arancione .kicker,
+  .art.arancione .sopratitolo,
+  .art.arancione .voce .dettaglio { color: rgba(20,23,26,.82); }
+  .art.arancione .serata .quando,
+  .art.arancione .invito .link,
+  .art.arancione .voce .etichetta,
+  .art.arancione .riga .pos { color: #fff; }
+  .art.arancione .filo { background: #294006; }
+  .art.arancione .badge { background: #14171a; color: #f28c28; }
+  .art.arancione .titolo,
+  .art.arancione .invito .titolino { color: #14171a; }
+  .art.arancione .testa img,
+  .art.arancione .piede img.partner { filter: brightness(0); }
   .art {
     width: {{ ART }}px; height: {{ ART_H }}px; position: relative; overflow: hidden;
     background: #14171a; color: #f2f4f0;
@@ -96,12 +117,16 @@
     font-family: 'Barlow Condensed', sans-serif;
   }
   .trama {
-    position: absolute; top: -90px; left: -80px; height: 900px;
-    opacity: .3; transform: rotate(-6deg);
+    /* Il tratto verticale parte a 54px dal bordo sinistro del PNG (375x666).
+       Dopo la rotazione l'offset lo porta 8px oltre il bordo destro della card. */
+    position: absolute; top: -4%;
+    right: -{{ (ART_H * 1.08 * 54 / 666 + 8)|round|int }}px;
+    height: 108%; width: auto;
+    opacity: .3; transform: rotate(180deg);
   }
   .velo {
     position: absolute; inset: 0;
-    background: linear-gradient(115deg, rgba(20,23,26,0) 42%, #14171a 62%);
+    background: linear-gradient(295deg, rgba(20,23,26,0) 42%, #14171a 62%);
   }
 
   .testa {
@@ -187,7 +212,7 @@
 <body>
 {# I temi ammessi si elencano qui: `tema` viene da config e senza questa
    lista finirebbe come classe CSS qualsiasi cosa ci sia scritto. #}
-{% set temi = ["chiaro", "verde"] %}
+{% set temi = ["chiaro", "verde", "arancione"] %}
 <div class="scala"><div class="art{% if tema|default("") in temi %} {{ tema }}{% endif %}">
   {% set trama = "templates/images/assets/triangoli.png"|asset %}
   {% if trama %}<img class="trama" src="{{ trama }}" alt="">{% endif %}

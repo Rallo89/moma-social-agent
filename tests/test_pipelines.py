@@ -305,6 +305,46 @@ def test_una_sera_con_due_tornei_produce_due_post(cfg, tmp_path):
     assert len({dedupe_key(b) for b in bozze}) == 2
 
 
+@pytest.mark.parametrize("nomi, leghe", [
+    (("Pauper Fall tappa 1", "Pauper Spring tappa 1"), ("lega-1", "lega-1")),
+    (("Tappa 1", "Tappa 1"), ("lega-1", "lega-2")),
+])
+def test_tornei_stesso_formato_non_sovrascrivono_le_slide(
+    cfg, tmp_path, monkeypatch, nomi, leghe,
+):
+    import json
+
+    def render_con_contenuto(cfg, template, context, out_name, size=None):
+        path = tmp_path / f"{out_name}.png"
+        contenuto = (context["rows"][0].player if "rows" in context
+                     else context["spicchi"][0]["nome"])
+        path.write_text(contenuto, encoding="utf-8")
+        return path
+
+    monkeypatch.setattr(pipelines, "render", render_con_contenuto)
+    righe = [
+        {"date": "2026-09-02", "leg": nome, "format": "Pauper",
+         "league": lega, "rank": 1, "player": giocatore, "deck": mazzo,
+         "points": "3"}
+        for nome, lega, giocatore, mazzo in zip(
+            nomi, leghe, ("Anna", "Bruno"), ("Affinity", "Burn"), strict=True
+        )
+    ]
+    path = tmp_path / "risultati.json"
+    path.write_text(json.dumps(righe), encoding="utf-8")
+    cfg.data["sources"]["results"] = {"url": str(path), "kind": "json"}
+
+    bozze = pipelines.drafts(cfg, "leg_results", dt.date(2026, 9, 2))
+
+    assert len(bozze) == 2
+    assert len({immagine for bozza in bozze for immagine in bozza.images}) == 4
+    for bozza, giocatore, mazzo in zip(
+        bozze, ("Anna", "Bruno"), ("Affinity", "Burn"), strict=True
+    ):
+        assert Path(bozza.images[0]).read_text(encoding="utf-8") == giocatore
+        assert Path(bozza.images[1]).read_text(encoding="utf-8") == mazzo
+
+
 def test_quota_dipende_dal_formato(cfg):
     """Il Pauper non costa come il Limited."""
     def quota(fmt):

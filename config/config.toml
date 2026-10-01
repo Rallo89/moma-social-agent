@@ -308,6 +308,7 @@ ledger = "state/published.jsonl"
 # "prossima": lanciato il sabato, annuncia la settimana che comincia.
 # "corrente": racconta la settimana che contiene la data di lancio.
 settimana           = "prossima"
+tema                = "arancione"   # fondo arancione, testi scuri, etichette bianche
 image_template      = "evento.html.j2"
 # Prima slide: tutta la settimana in un colpo d'occhio, poi una card per
 # serata. `riepilogo = false` la toglie e lascia il solo carosello di card.
