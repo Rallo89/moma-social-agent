@@ -22,6 +22,10 @@ on:
         description: "Genera senza pubblicare"
         type: boolean
         default: false
+      force:
+        description: "Pubblica una nuova versione anche se il mese e' gia' stato pubblicato"
+        type: boolean
+        default: false
 
 concurrency:
   group: post-calendario-mensile
@@ -52,6 +56,7 @@ jobs:
           # bash: non vanno interpolati nella riga di comando.
           POST_DATE: ${{ inputs.date }}
           POST_DRY_RUN: ${{ inputs.dry_run }}
+          POST_FORCE: ${{ inputs.force }}
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
           MEDIA_BUCKET: ${{ secrets.MEDIA_BUCKET }}
@@ -67,6 +72,7 @@ jobs:
           args=()
           if [ -n "${POST_DATE:-}" ]; then args+=(--date "$POST_DATE"); fi
           if [ "${POST_DRY_RUN:-}" = "true" ]; then args+=(--dry-run); fi
+          if [ "${POST_FORCE:-}" = "true" ]; then args+=(--force); fi
 
           set +e
           momasocial monthly "${args[@]}"
