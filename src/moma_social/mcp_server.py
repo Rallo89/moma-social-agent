@@ -24,7 +24,7 @@ except ImportError:  # pragma: no cover - SDK 1.x
 
 from . import config
 from .errors import MtgSocialError
-from .pipelines import PIPELINES, drafts
+from .pipelines import PIPELINES, PIPELINES_MULTI, drafts
 from .publish import ledger_path, publish_draft
 from .repos import events_by_day, fetch_events, fetch_leg_results, fetch_standings
 from .timeutil import fmt_range, resolve_date, week_bounds
@@ -98,11 +98,12 @@ def classifica(formato: str, stagione: str = "") -> str:
 def genera_post(tipo: str, data: str = "", formato: str = "") -> str:
     """Genera immagini e caption di un post SENZA pubblicarlo.
 
-    tipo: weekly_calendar | format_spotlight | leg_results
-    Restituisce i path dei PNG e il testo, da rivedere prima di pubblicare.
+    tipo: weekly_calendar | story_event | format_spotlight | leg_results
+    Restituisce i path delle immagini e il testo, da rivedere prima di pubblicare.
     """
-    if tipo not in PIPELINES:
-        return f"Tipo sconosciuto: {tipo}. Validi: {', '.join(PIPELINES)}"
+    tipi = {**PIPELINES, **PIPELINES_MULTI}
+    if tipo not in tipi:
+        return f"Tipo sconosciuto: {tipo}. Validi: {', '.join(tipi)}"
     cfg = _cfg()
     kwargs = {} if tipo == "weekly_calendar" else {"fmt": formato}
     # Una serata con due tornei sono due post: si restituiscono entrambi.
@@ -124,8 +125,9 @@ def pubblica_post(tipo: str, data: str = "", formato: str = "",
 
     Senza conferma esegue un dry-run: mostra cosa uscirebbe senza pubblicare.
     """
-    if tipo not in PIPELINES:
-        return f"Tipo sconosciuto: {tipo}. Validi: {', '.join(PIPELINES)}"
+    tipi = {**PIPELINES, **PIPELINES_MULTI}
+    if tipo not in tipi:
+        return f"Tipo sconosciuto: {tipo}. Validi: {', '.join(tipi)}"
     cfg = _cfg()
     kwargs = {} if tipo == "weekly_calendar" else {"fmt": formato}
     bozze = drafts(cfg, tipo, _day(data) if data else None, **kwargs)

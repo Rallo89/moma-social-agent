@@ -34,6 +34,9 @@ def ledger_path(cfg: Config) -> Path:
 
 def dedupe_key(draft: PostDraft) -> str:
     meta = draft.meta
+    if draft.kind == "story_event":
+        return (f"story_event:{meta['day']}:{meta['phase']}:"
+                f"{meta['tournament_id']}")
     scope = (meta.get("day") or meta.get("week_start")
              or meta.get("month_start") or "")
     # Il nome del torneo entra nella chiave perche' due leghe dello stesso
@@ -67,6 +70,7 @@ def record(cfg: Config, entry: dict) -> None:
 def save_draft_files(cfg: Config, draft: PostDraft) -> Path:
     """Salva caption e metadati accanto ai PNG: e' l'anteprima ispezionabile."""
     out_dir = cfg.resolve_path(cfg.get("render.output_dir", "out"))
+    out_dir.mkdir(parents=True, exist_ok=True)
     stem = Path(draft.images[0]).stem
     (out_dir / f"{stem}.caption.txt").write_text(draft.caption, encoding="utf-8")
     meta_path = out_dir / f"{stem}.json"
@@ -118,7 +122,12 @@ def publish_draft(cfg: Config, draft: PostDraft, *, dry_run: bool = False,
         client = InstagramClient(cfg)
         urls = upload_all(cfg, [Path(p) for p in draft.images])
         entry["image_urls"] = urls
-        post_id = client.publish_post(urls, draft.caption)
+        if draft.kind == "story_event":
+            if len(urls) != 1:
+                raise PublishError("Una storia deve contenere una sola immagine")
+            post_id = client.publish_story(urls[0])
+        else:
+            post_id = client.publish_post(urls, draft.caption)
     except PublishError as exc:
         entry["status"] = "error"
         entry["error"] = str(exc)
@@ -127,6 +136,6 @@ def publish_draft(cfg: Config, draft: PostDraft, *, dry_run: bool = False,
 
     entry["status"] = "published"
     entry["post_id"] = post_id
-    entry["permalink"] = client.permalink(post_id)
+    entry["permalink"] = "" if draft.kind == "story_event" else client.permalink(post_id)
     record(cfg, entry)
     return entry

@@ -156,6 +156,13 @@ class InstagramClient:
                                 "caption": caption}),
         )["id"]
 
+    def create_story(self, image_url: str) -> str:
+        """Le storie non accettano caption, coautori o sticker via API."""
+        return self._post(
+            f"{self.ig_user_id}/media",
+            {"media_type": "STORIES", "image_url": image_url},
+        )["id"]
+
     def wait_ready(self, container_id: str) -> None:
         for _ in range(POLL_ATTEMPTS):
             status = self._get(container_id, {"fields": "status_code,status"})
@@ -277,5 +284,11 @@ class InstagramClient:
                 self.wait_ready(child)
                 children.append(child)
             container = self._crea(lambda: self.create_carousel(children, caption))
+        self.wait_ready(container)
+        return self.publish(container)
+
+    def publish_story(self, image_url: str) -> str:
+        container = self._contenitore(
+            lambda: self.create_story(image_url), image_url, "La storia")
         self.wait_ready(container)
         return self.publish(container)

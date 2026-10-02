@@ -94,9 +94,10 @@ entry_fee = "quota"      # tournaments.costo, formattata dall'agente
 notes     = "note"
 league    = "lega"       # nome della lega, prima riga del titolo
 stage     = "tappa"      # numero di tappa, seconda riga: "Tappa 3"
-# Non presenti nel database: ora di inizio, premi, link iscrizioni. Restano in
-# [content.evento]; se un giorno finiscono in `tournaments`, basta esporli
-# nella vista e mapparli qui.
+tournament_id = "torneo_id"
+signup_url = "signup_url"
+# Ora e premi non sono nella vista: restano in [content.evento]. L'URL della
+# pagina del torneo e' esposto per il QR delle storie.
 # Tutte le altre colonne arrivano da supabase/v_social_eventi.sql: finche'
 # quella vista non e' aggiornata, la card ricade sui valori di configurazione.
 
@@ -344,6 +345,11 @@ stati               = ["aperto"]
 image_template   = "evento.html.j2"
 caption_template = "format_spotlight.txt.j2"
 hashtags         = ["#torneomagic"]
+
+[posts.story_event]
+image_template = "storia_evento.html.j2"
+width = 1080
+height = 1920
 
 [posts.leg_results]
 # Il template grafico dell'associazione e' quadrato e vale per entrambe le

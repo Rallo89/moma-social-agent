@@ -7,6 +7,7 @@
 --    sede / indirizzo   dove si gioca
 --    quota              tournaments.costo — il prezzo vero, non uno in config
 --    lega               nome della lega, prima riga del titolo della grafica
+--    torneo_id/signup_url identificano la pagina specifica da mettere nel QR
 --    tipo / stato       non usati oggi, ma li abbiamo sotto mano se servono
 --
 --  Il NUMERO DI TAPPA non c'e', e non e' una dimenticanza. Contare i tornei
@@ -23,23 +24,13 @@
 --
 --  Nessun dato personale: solo il torneo, mai chi ci gioca.
 --
---  Sostituire <UUID-MODENA-MAGIC> con lo stesso valore delle altre viste.
+--  La community e' quella gia' usata dalla vista installata.
 --
---  PERCHE' UN DROP E NON UN CREATE OR REPLACE
---  `create or replace view` in Postgres sa solo aggiungere colonne in fondo:
---  non puo' rinominarle ne' riordinarle, e qui l'ordine cambia. Da cui
---
---      ERROR: cannot change name of view column "quota" to "indirizzo"
---
---  Il drop e' senza CASCADE apposta: se qualcosa dipendesse da questa vista,
---  meglio un errore che scoprire dopo di averlo cancellato. In quel caso
---  fermarsi e guardare cosa dipende, invece di aggiungere CASCADE.
---  Fra il drop e il create la vista non esiste: eseguire tutto insieme.
+--  Le due nuove colonne sono in coda: CREATE OR REPLACE conserva permessi e
+--  dipendenze della vista gia' in uso.
 -- ═══════════════════════════════════════════════════════════════════════════
 
-drop view if exists public.v_social_eventi;
-
-create view public.v_social_eventi as
+create or replace view public.v_social_eventi as
 select t.start_date                    as data,
        t.name                          as titolo,
        t.format::text                  as formato,
@@ -51,10 +42,12 @@ select t.start_date                    as data,
        t.description                   as note,
        t.kind::text                    as tipo,
        t.status::text                  as stato,
-       l.name                          as lega
+       l.name                          as lega,
+       t.id                            as torneo_id,
+       ('https://modena-magic.vercel.app/tornei/' || t.id::text) as signup_url
 from public.tournaments t
 left join public.leagues l on l.id = t.league_id
-where t.community_id = '<UUID-MODENA-MAGIC>'
+where t.community_id = '18a12787-8509-4fa6-8646-0f5ad3cefc87'
   and t.status::text <> 'eliminato'
   and t.start_date is not null;
 

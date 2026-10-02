@@ -779,6 +779,7 @@ def build_parser() -> argparse.ArgumentParser:
         ("standings", "standings_update",
          "carosello aggiornamento classifiche di lega (lunedi 10:00)"),
         ("format", "format_spotlight", "post formato del giorno (mer/gio 04:00)"),
+        ("stories", "story_event", "storie dei tornei di oggi e domani"),
         ("results", "leg_results", "carosello risultati + meta della tappa (gio/ven 03:00)"),
     ):
         p = sub.add_parser(name, help=help_text)

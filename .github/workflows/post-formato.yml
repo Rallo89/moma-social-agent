@@ -1,19 +1,17 @@
-name: Post formato del giorno
+name: Storie tornei del giorno
 
-# Mercoledi e giovedi alle 04:00 Europe/Rome: il formato in programma quel giorno.
-# Di notte, cosi' la mattina il post e' gia' in cima al feed.
+# Ogni giorno alle 10:00 Europe/Rome: una storia per i tornei di oggi e domani.
 # I cron di GitHub sono a sforzo migliore, non a orario: su questo repo hanno
 # girato anche con sette ore di ritardo. Si tenta ogni ora dentro una finestra
 # e `--recupera` lascia passare il primo scatto utile; i successivi trovano la
 # pubblicazione gia' a registro e si fermano da soli.
 on:
   schedule:
-    - cron: "0 2-11 * * 3"
-    - cron: "0 2-11 * * 4"
+    - cron: "0 8-17 * * *"
   workflow_dispatch:
     inputs:
       date:
-        description: "Giorno di gioco da promuovere (AAAA-MM-GG, default oggi)"
+        description: "Data di lancio (AAAA-MM-GG, default oggi): eventi oggi e domani"
         required: false
       format:
         description: "Forza il formato di gioco (di norma si deduce dal calendario)"
@@ -24,7 +22,7 @@ on:
         default: false
 
 concurrency:
-  group: post-formato
+  group: storie-tornei
   cancel-in-progress: false
 
 permissions:
@@ -39,10 +37,10 @@ jobs:
       - uses: ./.github/actions/setup
 
       # Primo scatto utile della finestra: gli altri si fermano al registro.
-      - name: "A Roma sono almeno le 04:00?"
+      - name: "A Roma sono almeno le 10:00?"
         id: gate
         if: github.event_name == 'schedule'
-        run: momasocial gate --hour 4 --recupera
+        run: momasocial gate --hour 10 --recupera
 
       - name: Genera e pubblica
         id: post
@@ -71,12 +69,12 @@ jobs:
           if [ "${POST_DRY_RUN:-}" = "true" ]; then args+=(--dry-run); fi
 
           set +e
-          momasocial format "${args[@]}"
+          momasocial stories "${args[@]}"
           code=$?
           set -e
           # 78 = nessun dato per quel giorno: esito legittimo, il post si salta.
           if [ $code -eq 78 ]; then
-            echo "::notice::Nessun evento in programma oggi: post saltato."
+            echo "::notice::Nessuna storia pubblicabile per oggi e domani."
             exit 0
           fi
           exit $code
@@ -85,7 +83,7 @@ jobs:
         if: steps.post.conclusion != 'skipped'
         uses: actions/upload-artifact@v4
         with:
-          name: post-formato-${{ github.run_id }}
+          name: storie-tornei-${{ github.run_id }}
           path: out/
           retention-days: 30
           if-no-files-found: ignore

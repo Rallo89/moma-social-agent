@@ -34,6 +34,7 @@ class Event:
     stage: str = ""
     is_final: bool = False
     extra: dict = field(default_factory=dict)
+    tournament_id: str = ""
 
     @property
     def weekday(self) -> str:

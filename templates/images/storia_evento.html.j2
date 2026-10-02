@@ -1,0 +1,57 @@
+{% set logo = "templates/images/assets/logo-modena-magic.png"|asset %}
+{% set partner = "templates/images/assets/unocritico.png"|asset %}
+{% set trama = "templates/images/assets/triangoli.png"|asset %}
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><style>
+{% include "_fonts.css.j2" %}
+@page { size: 1080px 1920px; margin: 0; }
+* { box-sizing: border-box; }
+html,body { margin:0; width:1080px; height:1920px; overflow:hidden; }
+body { background:#14171a; color:#fff; font-family:'Barlow Condensed',Arial,sans-serif; }
+.story { position:relative; width:1080px; height:1920px; overflow:hidden;
+  display:flex; flex-direction:column; padding:260px 76px 310px; }
+.trama { position:absolute; height:108%; width:auto; top:-4%; right:-190px;
+  transform:rotate(180deg); opacity:.24; }
+.veil { position:absolute; inset:0; background:linear-gradient(110deg,#14171a 18%,rgba(20,23,26,.92) 57%,rgba(20,23,26,.45)); }
+.story > *:not(.trama):not(.veil) { position:relative; }
+.header { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; }
+.header img.logo { width:206px; }
+.header img.partner { width:112px; max-height:120px; object-fit:contain; }
+.phase { margin-top:86px; font:700 54px 'JetBrains Mono',monospace; letter-spacing:.09em;
+  color:#f28c28; text-transform:uppercase; }
+.format { margin-top:20px; font:700 58px 'Barlow Condensed',Arial,sans-serif;
+  color:#a9d227; text-transform:uppercase; letter-spacing:.06em; }
+.title { margin-top:20px; font:700 112px/1.0 'Bebas Neue','Arial Narrow',sans-serif;
+  text-transform:uppercase; overflow-wrap:anywhere; max-height:350px; overflow:hidden; }
+.when { margin-top:42px; font:600 54px 'Barlow Condensed',Arial,sans-serif;
+  text-transform:uppercase; }
+.where { margin-top:14px; font:500 35px 'Barlow Condensed',Arial,sans-serif;
+  color:#d5dad6; }
+.footer { margin-top:auto; display:flex; align-items:center; gap:32px; }
+.qr { width:270px; height:270px; flex:none; padding:14px; border-radius:14px; background:#fff; }
+.qr img { display:block; width:100%; height:100%; }
+.cta { min-width:0; }
+.cta strong { display:block; font:700 50px 'Barlow Condensed',Arial,sans-serif;
+  color:#f28c28; text-transform:uppercase; }
+.cta span { display:block; margin-top:10px; font:500 29px/1.25 'Barlow Condensed',Arial,sans-serif; }
+.url { margin-top:18px; font:500 20px 'JetBrains Mono',monospace; color:#a9d227;
+  overflow-wrap:anywhere; }
+</style></head><body>
+<main class="story">
+{% if trama %}<img class="trama" src="{{ trama }}" alt="">{% endif %}
+<div class="veil"></div>
+<header class="header">
+  {% if logo %}<img class="logo" src="{{ logo }}" alt="Modena Magic">{% endif %}
+  {% if partner %}<img class="partner" src="{{ partner }}" alt="Uno Critico">{% endif %}
+</header>
+<div class="phase">{{ fase }}</div>
+<div class="format">{{ formato }}</div>
+<h1 class="title">{{ titolo }}</h1>
+<div class="when">{{ quando }}</div>
+{% if dove %}<div class="where">{{ dove }}</div>{% endif %}
+<footer class="footer">
+  <div class="qr"><img src="{{ qr }}" alt="QR per la pagina del torneo"></div>
+  <div class="cta"><strong>Iscriviti</strong><span>Inquadra il QR per aprire il torneo</span>
+    <div class="url">modena-magic.vercel.app/tornei</div></div>
+</footer>
+</main></body></html>

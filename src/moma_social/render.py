@@ -166,10 +166,10 @@ def _find_chromium(configured: str = "") -> str:
 
 
 def _shot_chromium(cfg: Config, html: str, out_path: Path,
-                   size: tuple[int, int]) -> Path:
+                   size: tuple[int, int], scale: int | None = None) -> Path:
     binary = _find_chromium(cfg.get("render.chromium_path", ""))
     width, height = size
-    scale = cfg.get("render.scale", 2)
+    scale = scale or cfg.get("render.scale", 2)
 
     # In headless la finestra riserva spazio alla UI del browser: il viewport
     # e' piu' basso di --window-size e l'ultima fascia della slide resterebbe
@@ -199,7 +199,7 @@ def _shot_chromium(cfg: Config, html: str, out_path: Path,
 
 
 def _shot_playwright(cfg: Config, html: str, out_path: Path,
-                     size: tuple[int, int]) -> Path:
+                     size: tuple[int, int], scale: int | None = None) -> Path:
     try:
         from playwright.sync_api import sync_playwright
     except ImportError as exc:  # pragma: no cover
@@ -209,7 +209,7 @@ def _shot_playwright(cfg: Config, html: str, out_path: Path,
         browser = pw.chromium.launch(args=["--no-sandbox"])
         page = browser.new_page(
             viewport={"width": width, "height": height},
-            device_scale_factor=cfg.get("render.scale", 2),
+            device_scale_factor=scale or cfg.get("render.scale", 2),
         )
         page.set_content(html, wait_until="networkidle")
         page.wait_for_timeout(200)
@@ -219,7 +219,7 @@ def _shot_playwright(cfg: Config, html: str, out_path: Path,
 
 
 def render(cfg: Config, template: str, context: dict, out_name: str,
-           size: tuple[int, int] | None = None) -> Path:
+           size: tuple[int, int] | None = None, scale: int | None = None) -> Path:
     """Renderizza un template immagine e restituisce il path del PNG."""
     size = size or (cfg.get("render.width", 1080), cfg.get("render.height", 1350))
     context = {**context, "width": size[0], "height": size[1]}
@@ -239,5 +239,5 @@ def render(cfg: Config, template: str, context: dict, out_name: str,
 
     backend = cfg.get("render.backend", "chromium")
     if backend == "playwright":
-        return _shot_playwright(cfg, html, out_path, size)
-    return _shot_chromium(cfg, html, out_path, size)
+        return _shot_playwright(cfg, html, out_path, size, scale)
+    return _shot_chromium(cfg, html, out_path, size, scale)

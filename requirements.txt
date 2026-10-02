@@ -3,6 +3,7 @@ Jinja2>=3.1
 requests>=2.31
 python-dateutil>=2.9
 PyYAML>=6.0
+qrcode[pil]>=8.0
 # Windows non ha il database dei fusi orari di sistema
 tzdata; sys_platform == "win32"
 # Optional data sources (installed by default, harmless if unused)

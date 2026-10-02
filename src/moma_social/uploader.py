@@ -1,4 +1,4 @@
-"""Hosting delle immagini.
+"""Hosting delle immagini PNG/JPEG.
 
 La Content Publishing API di Instagram non accetta upload binari: scarica
 l'immagine da un URL pubblico. I PNG generati vanno quindi esposti su HTTP
@@ -90,7 +90,8 @@ def _upload_imgbb(cfg: Config, path: Path) -> str:
             data=data,
             # Nome e tipo espliciti: una parte multipart anonima puo' essere
             # rifiutata, e l'errore che ne esce non dice perche'.
-            files={"image": (path.name, path.read_bytes(), "image/png")},
+            files={"image": (path.name, path.read_bytes(),
+                              mimetypes.guess_type(path.name)[0] or "image/png")},
             timeout=TIMEOUT,
         )
         response.raise_for_status()
@@ -100,7 +101,7 @@ def _upload_imgbb(cfg: Config, path: Path) -> str:
 
 
 def upload(cfg: Config, path: Path) -> str:
-    """Carica un PNG e restituisce l'URL pubblico da passare alla Graph API."""
+    """Carica un'immagine e restituisce l'URL pubblico per la Graph API."""
     backend = cfg.get("media.backend", "none")
     if backend == "s3":
         return _upload_s3(cfg, path)

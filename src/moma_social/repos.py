@@ -69,6 +69,7 @@ def fetch_events(cfg: Config, start: dt.date, end: dt.date) -> list[Event]:
         events.append(
             Event(
                 date=day,
+                tournament_id=_clean(row.get("tournament_id")),
                 title=titolo,
                 format=_clean(row.get("format")),
                 start_time=_clean(row.get("start_time")),

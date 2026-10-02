@@ -3,20 +3,19 @@
 Agente che genera e pubblica su Instagram i contenuti settimanali di
 un'associazione no-profit che organizza tornei di Magic: The Gathering.
 
-Sei post a settimana piu' uno al mese, tutti automatici:
+Contenuti programmati, tutti automatici:
 
 | Quando (Europe/Rome) | Post | Contenuto |
 |---|---|---|
 | **Sabato 10:00** | carosello | riepilogo della settimana CHE COMINCIA + una card per serata |
 | **Lunedi 10:00** | carosello | classifiche di lega, una slide per lega aperta con la top 8 |
-| **Mercoledi 04:00** | immagine singola | formato in programma quel giorno |
-| **Giovedi 04:00** | immagine singola | formato in programma quel giorno |
+| **Ogni giorno 10:00** | storie 9:16 | un torneo per storia: eventi di oggi e domani, con QR alla pagina del torneo |
 | **Giovedi 03:00** | carosello | risultati della tappa di mercoledi + meta della serata |
 | **Venerdi 03:00** | carosello | risultati della tappa di giovedi + meta della serata |
 | **Il 30, 10:00** | carosello | calendario del mese successivo |
 
-I formati di mercoledi e giovedi non sono cablati: si deducono dagli eventi in
-calendario. I due post notturni leggono la tappa **della sera prima**, quando i
+Le storie leggono i singoli tornei in calendario e mostrano un QR specifico.
+I due post notturni leggono la tappa **della sera prima**, quando i
 risultati sono stati caricati a fine serata. Il post mensile gira l'ultimo
 giorno utile: a febbraio il 30 non esiste, quindi esce il 28.
 
@@ -46,7 +45,8 @@ DB eventi/risultati ──► adapter sorgenti ──► modelli ──► templ
   1080x1350 (4:5, il verticale del feed) con `scale = 2`. Il template grafico
   fornito dal grafico si inserisce come sfondo, il testo resta sovrapposto.
 - **Pubblicazione**: Instagram Content Publishing API, con il flusso a
-  container richiesto dai caroselli.
+  container richiesto dai caroselli e dalle storie. L'API non supporta lo
+  sticker link: il QR nella storia apre la pagina del singolo torneo.
 - **Idempotenza**: `state/published.jsonl` registra ogni post; rilanciare un
   workflow non produce un doppione.
 - **Scheduling**: GitHub Actions. I cron girano in UTC, quindi ogni workflow
@@ -81,6 +81,7 @@ momasocial doctor                      # config, sorgenti, rendering, token
 momasocial agenda                      # cosa si gioca questa settimana
 momasocial weekly  --no-publish        # anteprima calendario
 momasocial format  --date 2026-03-11 --no-publish
+momasocial stories --date 2026-03-11 --no-publish
 momasocial results --date 2026-03-11 --no-publish
 ```
 

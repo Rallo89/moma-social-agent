@@ -10,6 +10,9 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import json
+import warnings
+from urllib.parse import urlsplit
+from uuid import UUID
 
 from .captions import render_caption
 from .config import Config
@@ -31,6 +34,7 @@ from .repos import (
     formats_on,
     same_format,
 )
+from .storyutil import qr_data_uri, story_jpeg
 from .timeutil import (
     fmt_date,
     fmt_month,
@@ -616,6 +620,78 @@ def _post_formato(cfg: Config, day: dt.date, fmt: str, events: list) -> PostDraf
     )
 
 
+def _story_url(event) -> str:
+    """Accetta solo la pagina del torneo corrispondente all'ID della riga."""
+    try:
+        tournament_id = str(UUID(event.tournament_id))
+    except (ValueError, AttributeError):
+        return ""
+    url = urlsplit(event.signup_url)
+    if (url.scheme != "https" or url.netloc != "modena-magic.vercel.app"
+            or url.path.rstrip("/") != f"/tornei/{tournament_id}"):
+        return ""
+    return event.signup_url
+
+
+def _story_skip(cfg: Config, event) -> None:
+    """Lascia una traccia nell'artefatto del workflow, oltre al log."""
+    directory = cfg.resolve_path(cfg.get("render.output_dir", "out"))
+    if cfg.get("render.cartella_per_giorno", True):
+        directory /= resolve_date("today", cfg.timezone).isoformat()
+    directory.mkdir(parents=True, exist_ok=True)
+    with (directory / "stories-skipped.jsonl").open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps({
+            "day": event.date.isoformat(), "title": event.title,
+            "tournament_id": event.tournament_id,
+            "reason": "URL del torneo mancante o non valido",
+        }, ensure_ascii=False) + "\n")
+
+
+def story_events_batch(cfg: Config, day: dt.date | None = None,
+                       fmt: str = "") -> list[PostDraft]:
+    """Una storia per torneo di oggi e domani, con chiave distinta per fase."""
+    day = day or resolve_date("today", cfg.timezone)
+    try:
+        events = fetch_events(cfg, day, day + dt.timedelta(days=1))
+    except NoDataError:
+        raise
+    stories = []
+    for event in events:
+        if fmt and not same_format(event.format, fmt):
+            continue
+        url = _story_url(event)
+        if not url:
+            _story_skip(cfg, event)
+            warnings.warn(
+                f"Storia saltata: URL del torneo mancante o non valido "
+                f"({event.date}, {event.title}, id={event.tournament_id or 'mancante'})",
+                stacklevel=2,
+            )
+            continue
+        phase = "oggi" if event.date == day else "domani"
+        when = f"{fmt_date(event.date, with_weekday=True)} · "
+        when += event.start_time or cfg.get("content.evento.ora_default", "21:00")
+        size = post_size(cfg, "story_event")
+        png = render(
+            cfg, cfg.require("posts.story_event.image_template"),
+            {"fase": phase, "formato": event.format, "titolo": event.title,
+             "quando": when, "dove": event.venue or cfg.get("content.evento.dove", ""),
+             "qr": qr_data_uri(url)},
+            _stamp(cfg, "storia", event.date, f"{phase}-{event.tournament_id}"),
+            size=size, scale=1,
+        )
+        image = story_jpeg(png, *size)
+        stories.append(PostDraft(
+            kind="story_event", images=[str(image)], caption="",
+            meta={"day": event.date.isoformat(), "phase": phase,
+                  "tournament_id": event.tournament_id, "format": event.format,
+                  "title": event.title, "signup_url": url},
+        ))
+    if not stories:
+        raise NoDataError(f"Nessuna storia pubblicabile per {day} e {day + dt.timedelta(days=1)}")
+    return stories
+
+
 # ── Il meta della tappa, a spicchi ──────────────────────────────────────────
 # Palette categorica validata sul fondo scuro della card (#14171a): banda di
 # luminosita', soglia di croma, separazione per daltonismo e contrasto passano
@@ -842,6 +918,7 @@ PIPELINES = {
 PIPELINES_MULTI = {
     "leg_results": leg_results_batch,
     "format_spotlight": format_spotlight_batch,
+    "story_event": story_events_batch,
 }
 
 
