@@ -54,6 +54,8 @@ def test_due_storie_per_due_giorni_e_tornei_distinti(cfg, monkeypatch, tmp_path)
     assert all("qr" not in context for _, context, _ in contexts)
     assert contexts[0][1]["quota"] == "15 €"
     assert contexts[1][1]["quota"] == "10 €"
+    assert contexts[0][1]["data_breve"] == "07/10/2026"
+    assert contexts[0][1]["ora"] == "21:00"
     assert contexts[0][1]["illustrazione"]["artist"] == "Simon Dominic"
 
 
@@ -172,6 +174,7 @@ def test_template_storia_reale_9_16(cfg):
         "fase": "domani", "formato": "Premodern",
         "titolo": "Premodern Fall tappa 4",
         "quando": "Mercoledì 14 ottobre · 21:00", "dove": "Uno Critico",
+        "data_breve": "14/10/2026", "giorno": "Mercoledì", "ora": "21:00",
         "quota": "10 €",
         "illustrazione": cfg.data["posts"]["story_event"]["illustrations"]["default"],
     }
@@ -182,6 +185,8 @@ def test_template_storia_reale_9_16(cfg):
     assert "object-fit:cover" in html
     assert 'class="art"' not in html
     assert "Link in bio" in html
+    assert html.count('class="card-icon"') == 4
+    assert "domani</span> · 14/10/2026" in html
     assert "Grzegorz Rutkowski" in html
     png = render(cfg, "storia_evento.html.j2", context, "anteprima-storia",
                  size=(1080, 1920), scale=1)

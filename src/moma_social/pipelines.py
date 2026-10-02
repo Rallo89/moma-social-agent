@@ -674,14 +674,18 @@ def story_events_batch(cfg: Config, day: dt.date | None = None,
                      "evento")
         else:
             phase = "oggi" if event.date == day else "domani"
-        when = f"{fmt_date(event.date, with_weekday=True)} · "
-        when += event.start_time or cfg.get("content.evento.ora_default", "21:00")
+        date_label = fmt_date(event.date, with_weekday=True)
+        time_label = event.start_time or cfg.get("content.evento.ora_default", "21:00")
+        when = f"{date_label} · {time_label}"
         fee = format_fee(event.entry_fee) or _per_formato(cfg, "quota", event.format)
         size = post_size(cfg, "story_event")
         png = render(
             cfg, cfg.require("posts.story_event.image_template"),
             {"fase": phase, "formato": event.format, "titolo": event.title,
-             "quando": when, "dove": event.venue or cfg.get("content.evento.dove", ""),
+             "quando": when, "data": date_label,
+             "data_breve": event.date.strftime("%d/%m/%Y"),
+             "giorno": weekday_it(event.date), "ora": time_label,
+             "dove": event.venue or cfg.get("content.evento.dove", ""),
              "quota": fee, "illustrazione": _story_illustration(cfg, event.format)},
             _stamp(cfg, "storia", event.date, f"{phase}-{event.tournament_id}"),
             size=size, scale=1,

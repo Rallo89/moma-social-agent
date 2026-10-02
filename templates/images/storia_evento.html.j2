@@ -17,44 +17,54 @@ body { background:#14171a; color:#fff; font-family:'Barlow Condensed',Arial,sans
   rgba(20,23,26,.87) 0%,rgba(20,23,26,.74) 27%,rgba(20,23,26,.57) 45%,
   rgba(20,23,26,.13) 65%,rgba(20,23,26,.28) 77%,rgba(20,23,26,.84) 91%,
   #14171a 100%); }
-.frame { position:absolute; inset:168px 35px 205px; border:3px solid rgba(169,210,39,.72);
+.frame { position:absolute; inset:168px 35px 35px; border:3px solid rgba(169,210,39,.72);
   border-radius:22px; box-shadow:inset 0 0 0 7px #14171a,0 0 0 2px rgba(242,140,40,.55); }
 .frame::before, .frame::after { content:""; position:absolute; width:110px; height:14px;
   background:#f28c28; border-radius:8px; }
 .frame::before { left:28px; top:-8px; }
 .frame::after { right:28px; bottom:-8px; }
-.story > *:not(.art-bg):not(.veil):not(.frame) { position:relative; z-index:1; }
+.story > *:not(.art-bg):not(.veil):not(.frame) { z-index:1; }
 .header { display:flex; align-items:center; justify-content:space-between; gap:30px;
-  padding:0 28px; height:82px; flex:none; }
-.header .logo { width:270px; height:auto; max-height:92px; object-fit:contain; object-position:left center; }
-.header .partner { width:185px; height:auto; max-height:92px; object-fit:contain; object-position:right center; }
-.headline { margin:21px 10px 0; font:900 82px/.91 'Bebas Neue','Arial Narrow',sans-serif;
-  letter-spacing:.025em; text-align:center; text-transform:uppercase; text-shadow:0 4px 5px #000; }
-.headline span { display:block; }
-.headline span:first-child { color:#fff; }
-.headline span:last-child { color:#f28c28; }
-.panel { margin:21px 15px 0; padding:19px 28px 22px; flex:none;
-  border:3px solid #a9d227; border-radius:18px;
-  background:linear-gradient(135deg,rgba(20,23,26,.85),rgba(28,39,31,.76));
-  box-shadow:0 10px 26px #080a0bd9; }
-.panel-label { color:#f28c28; font:700 25px 'JetBrains Mono',monospace;
+  padding:0 20px; height:110px; flex:none; }
+.header .logo { width:340px; height:auto; max-height:112px; object-fit:contain; object-position:left center; }
+.header .partner { width:245px; height:auto; max-height:112px; object-fit:contain; object-position:right center; }
+.headline { margin:18px 22px 0; font-family:'Bebas Neue','Arial Narrow',sans-serif;
+  line-height:.91; letter-spacing:.02em; text-align:center; text-transform:uppercase;
+  overflow-wrap:anywhere; text-wrap:balance; text-shadow:0 4px 6px #000; }
+.cards { position:absolute; top:50%; left:72px; right:72px; transform:translateY(-50%);
+  margin:0; display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:14px; row-gap:30px; flex:none; }
+.card { display:flex; flex-direction:column; align-items:flex-start;
+  justify-content:center; text-align:left; min-height:172px; overflow:hidden;
+  padding:19px 24px; border:2px solid #a9d227; border-radius:14px;
+  background:linear-gradient(135deg,rgba(20,23,26,.89),rgba(28,39,31,.81));
+  box-shadow:0 10px 24px #080a0bd9; }
+.card:last-child:nth-child(odd) { grid-column:1/-1; }
+.card-icon { width:48px; height:48px; flex:none; color:#a9d227; opacity:.62;
+  fill:none; stroke:currentColor; stroke-width:2.5; }
+.card-icon text { fill:currentColor; stroke:none; font:700 29px Arial,sans-serif; }
+.card-label { display:block; color:#f28c28; font:700 22px 'JetBrains Mono',monospace;
   letter-spacing:.11em; text-transform:uppercase; }
-.title { margin:6px 0 14px; font-family:'Bebas Neue','Arial Narrow',sans-serif;
-  line-height:.94; text-transform:uppercase; overflow-wrap:anywhere; text-wrap:balance; }
-.facts { display:grid; gap:5px; }
-.fact { display:grid; grid-template-columns:132px 1fr; gap:15px;
-  align-items:baseline; font-size:30px; line-height:1.05; }
-.fact .label { color:#a9d227; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
-.fact .value { color:#fff; font-weight:600; overflow-wrap:anywhere; }
-.cta { margin:auto 22px 0; flex:none; text-align:center; text-transform:uppercase;
+.card-value { display:flex; align-items:center; gap:15px; margin-top:12px; color:#fff;
+  font:700 40px/1.05 'Barlow Condensed',Arial,sans-serif; min-width:0; }
+.card-value .copy { display:block; min-width:0; overflow-wrap:anywhere; }
+.card-date .card-value { font-size:27px; }
+.card-date .date-line { display:block; white-space:nowrap; }
+.card-date .phase { color:#a9d227; text-transform:uppercase; }
+.card-date .weekday, .card-date .time { display:block; margin-top:3px; }
+.card-date .time { font-size:34px; }
+.cta { position:absolute; left:35px; right:35px; bottom:255px;
+  padding:20px 24px 18px; background:rgba(20,23,26,.86);
+  border-top:2px solid #a9d227; border-bottom:2px solid #f28c28;
+  text-align:center; text-transform:uppercase;
   font:900 57px/.94 'Bebas Neue','Arial Narrow',sans-serif; letter-spacing:.025em;
   text-shadow:0 3px 5px #000; }
 .cta span { display:block; }
 .cta span:first-child { color:#f28c28; }
 .cta span:last-child { color:#fff; }
-.credit { margin:15px 25px 0; flex:none; color:#fff;
+.credit { position:absolute; left:65px; right:65px; bottom:154px; margin:0; color:#fff;
   font:600 20px 'Barlow Condensed',Arial,sans-serif; text-align:center; text-shadow:0 2px 4px #000; }
-.notice { margin:14px 25px 0; flex:none; color:#bfc3be;
+.notice { position:absolute; left:65px; right:65px; bottom:85px; margin:0; color:#bfc3be;
   font:500 17px/1.13 'Barlow Condensed',Arial,sans-serif; text-align:center; }
 </style></head><body>
 <main class="story">
@@ -65,16 +75,20 @@ body { background:#14171a; color:#fff; font-family:'Barlow Condensed',Arial,sans
   {% if logo %}<img class="logo" src="{{ logo }}" alt="Modena Magic">{% endif %}
   {% if partner %}<img class="partner" src="{{ partner }}" alt="Uno Critico">{% endif %}
 </header>
-<h1 class="headline"><span>{{ fase }}: torneo</span><span>di Magic!</span></h1>
-<section class="panel">
-  <div class="panel-label">{{ formato }}</div>
-  <h2 class="title" style="font-size:{{ 63 if titolo|length < 25 else 52 if titolo|length < 39 else 43 }}px">{{ titolo }}</h2>
-  <div class="facts">
-    <div class="fact"><span class="label">Data</span><span class="value">{{ quando }}</span></div>
-    <div class="fact"><span class="label">Formato</span><span class="value">{{ formato }}</span></div>
-    {% if quota|default("") %}<div class="fact"><span class="label">Quota</span><span class="value">{{ quota }}</span></div>{% endif %}
-    {% if dove %}<div class="fact"><span class="label">Sede</span><span class="value">{{ dove }}</span></div>{% endif %}
+<h1 class="headline" style="font-size:{{ 98 if titolo|length < 26 else 80 if titolo|length < 40 else 63 }}px">{{ titolo }}</h1>
+<section class="cards">
+  <div class="card card-date">
+    <span class="card-label">Data</span><span class="card-value"><svg class="card-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="8" width="38" height="35" rx="3"/><path d="M13 3v10M35 3v10M5 18h38M14 26h7M27 26h7M14 34h7"/></svg><span class="copy"><span class="date-line">{% if fase in ['oggi', 'domani'] %}<span class="phase">{{ fase }}</span> · {% endif %}{{ data_breve|default(data|default(quando)) }}</span>{% if giorno|default('') %}<span class="weekday">{{ giorno }}</span>{% endif %}<span class="time">{{ ora|default('') }}</span></span></span>
   </div>
+  <div class="card">
+    <span class="card-label">Formato</span><span class="card-value"><svg class="card-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="10" width="29" height="34" rx="2"/><path d="M14 4h29v34h-9M11 18h17M11 26h13"/></svg><span class="copy">{{ formato }}</span></span>
+  </div>
+  {% if quota|default("") %}<div class="card">
+    <span class="card-label">Quota</span><span class="card-value"><svg class="card-icon" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20"/><text x="24" y="34" text-anchor="middle">€</text></svg><span class="copy">{{ quota }}</span></span>
+  </div>{% endif %}
+  {% if dove %}<div class="card">
+    <span class="card-label">Sede</span><span class="card-value"><svg class="card-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 44S8 30 8 20a16 16 0 1 1 32 0C40 30 24 44 24 44Z"/><circle cx="24" cy="20" r="6"/></svg><span class="copy">{{ dove }}</span></span>
+  </div>{% endif %}
 </section>
 <footer class="cta"><span>Link in bio</span><span>per registrarti →</span></footer>
 {% if art %}<p class="credit">{{ artwork.get('card', 'Magic') }} · Illustrazione {{ artwork.get('artist', '') }} · © Wizards of the Coast LLC</p>{% endif %}
