@@ -44,8 +44,6 @@
     justify-content: space-between; gap: 25px;
   }
   .iscrizioni { display: flex; align-items: flex-end; gap: 16px; min-width: 0; }
-  .qr { width: 82px; height: 82px; flex: none; background: white; }
-  .qr img { display: block; width: 82px; height: 82px; }
   .invito { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .invito .titolo {
     color: #a9d227; font-weight: 800; font-size: 26px;
@@ -107,8 +105,6 @@
   {% block contenuto %}{% endblock %}
   <footer class="piede">
     <div class="iscrizioni">
-      {% set qr = qr_image|default("")|asset %}
-      {% if qr %}<div class="qr"><img src="{{ qr }}" alt="QR iscrizioni"></div>{% endif %}
       <div class="invito">
         <span class="titolo">{{ invito }}</span>
         <span class="link">{{ link }}</span>

@@ -9,12 +9,14 @@ Contenuti programmati, tutti automatici:
 |---|---|---|
 | **Sabato 10:00** | carosello | riepilogo della settimana CHE COMINCIA + una card per serata |
 | **Lunedi 10:00** | carosello | classifiche di lega, una slide per lega aperta con la top 8 |
-| **Ogni giorno 10:00** | storie 9:16 | un torneo per storia: eventi di oggi e domani, con QR alla pagina del torneo |
+| **Ogni giorno 10:00** | storie 9:16 | un torneo per storia: eventi di oggi e domani, con invito al link in bio |
 | **Giovedi 03:00** | carosello | risultati della tappa di mercoledi + meta della serata |
 | **Venerdi 03:00** | carosello | risultati della tappa di giovedi + meta della serata |
 | **Il 30, 10:00** | carosello | calendario del mese successivo |
 
-Le storie leggono i singoli tornei in calendario e mostrano un QR specifico.
+Le storie leggono i singoli tornei in calendario e invitano al link in bio.
+Per generare o pubblicare una singola storia usa `momasocial stories --tournament-id UUID`;
+il workflow manuale accetta lo stesso ID e l’opzione `force` per ripubblicare.
 I due post notturni leggono la tappa **della sera prima**, quando i
 risultati sono stati caricati a fine serata. Il post mensile gira l'ultimo
 giorno utile: a febbraio il 30 non esiste, quindi esce il 28.
@@ -46,7 +48,7 @@ DB eventi/risultati ──► adapter sorgenti ──► modelli ──► templ
   fornito dal grafico si inserisce come sfondo, il testo resta sovrapposto.
 - **Pubblicazione**: Instagram Content Publishing API, con il flusso a
   container richiesto dai caroselli e dalle storie. L'API non supporta lo
-  sticker link: il QR nella storia apre la pagina del singolo torneo.
+  sticker link: la storia invita a usare il link in bio.
 - **Idempotenza**: `state/published.jsonl` registra ogni post; rilanciare un
   workflow non produce un doppione.
 - **Scheduling**: GitHub Actions. I cron girano in UTC, quindi ogni workflow

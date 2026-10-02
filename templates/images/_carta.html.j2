@@ -189,13 +189,6 @@
     display: flex; align-items: center; justify-content: space-between; gap: 28px;
   }
   .iscrizioni { display: flex; align-items: center; gap: 22px; }
-  .qr {
-    width: 128px; height: 128px; background: #f2f4f0;
-    display: grid; place-items: center; overflow: hidden;
-    font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.5;
-    text-align: center; color: #14171a; letter-spacing: .06em;
-  }
-  .qr img { width: 128px; height: 128px; }
   .invito { display: flex; flex-direction: column; gap: 4px; }
   .invito .titolino {
     font-weight: 700; font-size: 32px; letter-spacing: .08em;
@@ -230,10 +223,6 @@
 
   <div class="piede">
     <div class="iscrizioni">
-      {# Il QR compare solo se ce n'e' uno vero: un riquadro con scritto "QR"
-         al posto del codice occupa spazio senza servire a niente. #}
-      {% set qr = qr_image|default("")|asset %}
-      {% if qr %}<div class="qr"><img src="{{ qr }}" alt=""></div>{% endif %}
       <div class="invito">
         <span class="titolino">{{ invito|default("Iscriviti") }}</span>
         <span class="link" data-fit="12">{{ link }}</span>

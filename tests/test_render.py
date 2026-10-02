@@ -58,7 +58,7 @@ def test_la_card_non_si_stira_sul_formato_alto(cfg):
         "kicker_1": "CLASSIFICA", "kicker_2": "1/1", "badge": "MODERN",
         "sopratitolo": "", "titolo": "2025/26",
         "righe": [{"rank": 1, "player": "Anna", "points": 9}],
-        "link": "esempio.it", "invito": "Iscriviti", "qr_image": "",
+        "link": "esempio.it", "invito": "Iscriviti",
         "tema": "verde"})
     scala = re.search(r"transform: scale\(([^)]*)\)", html).group(1)
     assert "," not in scala, f"scala non uniforme: scale({scala})"
@@ -289,7 +289,7 @@ def test_card_riepilogo_si_renderizza(cfg):
         "serate": [{"quando": f"Giorno {i} · 21:00",
                     "cosa": f"Formato {i} · Tappa {i}"} for i in range(1, 8)],
         "link": "modena-magic.vercel.app/tornei", "invito": "Iscriviti",
-        "qr_image": "", "background": "", "density": "",
+        "background": "", "density": "",
     }
     path = render(cfg, "settimana.html.j2", contesto, "test-settimana",
                   size=(1080, 1080))
@@ -308,7 +308,7 @@ def test_card_classifica_si_renderizza(cfg):
         "righe": [StandingRow(rank=i, player=f"Giocatore Numero {i}",
                               points=str(90 - i * 3)) for i in range(1, 17)],
         "link": "modena-magic.vercel.app/tornei", "invito": "Iscriviti",
-        "qr_image": "", "background": "", "density": "",
+        "background": "", "density": "",
     }
     path = render(cfg, "classifica.html.j2", contesto, "test-classifica",
                   size=(1080, 1080))

@@ -1,4 +1,4 @@
-"""Storie: un URL per torneo, due fasi e pubblicazione senza feed."""
+"""Storie: selezione per data o ID e pubblicazione senza feed."""
 
 import datetime as dt
 from pathlib import Path
@@ -8,17 +8,20 @@ import responses
 from PIL import Image
 
 from moma_social import pipelines
+from moma_social.cli import build_parser, cmd_post
+from moma_social.errors import ConfigError, SourceError
 from moma_social.instagram import InstagramClient
 from moma_social.models import Event, PostDraft
 from moma_social.publish import dedupe_key, publish_draft
-from moma_social.render import render
-from moma_social.storyutil import qr_data_uri, story_jpeg
+from moma_social.render import build_html, render
+from moma_social.repos import fetch_event_by_id
+from moma_social.storyutil import story_jpeg
 
 
 def _event(day, ident, title="Modern Fall"):
     return Event(
         date=day, tournament_id=ident, title=title, format="Modern",
-        venue="Uno Critico", signup_url=f"https://modena-magic.vercel.app/tornei/{ident}",
+        venue="Uno Critico",
     )
 
 
@@ -28,6 +31,7 @@ def test_due_storie_per_due_giorni_e_tornei_distinti(cfg, monkeypatch, tmp_path)
     second = "161dd0a4-997a-493d-a2b6-5d85186687f8"
     events = [_event(today, first), _event(today, second, "Modern Extra"),
               _event(today + dt.timedelta(days=1), first)]
+    events[0].entry_fee = "15"
     monkeypatch.setattr(pipelines, "fetch_events", lambda *_: events)
     contexts = []
 
@@ -47,14 +51,15 @@ def test_due_storie_per_due_giorni_e_tornei_distinti(cfg, monkeypatch, tmp_path)
     assert all(Image.open(d.images[0]).size == (1080, 1920) for d in drafts)
     assert all(t == "storia_evento.html.j2" and size == (1080, 1920)
                for t, _, size in contexts)
-    assert contexts[0][1]["qr"] != contexts[1][1]["qr"]
+    assert all("qr" not in context for _, context, _ in contexts)
+    assert contexts[0][1]["quota"] == "15 €"
+    assert contexts[1][1]["quota"] == "10 €"
+    assert contexts[0][1]["illustrazione"]["artist"] == "Simon Dominic"
 
 
-def test_url_sbagliato_salta_solo_quel_torneo(cfg, monkeypatch, tmp_path):
+def test_id_mancante_salta_solo_quel_torneo(cfg, monkeypatch, tmp_path):
     day = dt.date(2026, 10, 7)
-    ident = "92d6beb5-a1e3-44ad-9a65-7c8e982d7e44"
-    invalid = _event(day, ident)
-    invalid.signup_url = "https://modena-magic.vercel.app/tornei/altro"
+    invalid = _event(day, "")
     valid = _event(day, "161dd0a4-997a-493d-a2b6-5d85186687f8")
     monkeypatch.setattr(pipelines, "fetch_events", lambda *_: [invalid, valid])
     monkeypatch.setattr(pipelines, "render", lambda *args, **kwargs: tmp_path / "story.png")
@@ -65,9 +70,94 @@ def test_url_sbagliato_salta_solo_quel_torneo(cfg, monkeypatch, tmp_path):
     assert drafts[0].meta["tournament_id"] == valid.tournament_id
 
 
-def test_qr_e_jpeg_reali(tmp_path):
-    uri = qr_data_uri("https://modena-magic.vercel.app/tornei/abc")
-    assert uri.startswith("data:image/png;base64,")
+def test_ricerca_torneo_per_uuid_completo(cfg, monkeypatch):
+    ident = "92d6beb5-a1e3-44ad-9a65-7c8e982d7e44"
+    cfg.data["sources"]["events"] = {
+        "url": "https://example.test/events?from={date_from}",
+        "by_id_url": "https://example.test/events?id=eq.{tournament_id}",
+        "kind": "json",
+        "map": {"date": "data", "tournament_id": "torneo_id", "title": "titolo"},
+    }
+    with responses.RequestsMock() as mock:
+        mock.add(responses.GET, f"https://example.test/events?id=eq.{ident}",
+                 json=[{"data": "2026-11-12", "torneo_id": ident,
+                        "titolo": "Modern Fall"}])
+        event = fetch_event_by_id(cfg, ident)
+    assert event.date == dt.date(2026, 11, 12)
+    assert event.tournament_id == ident
+    assert event.title == "Modern Fall"
+    with pytest.raises(ConfigError, match="UUID completo"):
+        fetch_event_by_id(cfg, ident.replace("-", ""))
+    with responses.RequestsMock() as mock:
+        mock.add(responses.GET, f"https://example.test/events?id=eq.{ident}", json=[])
+        with pytest.raises(SourceError, match="Torneo non trovato"):
+            fetch_event_by_id(cfg, ident)
+
+
+def test_storia_per_id_fuori_dai_due_giorni(cfg, monkeypatch, tmp_path):
+    ident = "92d6beb5-a1e3-44ad-9a65-7c8e982d7e44"
+    event = _event(dt.date(2026, 11, 12), ident)
+    monkeypatch.setattr(pipelines, "fetch_event_by_id", lambda *_: event)
+    monkeypatch.setattr(pipelines, "resolve_date", lambda *_: dt.date(2026, 10, 7))
+    context = {}
+
+    def fake_render(_cfg, _template, data, _name, **_kwargs):
+        context.update(data)
+        return tmp_path / "story.png"
+
+    monkeypatch.setattr(pipelines, "render", fake_render)
+    monkeypatch.setattr(pipelines, "story_jpeg", lambda path, *_: path.with_suffix(".jpg"))
+    draft = pipelines.story_events_batch(cfg, tournament_id=ident)[0]
+    assert draft.meta["phase"] == "evento"
+    assert context["fase"] == "evento"
+    assert "12 novembre" in context["quando"].lower()
+    assert "qr" not in context
+    assert context["illustrazione"]["card"] == "Ragavan, Nimble Pilferer"
+
+
+def test_storia_senza_quota_usa_illustrazione_generale(cfg, monkeypatch, tmp_path):
+    ident = "92d6beb5-a1e3-44ad-9a65-7c8e982d7e44"
+    event = _event(dt.date(2026, 10, 7), ident)
+    event.format = "Premodern"
+    cfg.data["content"]["evento"]["quota"] = {}
+    monkeypatch.setattr(pipelines, "fetch_event_by_id", lambda *_: event)
+    context = {}
+    monkeypatch.setattr(pipelines, "render", lambda _cfg, _template, data, *_args, **_kwargs:
+                        context.update(data) or tmp_path / "story.png")
+    monkeypatch.setattr(pipelines, "story_jpeg", lambda path, *_: path.with_suffix(".jpg"))
+    pipelines.story_events_batch(cfg, tournament_id=ident)
+    assert context["quota"] == ""
+    assert context["illustrazione"]["card"] == "Sarkhan, Fireblood"
+
+
+def test_cli_rifiuta_id_con_data_o_formato(cfg, monkeypatch):
+    ident = "92d6beb5-a1e3-44ad-9a65-7c8e982d7e44"
+    monkeypatch.setattr("moma_social.cli.config.load", lambda *_: cfg)
+    parser = build_parser()
+    for extra in (("--date", "2026-10-07"), ("--format", "Modern")):
+        args = parser.parse_args(["stories", "--tournament-id", ident, *extra])
+        with pytest.raises(ConfigError, match="non si combina"):
+            cmd_post(args)
+
+
+def test_cli_inoltra_uuid_senza_data(cfg, monkeypatch):
+    ident = "92d6beb5-a1e3-44ad-9a65-7c8e982d7e44"
+    monkeypatch.setattr("moma_social.cli.config.load", lambda *_: cfg)
+    captured = {}
+
+    def fake_generate(_cfg, kind, day, kwargs, args):
+        captured.update(kind=kind, day=day, kwargs=kwargs, force=args.force)
+        return [("drafted", "1 slide")]
+
+    monkeypatch.setattr("moma_social.cli._genera", fake_generate)
+    args = build_parser().parse_args(["stories", "--tournament-id", ident,
+                                      "--no-publish", "--force"])
+    assert cmd_post(args) == 0
+    assert captured == {"kind": "story_event", "day": None,
+                        "kwargs": {"tournament_id": ident}, "force": True}
+
+
+def test_jpeg_reale(tmp_path):
     png = tmp_path / "story.png"
     Image.new("RGB", (2160, 3840), "#14171a").save(png)
     jpg = story_jpeg(png)
@@ -82,8 +172,17 @@ def test_template_storia_reale_9_16(cfg):
         "fase": "domani", "formato": "Premodern",
         "titolo": "Premodern Fall tappa 4",
         "quando": "Mercoledì 14 ottobre · 21:00", "dove": "Uno Critico",
-        "qr": qr_data_uri("https://modena-magic.vercel.app/tornei/abc"),
+        "quota": "10 €",
+        "illustrazione": cfg.data["posts"]["story_event"]["illustrations"]["default"],
     }
+    html = build_html(cfg, "storia_evento.html.j2", context)
+    assert 'alt="Modena Magic"' in html
+    assert 'alt="Uno Critico"' in html
+    assert 'class="art-bg"' in html
+    assert "object-fit:cover" in html
+    assert 'class="art"' not in html
+    assert "Link in bio" in html
+    assert "Grzegorz Rutkowski" in html
     png = render(cfg, "storia_evento.html.j2", context, "anteprima-storia",
                  size=(1080, 1920), scale=1)
     jpg = story_jpeg(png)

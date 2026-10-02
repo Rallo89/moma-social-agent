@@ -48,7 +48,7 @@ Tutto in `config/config.toml`, sezione `[content.evento]`:
 | `badge` | fascia lime | "Modern" |
 | `titolo` | tipografia grande | solo se l'evento non ha un nome a database |
 | `quando` `dove` `indirizzo` | blocco dati | usati solo se il database non li espone |
-| `invito` `link` `qr` | piede | "Iscriviti" / l'indirizzo del sito |
+| `invito` `link`  | piede | "Iscriviti" / l'indirizzo del sito |
 
 Segnaposto disponibili nei modelli: `{format}` `{weekday}` `{giorno}`
 `{data}` `{title}` `{venue}` `{city}` `{fee}` `{time}` `{org}`.
@@ -98,9 +98,6 @@ come il Limited — con `default` per tutti gli altri.
 Il `link` si scrive per intero in configurazione: la card lo stampa senza
 `https://`, come chiede il grafico, ma il valore completo resta disponibile
 altrove.
-
-`qr` è vuoto: senza un PNG vero il riquadro non viene disegnato affatto. Per
-riattivarlo basta metterci il percorso di un file.
 
 ## I limiti del disegno
 

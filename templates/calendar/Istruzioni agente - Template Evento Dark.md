@@ -20,7 +20,6 @@ Sostituire **solo** i segnaposto `{{...}}` nel markup. Non modificare stili, dim
 
 Se un campo supera il limite il testo va a capo e rompe il ritmo del layout: preferire un'abbreviazione (es. "gio 24 set · 20:30") piuttosto che allungare.
 
-Il quadrato QR è un segnaposto: per un QR reale sostituire il contenuto di `data-slot="QR"` con `<img src="..." style="width:128px;height:128px;">` mantenendo il fondo chiaro.
 
 ## Regole di scrittura
 
@@ -49,7 +48,7 @@ Asset, sempre presenti e non sostituibili
 - `assets/triangoli.png` — pattern triangoli, in alto a sinistra, ruotato, opacità 0.3
 - `assets/unocritico.png` — logo Uno Critico, in basso a destra, 84 px
 
-Struttura fissa: occhiello in alto, badge formato + titolo + blocco dati al centro con filo lime verticale, QR e link + logo Uno Critico in basso.
+Struttura fissa: occhiello in alto, badge formato + titolo + blocco dati al centro con filo lime verticale, link + logo Uno Critico in basso.
 
 ## Esempio compilato
 

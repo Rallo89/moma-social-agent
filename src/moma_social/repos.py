@@ -9,9 +9,10 @@ from __future__ import annotations
 
 import datetime as dt
 from pathlib import Path
+from uuid import UUID
 
 from .config import Config
-from .errors import NoDataError, SourceError
+from .errors import ConfigError, NoDataError, SourceError
 from .models import (
     Event,
     LegResults,
@@ -57,39 +58,60 @@ def fetch_events(cfg: Config, start: dt.date, end: dt.date) -> list[Event]:
         format="",
         season=cfg.get("org.season", ""),
     )
-    events: list[Event] = []
-    for row in rows:
-        day = parse_date(row.get("date"))
-        if day is None or not (start <= day <= end):
-            continue
-        titolo = _clean(row.get("title"))
-        # Il numero di tappa vive nel nome del torneo: la sorgente puo' darlo
-        # gia' pronto, altrimenti lo si legge da li'.
-        numero, finale = stage_from_title(titolo)
-        events.append(
-            Event(
-                date=day,
-                tournament_id=_clean(row.get("tournament_id")),
-                title=titolo,
-                format=_clean(row.get("format")),
-                start_time=_clean(row.get("start_time")),
-                venue=_clean(row.get("venue")),
-                address=_clean(row.get("address")),
-                city=_clean(row.get("city")),
-                entry_fee=_clean(row.get("entry_fee")),
-                prize=_clean(row.get("prize")),
-                signup_url=_clean(row.get("signup_url")),
-                notes=_clean(row.get("notes")),
-                league=_clean(row.get("league")),
-                stage=_clean(row.get("stage")) or numero,
-                is_final=finale,
-                extra=row.get("_extra", {}),
-            )
-        )
+    events = [event for row in rows
+              if (event := _event_from_row(row)) is not None
+              and start <= event.date <= end]
     events.sort(key=lambda e: (e.date, e.start_time or "99:99"))
     if not events:
         raise NoDataError(f"Nessun evento fra {start.isoformat()} e {end.isoformat()}")
     return events
+
+
+def fetch_event_by_id(cfg: Config, tournament_id: str) -> Event:
+    """Carica un solo torneo dalla vista, indipendentemente dalla data."""
+    try:
+        ident = str(UUID(tournament_id))
+        if tournament_id.lower() != ident:
+            raise ValueError("UUID non canonico")
+    except (ValueError, AttributeError, TypeError) as exc:
+        raise ConfigError(f"ID torneo non valido: {tournament_id!r}. Usa l'UUID completo.") from exc
+    spec = {**cfg.section("sources.events"),
+            "url": cfg.require("sources.events.by_id_url")}
+    rows = load_rows(spec, Path(cfg.root), tournament_id=ident)
+    matching = [event for row in rows
+                if (event := _event_from_row(row)) is not None
+                and event.tournament_id.lower() == ident]
+    if not matching:
+        raise SourceError(f"Torneo non trovato per ID {ident}")
+    if len(matching) != 1:
+        raise SourceError(f"La ricerca per ID {ident} ha restituito {len(matching)} tornei")
+    return matching[0]
+
+
+def _event_from_row(row: dict) -> Event | None:
+    day = parse_date(row.get("date"))
+    if day is None:
+        return None
+    titolo = _clean(row.get("title"))
+    numero, finale = stage_from_title(titolo)
+    return Event(
+        date=day,
+        tournament_id=_clean(row.get("tournament_id")),
+        title=titolo,
+        format=_clean(row.get("format")),
+        start_time=_clean(row.get("start_time")),
+        venue=_clean(row.get("venue")),
+        address=_clean(row.get("address")),
+        city=_clean(row.get("city")),
+        entry_fee=_clean(row.get("entry_fee")),
+        prize=_clean(row.get("prize")),
+        signup_url=_clean(row.get("signup_url")),
+        notes=_clean(row.get("notes")),
+        league=_clean(row.get("league")),
+        stage=_clean(row.get("stage")) or numero,
+        is_final=finale,
+        extra=row.get("_extra", {}),
+    )
 
 
 def events_by_day(events: list[Event]) -> list[tuple[dt.date, list[Event]]]:

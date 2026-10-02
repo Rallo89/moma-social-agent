@@ -11,12 +11,11 @@ import datetime as dt
 import hashlib
 import json
 import warnings
-from urllib.parse import urlsplit
 from uuid import UUID
 
 from .captions import render_caption
 from .config import Config
-from .errors import MtgSocialError, NoDataError
+from .errors import ConfigError, MtgSocialError, NoDataError, SourceError
 from .models import (
     PostDraft,
     Standings,
@@ -27,6 +26,7 @@ from .models import (
 from .render import post_size, render
 from .repos import (
     events_by_day,
+    fetch_event_by_id,
     fetch_events,
     fetch_leg_results,
     fetch_leg_results_all,
@@ -34,7 +34,7 @@ from .repos import (
     formats_on,
     same_format,
 )
-from .storyutil import qr_data_uri, story_jpeg
+from .storyutil import story_jpeg
 from .timeutil import (
     fmt_date,
     fmt_month,
@@ -181,7 +181,6 @@ def _card_evento(cfg: Config, day: dt.date, fmt: str, event=None,
         ],
         "link": _senza_schema(_testo_evento(cfg, "link", event, day, fmt)),
         "invito": cfg.get("content.evento.invito", "Iscriviti"),
-        "qr_image": cfg.get("content.evento.qr", ""),
     }
 
 
@@ -237,7 +236,6 @@ def _card_riepilogo(cfg: Config, events: list, inizio: dt.date, fine: dt.date,
         "serate": [_serata(cfg, evento) for evento in events],
         "link": _senza_schema(cfg.get("content.evento.link", "")),
         "invito": cfg.get("content.evento.invito", "Iscriviti"),
-        "qr_image": cfg.get("content.evento.qr", ""),
     }
 
 
@@ -435,7 +433,6 @@ def monthly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
         "mese": mese.split()[0],
         "link": _senza_schema(cfg.get("content.evento.link", "")),
         "invito": cfg.get("content.evento.invito", "Iscriviti"),
-        "qr_image": cfg.get("content.evento.qr", ""),
     }
     immagini = [render(
         cfg, copertina, comuni,
@@ -502,7 +499,6 @@ def standings_update(cfg: Config, day: dt.date | None = None) -> PostDraft:
              "tema": cfg.get("posts.standings_update.tema", "chiaro"),
              "link": _senza_schema(cfg.get("content.evento.link", "")),
              "invito": cfg.get("content.evento.invito", "Iscriviti"),
-             "qr_image": cfg.get("content.evento.qr", ""),
              "background": _background(cfg, "standings_update"), "density": ""},
             _stamp(cfg, "classifiche", day,
                    f"{indice + 1:02d}-{classifica.format.lower().replace(' ', '-')}"),
@@ -620,20 +616,7 @@ def _post_formato(cfg: Config, day: dt.date, fmt: str, events: list) -> PostDraf
     )
 
 
-def _story_url(event) -> str:
-    """Accetta solo la pagina del torneo corrispondente all'ID della riga."""
-    try:
-        tournament_id = str(UUID(event.tournament_id))
-    except (ValueError, AttributeError):
-        return ""
-    url = urlsplit(event.signup_url)
-    if (url.scheme != "https" or url.netloc != "modena-magic.vercel.app"
-            or url.path.rstrip("/") != f"/tornei/{tournament_id}"):
-        return ""
-    return event.signup_url
-
-
-def _story_skip(cfg: Config, event) -> None:
+def _story_skip(cfg: Config, event, reason: str) -> None:
     """Lascia una traccia nell'artefatto del workflow, oltre al log."""
     directory = cfg.resolve_path(cfg.get("render.output_dir", "out"))
     if cfg.get("render.cartella_per_giorno", True):
@@ -642,41 +625,64 @@ def _story_skip(cfg: Config, event) -> None:
     with (directory / "stories-skipped.jsonl").open("a", encoding="utf-8") as handle:
         handle.write(json.dumps({
             "day": event.date.isoformat(), "title": event.title,
-            "tournament_id": event.tournament_id,
-            "reason": "URL del torneo mancante o non valido",
+            "tournament_id": event.tournament_id, "reason": reason,
         }, ensure_ascii=False) + "\n")
 
 
+def _story_illustration(cfg: Config, fmt: str) -> dict:
+    illustrations = cfg.section("posts.story_event.illustrations")
+    key = fmt.strip().lower()
+    return illustrations.get(key) or illustrations.get("default", {})
+
+
 def story_events_batch(cfg: Config, day: dt.date | None = None,
-                       fmt: str = "") -> list[PostDraft]:
-    """Una storia per torneo di oggi e domani, con chiave distinta per fase."""
-    day = day or resolve_date("today", cfg.timezone)
-    try:
+                       fmt: str = "", tournament_id: str = "") -> list[PostDraft]:
+    """Storie di oggi/domani, oppure una storia scelta per UUID completo."""
+    if tournament_id and (day is not None or fmt):
+        raise ConfigError("--tournament-id non si combina con --date o --format")
+    today = resolve_date("today", cfg.timezone)
+    if tournament_id:
+        events = [fetch_event_by_id(cfg, tournament_id)]
+    else:
+        day = day or today
         events = fetch_events(cfg, day, day + dt.timedelta(days=1))
-    except NoDataError:
-        raise
     stories = []
     for event in events:
         if fmt and not same_format(event.format, fmt):
             continue
-        url = _story_url(event)
-        if not url:
-            _story_skip(cfg, event)
+        if not event.tournament_id:
+            reason = "ID del torneo mancante"
+        else:
+            try:
+                UUID(event.tournament_id)
+                reason = ""
+            except ValueError:
+                reason = "ID del torneo non valido"
+        if reason:
+            if tournament_id:
+                raise SourceError(f"{reason}: {event.title}")
+            _story_skip(cfg, event, reason)
             warnings.warn(
-                f"Storia saltata: URL del torneo mancante o non valido "
+                f"Storia saltata: {reason} "
                 f"({event.date}, {event.title}, id={event.tournament_id or 'mancante'})",
                 stacklevel=2,
             )
             continue
-        phase = "oggi" if event.date == day else "domani"
+        if tournament_id:
+            phase = ("oggi" if event.date == today else
+                     "domani" if event.date == today + dt.timedelta(days=1) else
+                     "evento")
+        else:
+            phase = "oggi" if event.date == day else "domani"
         when = f"{fmt_date(event.date, with_weekday=True)} · "
         when += event.start_time or cfg.get("content.evento.ora_default", "21:00")
+        fee = format_fee(event.entry_fee) or _per_formato(cfg, "quota", event.format)
         size = post_size(cfg, "story_event")
         png = render(
             cfg, cfg.require("posts.story_event.image_template"),
             {"fase": phase, "formato": event.format, "titolo": event.title,
              "quando": when, "dove": event.venue or cfg.get("content.evento.dove", ""),
-             "qr": qr_data_uri(url)},
+             "quota": fee, "illustrazione": _story_illustration(cfg, event.format)},
             _stamp(cfg, "storia", event.date, f"{phase}-{event.tournament_id}"),
             size=size, scale=1,
         )
@@ -685,7 +691,7 @@ def story_events_batch(cfg: Config, day: dt.date | None = None,
             kind="story_event", images=[str(image)], caption="",
             meta={"day": event.date.isoformat(), "phase": phase,
                   "tournament_id": event.tournament_id, "format": event.format,
-                  "title": event.title, "signup_url": url},
+                  "title": event.title},
         ))
     if not stories:
         raise NoDataError(f"Nessuna storia pubblicabile per {day} e {day + dt.timedelta(days=1)}")
@@ -754,7 +760,6 @@ def _card_meta(cfg: Config, leg, kicker: str, suffisso: str) -> dict | None:
         }),
         "link": _senza_schema(cfg.get("content.evento.link", "")),
         "invito": cfg.get("content.evento.invito", "Iscriviti"),
-        "qr_image": cfg.get("content.evento.qr", ""),
         "background": _background(cfg, "leg_results_meta"), "density": "",
     }
 
@@ -845,7 +850,6 @@ def _post_di_tappa(cfg: Config, day: dt.date, leg, senza_meta: bool) -> PostDraf
              "righe": pagina,
              "link": _senza_schema(cfg.get("content.evento.link", "")),
              "invito": cfg.get("content.evento.invito", "Iscriviti"),
-             "qr_image": cfg.get("content.evento.qr", ""),
              # Serviti al vecchio template su sfondo Canva, ancora disponibile.
              "leg": leg, "standings": Standings(format=leg.format),
              "title": torneo, "hashtag": hashtag, "rows": pagina,

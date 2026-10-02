@@ -75,6 +75,7 @@ chromium_path = ""
 # Modena Magic, senza dati personali. L'URL del progetto non e' un segreto (e'
 # pubblico per progettazione); la chiave sta in SUPABASE_KEY.
 url  = "https://wxvxtodrnrefbechawgz.supabase.co/rest/v1/v_social_eventi?select=*&data=gte.{date_from}&data=lte.{date_to}&order=data.asc"
+by_id_url = "https://wxvxtodrnrefbechawgz.supabase.co/rest/v1/v_social_eventi?select=*&torneo_id=eq.{tournament_id}"
 kind = "json"
 
 [sources.events.headers]
@@ -95,9 +96,7 @@ notes     = "note"
 league    = "lega"       # nome della lega, prima riga del titolo
 stage     = "tappa"      # numero di tappa, seconda riga: "Tappa 3"
 tournament_id = "torneo_id"
-signup_url = "signup_url"
-# Ora e premi non sono nella vista: restano in [content.evento]. L'URL della
-# pagina del torneo e' esposto per il QR delle storie.
+# Ora e premi non sono nella vista: restano in [content.evento].
 # Tutte le altre colonne arrivano da supabase/v_social_eventi.sql: finche'
 # quella vista non e' aggiornata, la card ricade sui valori di configurazione.
 
@@ -249,7 +248,6 @@ dove              = "Uno Critico"              # usata se l'evento non ha sede
 indirizzo         = "Via Cesare Balbo, 88/B, Modena"
 invito            = "Iscriviti"
 link              = "https://modena-magic.vercel.app/tornei"
-qr                = ""                         # PNG del QR; vuoto = nessun QR
 
 # Quota per formato, usata quando l'evento non la porta con se'. Il Pauper
 # non costa come il Limited: tenerla qui evita di scriverla torneo per torneo.
@@ -350,6 +348,36 @@ hashtags         = ["#torneomagic"]
 image_template = "storia_evento.html.j2"
 width = 1080
 height = 1920
+
+[posts.story_event.illustrations.modern]
+asset = "templates/images/assets/stories/modern.jpg"
+card = "Ragavan, Nimble Pilferer"
+artist = "Simon Dominic"
+focus = "52% 50%"
+
+[posts.story_event.illustrations.pauper]
+asset = "templates/images/assets/stories/pauper.jpg"
+card = "Lightning Bolt"
+artist = "Christopher Moeller"
+focus = "48% 50%"
+
+[posts.story_event.illustrations.limited]
+asset = "templates/images/assets/stories/limited.jpg"
+card = "Shivan Dragon"
+artist = "Donato Giancola"
+focus = "37% 50%"
+
+[posts.story_event.illustrations.legacy]
+asset = "templates/images/assets/stories/legacy.jpg"
+card = "Force of Will"
+artist = "Donato Giancola"
+focus = "58% 50%"
+
+[posts.story_event.illustrations.default]
+asset = "templates/images/assets/stories/general.jpg"
+card = "Sarkhan, Fireblood"
+artist = "Grzegorz Rutkowski"
+focus = "50% 50%"
 
 [posts.leg_results]
 # Il template grafico dell'associazione e' quadrato e vale per entrambe le

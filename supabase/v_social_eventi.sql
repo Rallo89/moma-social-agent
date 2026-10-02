@@ -7,7 +7,7 @@
 --    sede / indirizzo   dove si gioca
 --    quota              tournaments.costo — il prezzo vero, non uno in config
 --    lega               nome della lega, prima riga del titolo della grafica
---    torneo_id/signup_url identificano la pagina specifica da mettere nel QR
+--    torneo_id identifica il torneo; signup_url resta disponibile nella vista
 --    tipo / stato       non usati oggi, ma li abbiamo sotto mano se servono
 --
 --  Il NUMERO DI TAPPA non c'e', e non e' una dimenticanza. Contare i tornei

@@ -12,7 +12,7 @@ dependencies = [
   "requests>=2.31",
   "python-dateutil>=2.9",
   "PyYAML>=6.0",
-  "qrcode[pil]>=8.0",
+  "Pillow>=10.0",
   # Windows non ha un database dei fusi orari di sistema: senza questo
   # ZoneInfo("Europe/Rome") solleva ZoneInfoNotFoundError.
   "tzdata; sys_platform == 'win32'",

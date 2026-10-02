@@ -16,8 +16,15 @@ on:
       format:
         description: "Forza il formato di gioco (di norma si deduce dal calendario)"
         required: false
+      tournament_id:
+        description: "UUID completo di un torneo (senza data o formato)"
+        required: false
       dry_run:
         description: "Genera senza pubblicare"
+        type: boolean
+        default: false
+      force:
+        description: "Ripubblica anche se la storia risulta già pubblicata"
         type: boolean
         default: false
 
@@ -50,7 +57,9 @@ jobs:
           # bash: non vanno interpolati nella riga di comando.
           POST_DATE: ${{ inputs.date }}
           POST_FORMAT: ${{ inputs.format }}
+          POST_TOURNAMENT_ID: ${{ inputs.tournament_id }}
           POST_DRY_RUN: ${{ inputs.dry_run }}
+          POST_FORCE: ${{ inputs.force }}
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
           MEDIA_BUCKET: ${{ secrets.MEDIA_BUCKET }}
@@ -66,7 +75,9 @@ jobs:
           args=()
           if [ -n "${POST_DATE:-}" ]; then args+=(--date "$POST_DATE"); fi
           if [ -n "${POST_FORMAT:-}" ]; then args+=(--format "$POST_FORMAT"); fi
+          if [ -n "${POST_TOURNAMENT_ID:-}" ]; then args+=(--tournament-id "$POST_TOURNAMENT_ID"); fi
           if [ "${POST_DRY_RUN:-}" = "true" ]; then args+=(--dry-run); fi
+          if [ "${POST_FORCE:-}" = "true" ]; then args+=(--force); fi
 
           set +e
           momasocial stories "${args[@]}"

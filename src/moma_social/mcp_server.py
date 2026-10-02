@@ -95,7 +95,8 @@ def classifica(formato: str, stagione: str = "") -> str:
 
 
 @mcp.tool()
-def genera_post(tipo: str, data: str = "", formato: str = "") -> str:
+def genera_post(tipo: str, data: str = "", formato: str = "",
+                id_torneo: str = "") -> str:
     """Genera immagini e caption di un post SENZA pubblicarlo.
 
     tipo: weekly_calendar | story_event | format_spotlight | leg_results
@@ -104,8 +105,13 @@ def genera_post(tipo: str, data: str = "", formato: str = "") -> str:
     tipi = {**PIPELINES, **PIPELINES_MULTI}
     if tipo not in tipi:
         return f"Tipo sconosciuto: {tipo}. Validi: {', '.join(tipi)}"
+    if id_torneo and tipo != "story_event":
+        return "id_torneo è disponibile solo per story_event"
+    if id_torneo and (data or formato):
+        return "id_torneo non si combina con data o formato"
     cfg = _cfg()
-    kwargs = {} if tipo == "weekly_calendar" else {"fmt": formato}
+    kwargs = ({"tournament_id": id_torneo} if id_torneo else
+              {} if tipo == "weekly_calendar" else {"fmt": formato})
     # Una serata con due tornei sono due post: si restituiscono entrambi.
     bozze = drafts(cfg, tipo, _day(data) if data else None, **kwargs)
     from .publish import save_draft_files
@@ -120,7 +126,7 @@ def genera_post(tipo: str, data: str = "", formato: str = "") -> str:
 
 @mcp.tool()
 def pubblica_post(tipo: str, data: str = "", formato: str = "",
-                  conferma: bool = False) -> str:
+                  conferma: bool = False, id_torneo: str = "") -> str:
     """Genera e PUBBLICA su Instagram. Richiede conferma=true.
 
     Senza conferma esegue un dry-run: mostra cosa uscirebbe senza pubblicare.
@@ -128,8 +134,13 @@ def pubblica_post(tipo: str, data: str = "", formato: str = "",
     tipi = {**PIPELINES, **PIPELINES_MULTI}
     if tipo not in tipi:
         return f"Tipo sconosciuto: {tipo}. Validi: {', '.join(tipi)}"
+    if id_torneo and tipo != "story_event":
+        return "id_torneo è disponibile solo per story_event"
+    if id_torneo and (data or formato):
+        return "id_torneo non si combina con data o formato"
     cfg = _cfg()
-    kwargs = {} if tipo == "weekly_calendar" else {"fmt": formato}
+    kwargs = ({"tournament_id": id_torneo} if id_torneo else
+              {} if tipo == "weekly_calendar" else {"fmt": formato})
     bozze = drafts(cfg, tipo, _day(data) if data else None, **kwargs)
     return json.dumps([publish_draft(cfg, draft, dry_run=not conferma)
                        for draft in bozze], ensure_ascii=False, indent=2)

@@ -155,11 +155,16 @@ def _post_di_una_settimana(cfg, kind, kwargs, args, day) -> int:
 
 def cmd_post(args) -> int:
     cfg = config.load(args.config)
+    tournament_id = getattr(args, "tournament_id", "")
+    if tournament_id and (args.date or args.format or args.settimana):
+        raise ConfigError("--tournament-id non si combina con --date, --format o --settimana")
     day = resolve_date(args.date, cfg.timezone) if args.date else None
 
     kwargs = {}
     if args.kind != "weekly_calendar" and args.format:
         kwargs["fmt"] = args.format
+    if args.kind == "story_event" and tournament_id:
+        kwargs["tournament_id"] = tournament_id
     if args.kind == "leg_results" and getattr(args, "no_meta", False):
         kwargs["senza_meta"] = True
 
@@ -793,6 +798,9 @@ def build_parser() -> argparse.ArgumentParser:
                        help="pubblica anche se il dedupe dice gia' fatto")
         p.add_argument("--settimana", action="store_true",
                        help="un post per ogni giornata di gioco della settimana di --date")
+        if kind == "story_event":
+            p.add_argument("--tournament-id", default="",
+                           help="UUID completo di un singolo torneo, senza data o formato")
         if kind == "leg_results":
             p.add_argument("--no-meta", action="store_true", dest="no_meta",
                            help="solo le slide dei risultati, senza il meta")

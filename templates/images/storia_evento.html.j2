@@ -1,57 +1,82 @@
 {% set logo = "templates/images/assets/logo-modena-magic.png"|asset %}
 {% set partner = "templates/images/assets/unocritico.png"|asset %}
-{% set trama = "templates/images/assets/triangoli.png"|asset %}
+{% set artwork = illustrazione|default({}) %}
+{% set art = artwork.get("asset", "")|asset %}
 <!doctype html>
 <html lang="it"><head><meta charset="utf-8"><style>
 {% include "_fonts.css.j2" %}
 @page { size: 1080px 1920px; margin: 0; }
 * { box-sizing: border-box; }
-html,body { margin:0; width:1080px; height:1920px; overflow:hidden; }
+html, body { margin:0; width:1080px; height:1920px; overflow:hidden; }
 body { background:#14171a; color:#fff; font-family:'Barlow Condensed',Arial,sans-serif; }
 .story { position:relative; width:1080px; height:1920px; overflow:hidden;
-  display:flex; flex-direction:column; padding:260px 76px 310px; }
-.trama { position:absolute; height:108%; width:auto; top:-4%; right:-190px;
-  transform:rotate(180deg); opacity:.24; }
-.veil { position:absolute; inset:0; background:linear-gradient(110deg,#14171a 18%,rgba(20,23,26,.92) 57%,rgba(20,23,26,.45)); }
-.story > *:not(.trama):not(.veil) { position:relative; }
-.header { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; }
-.header img.logo { width:206px; }
-.header img.partner { width:112px; max-height:120px; object-fit:contain; }
-.phase { margin-top:86px; font:700 54px 'JetBrains Mono',monospace; letter-spacing:.09em;
-  color:#f28c28; text-transform:uppercase; }
-.format { margin-top:20px; font:700 58px 'Barlow Condensed',Arial,sans-serif;
-  color:#a9d227; text-transform:uppercase; letter-spacing:.06em; }
-.title { margin-top:20px; font:700 112px/1.0 'Bebas Neue','Arial Narrow',sans-serif;
-  text-transform:uppercase; overflow-wrap:anywhere; max-height:350px; overflow:hidden; }
-.when { margin-top:42px; font:600 54px 'Barlow Condensed',Arial,sans-serif;
-  text-transform:uppercase; }
-.where { margin-top:14px; font:500 35px 'Barlow Condensed',Arial,sans-serif;
-  color:#d5dad6; }
-.footer { margin-top:auto; display:flex; align-items:center; gap:32px; }
-.qr { width:270px; height:270px; flex:none; padding:14px; border-radius:14px; background:#fff; }
-.qr img { display:block; width:100%; height:100%; }
-.cta { min-width:0; }
-.cta strong { display:block; font:700 50px 'Barlow Condensed',Arial,sans-serif;
-  color:#f28c28; text-transform:uppercase; }
-.cta span { display:block; margin-top:10px; font:500 29px/1.25 'Barlow Condensed',Arial,sans-serif; }
-.url { margin-top:18px; font:500 20px 'JetBrains Mono',monospace; color:#a9d227;
-  overflow-wrap:anywhere; }
+  padding:215px 72px 250px; display:flex; flex-direction:column;
+  background:#14171a; }
+.art-bg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.veil { position:absolute; inset:0; background:linear-gradient(180deg,
+  rgba(20,23,26,.87) 0%,rgba(20,23,26,.74) 27%,rgba(20,23,26,.57) 45%,
+  rgba(20,23,26,.13) 65%,rgba(20,23,26,.28) 77%,rgba(20,23,26,.84) 91%,
+  #14171a 100%); }
+.frame { position:absolute; inset:168px 35px 205px; border:3px solid rgba(169,210,39,.72);
+  border-radius:22px; box-shadow:inset 0 0 0 7px #14171a,0 0 0 2px rgba(242,140,40,.55); }
+.frame::before, .frame::after { content:""; position:absolute; width:110px; height:14px;
+  background:#f28c28; border-radius:8px; }
+.frame::before { left:28px; top:-8px; }
+.frame::after { right:28px; bottom:-8px; }
+.story > *:not(.art-bg):not(.veil):not(.frame) { position:relative; z-index:1; }
+.header { display:flex; align-items:center; justify-content:space-between; gap:30px;
+  padding:0 28px; height:82px; flex:none; }
+.header .logo { width:270px; height:auto; max-height:92px; object-fit:contain; object-position:left center; }
+.header .partner { width:185px; height:auto; max-height:92px; object-fit:contain; object-position:right center; }
+.headline { margin:21px 10px 0; font:900 82px/.91 'Bebas Neue','Arial Narrow',sans-serif;
+  letter-spacing:.025em; text-align:center; text-transform:uppercase; text-shadow:0 4px 5px #000; }
+.headline span { display:block; }
+.headline span:first-child { color:#fff; }
+.headline span:last-child { color:#f28c28; }
+.panel { margin:21px 15px 0; padding:19px 28px 22px; flex:none;
+  border:3px solid #a9d227; border-radius:18px;
+  background:linear-gradient(135deg,rgba(20,23,26,.85),rgba(28,39,31,.76));
+  box-shadow:0 10px 26px #080a0bd9; }
+.panel-label { color:#f28c28; font:700 25px 'JetBrains Mono',monospace;
+  letter-spacing:.11em; text-transform:uppercase; }
+.title { margin:6px 0 14px; font-family:'Bebas Neue','Arial Narrow',sans-serif;
+  line-height:.94; text-transform:uppercase; overflow-wrap:anywhere; text-wrap:balance; }
+.facts { display:grid; gap:5px; }
+.fact { display:grid; grid-template-columns:132px 1fr; gap:15px;
+  align-items:baseline; font-size:30px; line-height:1.05; }
+.fact .label { color:#a9d227; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+.fact .value { color:#fff; font-weight:600; overflow-wrap:anywhere; }
+.cta { margin:auto 22px 0; flex:none; text-align:center; text-transform:uppercase;
+  font:900 57px/.94 'Bebas Neue','Arial Narrow',sans-serif; letter-spacing:.025em;
+  text-shadow:0 3px 5px #000; }
+.cta span { display:block; }
+.cta span:first-child { color:#f28c28; }
+.cta span:last-child { color:#fff; }
+.credit { margin:15px 25px 0; flex:none; color:#fff;
+  font:600 20px 'Barlow Condensed',Arial,sans-serif; text-align:center; text-shadow:0 2px 4px #000; }
+.notice { margin:14px 25px 0; flex:none; color:#bfc3be;
+  font:500 17px/1.13 'Barlow Condensed',Arial,sans-serif; text-align:center; }
 </style></head><body>
 <main class="story">
-{% if trama %}<img class="trama" src="{{ trama }}" alt="">{% endif %}
+{% if art %}<img class="art-bg" src="{{ art }}" style="object-position:{{ artwork.get('focus', '50% 50%') }}" alt="Illustrazione di {{ artwork.get('artist', '') }} per {{ artwork.get('card', 'Magic') }}">{% endif %}
 <div class="veil"></div>
+<div class="frame"></div>
 <header class="header">
   {% if logo %}<img class="logo" src="{{ logo }}" alt="Modena Magic">{% endif %}
   {% if partner %}<img class="partner" src="{{ partner }}" alt="Uno Critico">{% endif %}
 </header>
-<div class="phase">{{ fase }}</div>
-<div class="format">{{ formato }}</div>
-<h1 class="title">{{ titolo }}</h1>
-<div class="when">{{ quando }}</div>
-{% if dove %}<div class="where">{{ dove }}</div>{% endif %}
-<footer class="footer">
-  <div class="qr"><img src="{{ qr }}" alt="QR per la pagina del torneo"></div>
-  <div class="cta"><strong>Iscriviti</strong><span>Inquadra il QR per aprire il torneo</span>
-    <div class="url">modena-magic.vercel.app/tornei</div></div>
-</footer>
+<h1 class="headline"><span>{{ fase }}: torneo</span><span>di Magic!</span></h1>
+<section class="panel">
+  <div class="panel-label">{{ formato }}</div>
+  <h2 class="title" style="font-size:{{ 63 if titolo|length < 25 else 52 if titolo|length < 39 else 43 }}px">{{ titolo }}</h2>
+  <div class="facts">
+    <div class="fact"><span class="label">Data</span><span class="value">{{ quando }}</span></div>
+    <div class="fact"><span class="label">Formato</span><span class="value">{{ formato }}</span></div>
+    {% if quota|default("") %}<div class="fact"><span class="label">Quota</span><span class="value">{{ quota }}</span></div>{% endif %}
+    {% if dove %}<div class="fact"><span class="label">Sede</span><span class="value">{{ dove }}</span></div>{% endif %}
+  </div>
+</section>
+<footer class="cta"><span>Link in bio</span><span>per registrarti →</span></footer>
+{% if art %}<p class="credit">{{ artwork.get('card', 'Magic') }} · Illustrazione {{ artwork.get('artist', '') }} · © Wizards of the Coast LLC</p>{% endif %}
+<p class="notice">Modena Magic è un contenuto fan non ufficiale, non approvato né sponsorizzato da Wizards. Parti dei materiali appartengono a Wizards of the Coast. © Wizards of the Coast LLC.</p>
 </main></body></html>
