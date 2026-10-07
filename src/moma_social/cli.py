@@ -176,11 +176,26 @@ def cmd_post(args) -> int:
         nota = risultati[0][1]
         print(f"[skip] {nota}", file=sys.stderr)
         _github_output(status="no-data", reason=nota)
-        _summary(f"Saltato **{args.kind}**: {nota}")
+        if args.kind == "story_event":
+            _summary(f"**Storie**: 0 generate — {nota}")
+        else:
+            _summary(f"Saltato **{args.kind}**: {nota}")
         return EXIT_NO_DATA
 
     esiti = ", ".join(esito for esito, _ in risultati)
     _github_output(status=esiti, post=str(len(risultati)))
+    if args.kind == "story_event":
+        pubblicate = sum(esito == "published" for esito, _ in risultati)
+        gia_pubblicate = sum(
+            esito == "skipped" and nota.startswith("gia' pubblicato")
+            for esito, nota in risultati
+        )
+        altre_saltate = sum(esito == "skipped" for esito, _ in risultati) - gia_pubblicate
+        anteprime = sum(esito in ("drafted", "dry-run") for esito, _ in risultati)
+        _summary(
+            f"**Storie**: {pubblicate} pubblicate, {gia_pubblicate} già pubblicate, "
+            f"{altre_saltate} saltate, {anteprime} anteprime"
+        )
     for esito, nota in risultati:
         _summary(f"**{args.kind}** - {esito}" + (f" - {nota}" if nota else ""))
     return EXIT_OK

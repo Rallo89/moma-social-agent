@@ -647,6 +647,7 @@ def story_events_batch(cfg: Config, day: dt.date | None = None,
         day = day or today
         events = fetch_events(cfg, day, day + dt.timedelta(days=1))
     stories = []
+    skipped_invalid = []
     for event in events:
         if fmt and not same_format(event.format, fmt):
             continue
@@ -661,6 +662,7 @@ def story_events_batch(cfg: Config, day: dt.date | None = None,
         if reason:
             if tournament_id:
                 raise SourceError(f"{reason}: {event.title}")
+            skipped_invalid.append(f"{event.title} ({reason})")
             _story_skip(cfg, event, reason)
             warnings.warn(
                 f"Storia saltata: {reason} "
@@ -698,6 +700,11 @@ def story_events_batch(cfg: Config, day: dt.date | None = None,
                   "title": event.title},
         ))
     if not stories:
+        if skipped_invalid:
+            raise SourceError(
+                "Nessuna storia generata: tutti i tornei selezionati hanno un ID "
+                "mancante o non valido: " + "; ".join(skipped_invalid)
+            )
         raise NoDataError(f"Nessuna storia pubblicabile per {day} e {day + dt.timedelta(days=1)}")
     return stories
 

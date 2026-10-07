@@ -7,9 +7,9 @@ import pytest
 import responses
 from PIL import Image
 
-from moma_social import pipelines
+from moma_social import cli, pipelines
 from moma_social.cli import build_parser, cmd_post
-from moma_social.errors import ConfigError, SourceError
+from moma_social.errors import ConfigError, NoDataError, SourceError
 from moma_social.instagram import InstagramClient
 from moma_social.models import Event, PostDraft
 from moma_social.publish import dedupe_key, publish_draft
@@ -70,6 +70,53 @@ def test_id_mancante_salta_solo_quel_torneo(cfg, monkeypatch, tmp_path):
         drafts = pipelines.story_events_batch(cfg, day)
     assert len(drafts) == 1
     assert drafts[0].meta["tournament_id"] == valid.tournament_id
+
+
+def test_nessun_torneo_e_uno_skip_esplicito(cfg, monkeypatch, tmp_path):
+    monkeypatch.setattr(cli.config, "load", lambda *_: cfg)
+    monkeypatch.setattr(pipelines, "fetch_events", lambda *_: (_ for _ in ()).throw(
+        NoDataError("Nessun evento fra 2026-10-03 e 2026-10-04")))
+    output = tmp_path / "github-output"
+    summary = tmp_path / "github-summary"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(output))
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
+
+    assert cli.main(["stories", "--date", "2026-10-03", "--no-publish"]) == cli.EXIT_NO_DATA
+    assert "status=no-data" in output.read_text(encoding="utf-8")
+    assert "Nessun evento fra 2026-10-03 e 2026-10-04" in summary.read_text(encoding="utf-8")
+
+
+def test_soli_id_invalidi_fanno_fallire_la_run(cfg, monkeypatch, tmp_path):
+    monkeypatch.setattr(cli.config, "load", lambda *_: cfg)
+    day = dt.date(2026, 10, 7)
+    monkeypatch.setattr(pipelines, "fetch_events", lambda *_: [
+        _event(day, "", "Senza ID"), _event(day, "non-un-uuid", "ID errato"),
+    ])
+    output = tmp_path / "github-output"
+    summary = tmp_path / "github-summary"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(output))
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
+
+    with pytest.warns(UserWarning, match="Storia saltata"):
+        assert cli.main(["stories", "--date", day.isoformat(), "--no-publish"]) == cli.EXIT_ERROR
+    assert "status=error" in output.read_text(encoding="utf-8")
+    assert "Senza ID" in summary.read_text(encoding="utf-8")
+    assert "ID errato" in summary.read_text(encoding="utf-8")
+    skipped = list((tmp_path / "out").rglob("stories-skipped.jsonl"))
+    assert len(skipped) == 1
+    assert len(skipped[0].read_text(encoding="utf-8").splitlines()) == 2
+
+
+def test_riepilogo_distingue_pubblicate_e_gia_pubblicate(cfg, monkeypatch, tmp_path):
+    monkeypatch.setattr(cli.config, "load", lambda *_: cfg)
+    monkeypatch.setattr(cli, "_genera", lambda *_: [
+        ("published", ""), ("skipped", "gia' pubblicato il 2026-10-06"),
+    ])
+    summary = tmp_path / "github-summary"
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
+
+    assert cli.main(["stories", "--date", "2026-10-07"]) == cli.EXIT_OK
+    assert "1 pubblicate, 1 già pubblicate" in summary.read_text(encoding="utf-8")
 
 
 def test_ricerca_torneo_per_uuid_completo(cfg, monkeypatch):

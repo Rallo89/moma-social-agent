@@ -9,7 +9,7 @@ Contenuti programmati, tutti automatici:
 |---|---|---|
 | **Sabato 10:00** | carosello | riepilogo della settimana CHE COMINCIA + una card per serata |
 | **Lunedi 10:00** | carosello | classifiche di lega, una slide per lega aperta con la top 8 |
-| **Ogni giorno 10:00** | storie 9:16 | un torneo per storia: eventi di oggi e domani, con invito al link in bio |
+| **Ogni giorno dalle 10:07** | storie 9:16 | un torneo per storia: eventi di oggi e domani, con invito al link in bio |
 | **Giovedi 03:00** | carosello | risultati della tappa di mercoledi + meta della serata |
 | **Venerdi 03:00** | carosello | risultati della tappa di giovedi + meta della serata |
 | **Il 30, 10:00** | carosello | calendario del mese successivo |
@@ -22,9 +22,10 @@ risultati sono stati caricati a fine serata. Il post mensile gira l'ultimo
 giorno utile: a febbraio il 30 non esiste, quindi esce il 28.
 
 Gli orari sono un "non prima di", non una promessa: i cron di GitHub sono a
-sforzo migliore e arrivano anche con ore di ritardo. Ogni workflow ritenta a
-ogni ora dentro una finestra, pubblica al primo scatto utile e si ferma da
-solo sui successivi, che trovano la pubblicazione gia' a registro.
+sforzo migliore e arrivano anche con ore di ritardo. I workflow ritentano
+nella propria finestra oraria; quello delle storie tenta due volte l'ora.
+Il primo scatto utile pubblica, i successivi trovano la pubblicazione gia'
+a registro.
 
 ## Come funziona
 
@@ -51,9 +52,9 @@ DB eventi/risultati ──► adapter sorgenti ──► modelli ──► templ
   sticker link: la storia invita a usare il link in bio.
 - **Idempotenza**: `state/published.jsonl` registra ogni post; rilanciare un
   workflow non produce un doppione.
-- **Scheduling**: GitHub Actions. I cron girano in UTC, quindi ogni workflow
-  ne schedula due (ora legale e ora solare) e un cancello orario lascia
-  passare solo quello giusto: il post esce alle 10:00 italiane tutto l'anno.
+- **Scheduling**: GitHub Actions. I cron girano in UTC e un cancello orario
+  verifica l'ora italiana. Le storie tentano la pubblicazione due volte l'ora
+  a partire dalle 10:07; GitHub puo' ritardare o saltare uno scatto.
 
 ## Avvio rapido
 

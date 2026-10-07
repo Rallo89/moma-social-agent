@@ -1,13 +1,11 @@
 name: Storie tornei del giorno
 
-# Ogni giorno alle 10:00 Europe/Rome: una storia per i tornei di oggi e domani.
-# I cron di GitHub sono a sforzo migliore, non a orario: su questo repo hanno
-# girato anche con sette ore di ritardo. Si tenta ogni ora dentro una finestra
-# e `--recupera` lascia passare il primo scatto utile; i successivi trovano la
-# pubblicazione gia' a registro e si fermano da soli.
+# Primo tentativo dalle 10:07 Europe/Rome, poi ogni mezz'ora circa:
+# GitHub puo' ritardare o saltare gli scatti, quindi si tenta due volte l'ora.
+# `--recupera` lascia passare il primo scatto utile; il registro blocca i doppioni.
 on:
   schedule:
-    - cron: "0 8-17 * * *"
+    - cron: "7,37 8-17 * * *"
   workflow_dispatch:
     inputs:
       date:
@@ -83,15 +81,15 @@ jobs:
           momasocial stories "${args[@]}"
           code=$?
           set -e
-          # 78 = nessun dato per quel giorno: esito legittimo, il post si salta.
+          # 78 = nessun torneo nel periodo: esito legittimo, senza artefatti.
           if [ $code -eq 78 ]; then
-            echo "::notice::Nessuna storia pubblicabile per oggi e domani."
+            echo "::notice::Nessuna storia da pubblicare. Vedi il motivo nel riepilogo della run."
             exit 0
           fi
           exit $code
 
       - name: Archivia immagini e caption
-        if: steps.post.conclusion != 'skipped'
+        if: always() && steps.post.outcome != 'skipped' && steps.post.outputs.status != 'no-data'
         uses: actions/upload-artifact@v4
         with:
           name: storie-tornei-${{ github.run_id }}
@@ -103,5 +101,5 @@ jobs:
       # ed e' l'unica traccia che resta di un guasto notturno dopo che i log
       # della run sono scaduti.
       - name: Aggiorna il registro pubblicazioni
-        if: steps.post.conclusion != 'skipped'
+        if: always() && steps.post.outcome != 'skipped' && steps.post.outputs.status != 'no-data'
         uses: ./.github/actions/commit-ledger
