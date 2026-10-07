@@ -186,7 +186,8 @@ def test_template_storia_reale_9_16(cfg):
     assert 'class="art"' not in html
     assert "Link in bio" in html
     assert html.count('class="card-icon"') == 4
-    assert "domani</span> · 14/10/2026" in html
+    assert '<span class="date-line">14/10/2026</span>' in html
+    assert '<span class="date-meta">Mercoledì 21:00</span>' in html
     assert "Grzegorz Rutkowski" in html
     png = render(cfg, "storia_evento.html.j2", context, "anteprima-storia",
                  size=(1080, 1920), scale=1)

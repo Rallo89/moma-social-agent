@@ -31,28 +31,29 @@ body { background:#14171a; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .headline { margin:18px 22px 0; font-family:'Bebas Neue','Arial Narrow',sans-serif;
   line-height:.91; letter-spacing:.02em; text-align:center; text-transform:uppercase;
   overflow-wrap:anywhere; text-wrap:balance; text-shadow:0 4px 6px #000; }
-.cards { position:absolute; top:50%; left:72px; right:72px; transform:translateY(-50%);
-  margin:0; display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:14px; row-gap:30px; flex:none; }
-.card { display:flex; flex-direction:column; align-items:flex-start;
-  justify-content:center; text-align:left; min-height:172px; overflow:hidden;
-  padding:19px 24px; border:2px solid #a9d227; border-radius:14px;
-  background:linear-gradient(135deg,rgba(20,23,26,.89),rgba(28,39,31,.81));
-  box-shadow:0 10px 24px #080a0bd9; }
-.card:last-child:nth-child(odd) { grid-column:1/-1; }
-.card-icon { width:48px; height:48px; flex:none; color:#a9d227; opacity:.62;
+.cards { position:absolute; top:50%; left:150px; right:150px; transform:translateY(-50%);
+  margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-rows:300px 300px 240px; gap:20px; flex:none; }
+.cards-short { grid-template-rows:300px 300px; }
+.card { display:flex; flex-direction:column; align-items:flex-start; justify-content:center;
+  text-align:left; min-width:0; overflow:hidden; padding:30px 36px;
+  border:2px solid #a9d227; border-radius:22px;
+  background:rgba(20,23,26,.83); box-shadow:0 12px 26px #080a0bc2; }
+.card-wide, .card:nth-child(3):last-child { grid-column:1/-1; }
+.card-bottom { padding:26px 27px; }
+.card-icon { width:58px; height:58px; flex:none; color:#a9d227; opacity:.62;
   fill:none; stroke:currentColor; stroke-width:2.5; }
 .card-icon text { fill:currentColor; stroke:none; font:700 29px Arial,sans-serif; }
-.card-label { display:block; color:#f28c28; font:700 22px 'JetBrains Mono',monospace;
+.card-label { display:block; color:#f28c28; font:700 27px 'JetBrains Mono',monospace;
   letter-spacing:.11em; text-transform:uppercase; }
-.card-value { display:flex; align-items:center; gap:15px; margin-top:12px; color:#fff;
-  font:700 40px/1.05 'Barlow Condensed',Arial,sans-serif; min-width:0; }
+.card-value { display:flex; align-items:center; gap:22px; margin-top:20px; color:#fff;
+  font:700 54px/1.05 'Barlow Condensed',Arial,sans-serif; min-width:0; width:100%; }
 .card-value .copy { display:block; min-width:0; overflow-wrap:anywhere; }
-.card-date .card-value { font-size:27px; }
+.card-date .card-value { font-size:66px; }
 .card-date .date-line { display:block; white-space:nowrap; }
-.card-date .phase { color:#a9d227; text-transform:uppercase; }
-.card-date .weekday, .card-date .time { display:block; margin-top:3px; }
-.card-date .time { font-size:34px; }
+.card-date .date-meta { display:block; margin-top:7px; font-size:45px; white-space:nowrap; }
+.card-bottom .card-icon { width:50px; height:50px; }
+.card-bottom .card-value { gap:17px; margin-top:16px; font-size:42px; }
 .cta { position:absolute; left:35px; right:35px; bottom:255px;
   padding:20px 24px 18px; background:rgba(20,23,26,.86);
   border-top:2px solid #a9d227; border-bottom:2px solid #f28c28;
@@ -76,18 +77,18 @@ body { background:#14171a; color:#fff; font-family:'Barlow Condensed',Arial,sans
   {% if partner %}<img class="partner" src="{{ partner }}" alt="Uno Critico">{% endif %}
 </header>
 <h1 class="headline" style="font-size:{{ 98 if titolo|length < 26 else 80 if titolo|length < 40 else 63 }}px">{{ titolo }}</h1>
-<section class="cards">
-  <div class="card card-date">
-    <span class="card-label">Data</span><span class="card-value"><svg class="card-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="8" width="38" height="35" rx="3"/><path d="M13 3v10M35 3v10M5 18h38M14 26h7M27 26h7M14 34h7"/></svg><span class="copy"><span class="date-line">{% if fase in ['oggi', 'domani'] %}<span class="phase">{{ fase }}</span> · {% endif %}{{ data_breve|default(data|default(quando)) }}</span>{% if giorno|default('') %}<span class="weekday">{{ giorno }}</span>{% endif %}<span class="time">{{ ora|default('') }}</span></span></span>
+<section class="cards{% if not quota|default('') and not dove %} cards-short{% endif %}">
+  <div class="card card-wide card-date">
+    <span class="card-label">Data</span><span class="card-value"><svg class="card-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="8" width="38" height="35" rx="3"/><path d="M13 3v10M35 3v10M5 18h38M14 26h7M27 26h7M14 34h7"/></svg><span class="copy"><span class="date-line">{{ data_breve|default(data|default(quando)) }}</span><span class="date-meta">{% if giorno|default('') %}{{ giorno }} {% endif %}{{ ora|default('') }}</span></span></span>
   </div>
-  <div class="card">
+  <div class="card card-wide">
     <span class="card-label">Formato</span><span class="card-value"><svg class="card-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="10" width="29" height="34" rx="2"/><path d="M14 4h29v34h-9M11 18h17M11 26h13"/></svg><span class="copy">{{ formato }}</span></span>
   </div>
-  {% if quota|default("") %}<div class="card">
+  {% if quota|default("") %}<div class="card card-bottom">
     <span class="card-label">Quota</span><span class="card-value"><svg class="card-icon" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20"/><text x="24" y="34" text-anchor="middle">€</text></svg><span class="copy">{{ quota }}</span></span>
   </div>{% endif %}
-  {% if dove %}<div class="card">
-    <span class="card-label">Sede</span><span class="card-value"><svg class="card-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 44S8 30 8 20a16 16 0 1 1 32 0C40 30 24 44 24 44Z"/><circle cx="24" cy="20" r="6"/></svg><span class="copy">{{ dove }}</span></span>
+  {% if dove %}<div class="card card-bottom card-location">
+    <span class="card-label">Sede</span><span class="card-value"><svg class="card-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 44S8 30 8 20a16 16 0 1 1 32 0C40 30 24 44 24 44Z"/><circle cx="24" cy="20" r="6"/></svg><span class="copy" style="font-size:{{ 42 if dove|length < 17 else 34 if dove|length < 27 else 28 }}px">{{ dove }}</span></span>
   </div>{% endif %}
 </section>
 <footer class="cta"><span>Link in bio</span><span>per registrarti →</span></footer>
