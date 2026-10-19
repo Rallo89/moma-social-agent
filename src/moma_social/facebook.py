@@ -5,7 +5,9 @@ e page/photos/: upload non pubblicato, cover = ID numerico della foto.
 La lettura successiva conferma l'applicazione prima di registrare il successo.
 """
 
+import hashlib
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import requests
 
@@ -127,4 +129,56 @@ class FacebookClient:
 
     def verify_cover(self, photo_id: str) -> bool:
         cover = self.page().get("cover") or {}
-        return isinstance(cover, dict) and str(cover.get("id", "")) == photo_id
+        if not isinstance(cover, dict):
+            return False
+        current_id = str(cover.get("id") or cover.get("cover_id") or "")
+        if current_id == photo_id:
+            return True
+        if not current_id:
+            return False
+        # Facebook puo' copiare la foto nell'album copertine assegnando un nuovo ID.
+        # Verifichiamo i file alla stessa risoluzione, senza confronti approssimativi.
+        try:
+            expected = self._photo_sources(photo_id)
+            current = self._photo_sources(current_id)
+            sizes = expected.keys() & current.keys()
+            if not sizes:
+                return False
+            size = max(sizes, key=lambda size: size[0] * size[1])
+            return self._image_digest(expected[size]) == self._image_digest(current[size])
+        except PublishError:
+            return False
+
+    def _photo_sources(self, photo_id: str) -> dict:
+        data = self._request("GET", photo_id, params={"fields": "images"})
+        return {(image["width"], image["height"]): image["source"]
+                for image in data.get("images", [])
+                if isinstance(image, dict) and isinstance(image.get("width"), int)
+                and isinstance(image.get("height"), int)
+                and image["width"] > 0 and image["height"] > 0 and image.get("source")}
+
+    @staticmethod
+    def _image_digest(url: str) -> str:
+        parsed = urlsplit(url)
+        host = parsed.hostname or ""
+        if parsed.scheme != "https" or not host.endswith(".fbcdn.net"):
+            raise PublishError("Sorgente foto Facebook non riconosciuta")
+        try:
+            # Nessun token viene inviato al CDN; i redirect non sono seguiti.
+            with requests.get(url, timeout=30, stream=True, allow_redirects=False) as response:
+                if not response.ok or not response.headers.get("Content-Type", "").startswith(
+                    "image/"
+                ):
+                    raise PublishError("Impossibile leggere la foto Facebook per la verifica")
+                digest = hashlib.sha256()
+                size = 0
+                for chunk in response.iter_content(65536):
+                    size += len(chunk)
+                    if size > 4 * 1024 * 1024:
+                        raise PublishError("Foto Facebook troppo grande per la verifica")
+                    digest.update(chunk)
+                if size == 0:
+                    raise PublishError("Foto Facebook vuota durante la verifica")
+                return digest.hexdigest()
+        except requests.RequestException:
+            raise PublishError("Download della foto Facebook non riuscito") from None

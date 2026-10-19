@@ -467,3 +467,52 @@ def test_errore_283_indica_permesso_mancante_senza_esporre_token(fb):
         FacebookClient(cfg).set_cover("55")
     assert "pages_manage_metadata" in str(exc.value)
     assert "SEGRETO" not in str(exc.value)
+
+
+def _mock_copertina_copiata(content=b"IMMAGINE", current_content=b"IMMAGINE"):
+    responses.get(f"{BASE}/me", json=_pagina("77"))
+    for photo_id, file_name in [("55", "caricata"), ("77", "copertina")]:
+        responses.get(f"{BASE}/{photo_id}", json={"images": [{
+            "width": 1640, "height": 720,
+            "source": f"https://scontent.fbcdn.net/{file_name}.jpg",
+        }]})
+    responses.get("https://scontent.fbcdn.net/caricata.jpg", body=content,
+                  content_type="image/jpeg")
+    responses.get("https://scontent.fbcdn.net/copertina.jpg", body=current_content,
+                  content_type="image/jpeg")
+
+
+@responses.activate
+@pytest.mark.parametrize("current,expected", [(b"IMMAGINE", True), (b"ALTRA", False)])
+def test_verifica_copia_facebook_con_id_diverso(fb, current, expected):
+    cfg, _ = fb
+    _mock_copertina_copiata(current_content=current)
+    assert FacebookClient(cfg).verify_cover("55") is expected
+    cdn_calls = [c for c in responses.calls if "scontent.fbcdn.net" in c.request.url]
+    assert len(cdn_calls) == 2
+    assert all("Authorization" not in c.request.headers for c in cdn_calls)
+
+
+@responses.activate
+def test_rilancio_con_copia_conferma_senza_ripubblicare(fb):
+    cfg, path = fb
+    key = "facebook_cover:123:v26.0:2026-08-01"
+    publish.record(cfg, {"kind": "facebook_cover", "dedupe_key": key,
+                         "status": "uploaded", "photo_id": "55"})
+    _mock_copertina_copiata()
+    result = publish.publish_facebook_cover(cfg, path, "2026-08-01", bootstrap=True)
+    assert result["status"] == "published"
+    assert all(c.request.method == "GET" for c in responses.calls)
+
+
+@responses.activate
+def test_cdn_illeggibile_non_conferma_copertina(fb):
+    cfg, _ = fb
+    _mock_copertina_copiata()
+    responses.replace(responses.GET, "https://scontent.fbcdn.net/copertina.jpg", status=403)
+    assert FacebookClient(cfg).verify_cover("55") is False
+
+
+def test_verifica_immagine_blocca_host_estranei():
+    with pytest.raises(PublishError, match="non riconosciuta"):
+        FacebookClient._image_digest("https://altro.example/foto.jpg")

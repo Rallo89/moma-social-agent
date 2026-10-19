@@ -122,6 +122,13 @@ Token scaduti o permessi revocati producono un errore esplicito: correggere
 le credenziali e rilanciare. L'aggiornamento della copertina richiede una lettura
 di conferma; un semplice HTTP 200 non viene registrato come successo.
 
+Facebook puo' creare una copia della foto nell'album copertine con un ID
+diverso da quello dell'upload. In questo caso la verifica confronta SHA-256
+dei file restituiti dal CDN Facebook alla stessa risoluzione. Solo file
+identici confermano l'aggiornamento; i download non ricevono il token.
+Al rilancio, una copia gia' impostata viene confermata senza nuovo upload
+o nuova modifica della pagina.
+
 Se la foto viene caricata ma l'impostazione fallisce con codice 283 e
 `pages_manage_metadata`, aggiungere questo permesso in **Gestisci tutto sulla
 tua Pagina → Personalizza → Autorizzazioni e funzioni**. Selezionarlo anche
