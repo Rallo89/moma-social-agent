@@ -72,6 +72,25 @@ una nuova prima impostazione riuscita.
 
 ## Recupero degli errori
 
+In **Actions → Post calendario mensile → Run workflow**, il parametro `channel`
+sceglie `instagram` (solo carosello), `facebook` (solo copertina) oppure `both`
+(entrambi, valore predefinito anche per i run programmati).
+`dry_run` prova soltanto i canali selezionati senza chiamare le API;
+`force` ripete la pubblicazione soltanto sui canali selezionati. Il canale
+escluso non viene contattato e non riceve nuove righe nel registro.
+
+La stessa scelta e' disponibile da CLI:
+
+```bash
+momasocial monthly --channel instagram
+momasocial monthly --channel facebook --dry-run
+momasocial monthly --channel facebook --force
+```
+
+La selezione non scavalca le abilitazioni: per Facebook restano necessari
+`facebook.publish_enabled = true` e una prima impostazione riuscita con
+`fb-cover`. Tutte le anteprime vengono comunque generate e archiviate.
+
 Instagram e Facebook hanno chiavi ed esiti separati nel registro. Se un canale
 fallisce, si tenta comunque l'altro e il comando termina con errore, riportando
 entrambi gli esiti. Rilanciare il mensile ritenta solo il canale incompleto.

@@ -293,3 +293,67 @@ def test_png_copertina_dimensioni(cfg):
     }, "facebook-cover", size=(1640, 720), scale=1)
     with Image.open(path) as img:
         assert img.size == (1640, 720)
+
+
+@pytest.mark.parametrize("channel", ["instagram", "facebook", "both"])
+@pytest.mark.parametrize("flags", [{}, {"dry_run": True}, {"force": True}])
+def test_scelta_canale_isola_pubblicazione_e_flag(fb, monkeypatch, channel, flags):
+    cfg, path = fb
+    draft = PostDraft("monthly_calendar", [path], "caption",
+                      {"month_start": "2026-08-01"}, {"facebook_cover": path})
+    ig = Mock(return_value={"status": "published"})
+    facebook = Mock(return_value={"status": "published"})
+    monkeypatch.setattr(publish, "_publish_instagram_draft", ig)
+    monkeypatch.setattr(publish, "publish_facebook_cover", facebook)
+    result = publish.publish_draft(cfg, draft, channel=channel, **flags)
+    assert result["status"] == "published"
+    expected_flags = {"dry_run": flags.get("dry_run", False), "force": flags.get("force", False)}
+    if channel in ("instagram", "both"):
+        ig.assert_called_once_with(cfg, draft, **expected_flags)
+    else:
+        ig.assert_not_called()
+    if channel in ("facebook", "both"):
+        facebook.assert_called_once_with(cfg, path, "2026-08-01", **expected_flags)
+    else:
+        facebook.assert_not_called()
+
+
+@responses.activate
+@pytest.mark.parametrize("channel,kinds", [
+    ("instagram", {"monthly_calendar"}), ("facebook", {"facebook_cover"}),
+    ("both", {"monthly_calendar", "facebook_cover"}),
+])
+def test_dry_run_registra_solo_canali_scelti_senza_rete(fb, channel, kinds):
+    cfg, path = fb
+    draft = PostDraft("monthly_calendar", [path], "caption",
+                      {"month_start": "2026-08-01"}, {"facebook_cover": path})
+    result = publish.publish_draft(cfg, draft, channel=channel, dry_run=True)
+    assert result["status"] == "dry-run"
+    entries = [json.loads(line) for line in publish.ledger_path(cfg).read_text().splitlines()]
+    assert {entry["kind"] for entry in entries} == kinds
+    assert all(entry["status"] == "dry-run" for entry in entries)
+    assert not responses.calls
+
+
+@pytest.mark.parametrize("args,channel", [([], "both"), (["--channel", "instagram"], "instagram"),
+                                        (["--channel", "facebook"], "facebook")])
+def test_cli_inoltra_scelta_canale(fb, monkeypatch, args, channel):
+    cfg, path = fb
+    draft = PostDraft("monthly_calendar", [path], "caption",
+                      {"month_start": "2026-08-01"}, {"facebook_cover": path})
+    monkeypatch.setattr(cli.config, "load", lambda *a: cfg)
+    monkeypatch.setattr(cli, "drafts", lambda *a, **kw: [draft])
+    publisher = Mock(return_value={"status": "dry-run"})
+    monkeypatch.setattr(cli, "publish_draft", publisher)
+    assert cli.main(["monthly", "--dry-run", "--force", *args]) == 0
+    publisher.assert_called_once_with(cfg, draft, channel=channel, dry_run=True, force=True)
+
+
+def test_facebook_senza_copertina_non_ripiega_su_instagram(fb, monkeypatch):
+    cfg, path = fb
+    ig = Mock()
+    monkeypatch.setattr(publish, "_publish_instagram_draft", ig)
+    draft = PostDraft("monthly_calendar", [path], "caption")
+    with pytest.raises(ConfigError, match="copertina generata"):
+        publish.publish_draft(cfg, draft, channel="facebook")
+    ig.assert_not_called()

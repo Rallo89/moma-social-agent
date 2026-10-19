@@ -25,6 +25,8 @@ Procedi cosi':
    con la griglia del mese, separata dalle slide. Se Facebook e' configurato e
    attivato, la pubblicazione aggiorna anche la copertina della pagina.
    Collegamento e prima attivazione sono descritti in `docs/FACEBOOK.md`.
+   Per prove e rilanci si puo' scegliere il canale con `--channel instagram`,
+   `--channel facebook` oppure `--channel both` (predefinito).
 5. Pubblica **solo** se in `$ARGUMENTS` compare `--pubblica`, rilanciando lo
    stesso comando senza `--no-publish`. Altrimenti chiudi dicendo che il post
    e' pronto e come pubblicarlo.

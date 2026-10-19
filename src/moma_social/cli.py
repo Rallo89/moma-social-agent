@@ -93,7 +93,10 @@ def _genera(cfg, kind, day, kwargs, args) -> list[tuple[str, str]]:
                           + (f" · {etichetta}" if etichetta else "")))
             continue
 
-        result = publish_draft(cfg, draft, dry_run=args.dry_run, force=args.force)
+        publish_kwargs = {"dry_run": args.dry_run, "force": args.force}
+        if kind == "monthly_calendar":
+            publish_kwargs["channel"] = args.channel
+        result = publish_draft(cfg, draft, **publish_kwargs)
         print(json.dumps(result, ensure_ascii=False, indent=2))
         if "channels" in result:
             note = []
@@ -845,6 +848,10 @@ def build_parser() -> argparse.ArgumentParser:
                        help="genera i file e basta, senza toccare il ledger")
         p.add_argument("--force", action="store_true",
                        help="pubblica anche se il dedupe dice gia' fatto")
+        if kind == "monthly_calendar":
+            p.add_argument("--channel", choices=("both", "instagram", "facebook"), default="both",
+                           help="canale del mensile: carosello Instagram, copertina Facebook "
+                                "o entrambi (default)")
         p.add_argument("--settimana", action="store_true",
                        help="un post per ogni giornata di gioco della settimana di --date")
         if kind == "story_event":

@@ -214,18 +214,30 @@ def publish_facebook_cover(cfg: Config, path: str, month: str, *, dry_run: bool 
 
 
 def publish_draft(cfg: Config, draft: PostDraft, *, dry_run: bool = False,
-                  force: bool = False) -> dict:
+                  force: bool = False, channel: str = "both") -> dict:
     """I due canali del mensile hanno esiti e retry indipendenti."""
+    if channel not in {"both", "instagram", "facebook"}:
+        raise ConfigError(f"Canale sconosciuto: {channel}")
+    if channel == "facebook" and (draft.kind != "monthly_calendar"
+                                  or "facebook_cover" not in draft.artifacts):
+        raise ConfigError("Il canale Facebook richiede un mensile con copertina generata")
+    if channel == "instagram":
+        return _publish_instagram_draft(cfg, draft, dry_run=dry_run, force=force)
     if draft.kind != "monthly_calendar" or "facebook_cover" not in draft.artifacts:
         return _publish_instagram_draft(cfg, draft, dry_run=dry_run, force=force)
-    try:
-        instagram = _publish_instagram_draft(cfg, draft, dry_run=dry_run, force=force)
-    except MtgSocialError as exc:
-        instagram = {"status": "error", "error": str(exc)}
-    facebook = publish_facebook_cover(
+    channels = {}
+    if channel == "both":
+        try:
+            channels["instagram"] = _publish_instagram_draft(
+                cfg, draft, dry_run=dry_run, force=force)
+        except MtgSocialError as exc:
+            channels["instagram"] = {"status": "error", "error": str(exc)}
+    else:
+        save_draft_files(cfg, draft)
+    channels["facebook"] = publish_facebook_cover(
         cfg, draft.artifacts["facebook_cover"], draft.meta["month_start"],
         dry_run=dry_run, force=force,
     )
-    statuses = (instagram["status"], facebook["status"])
+    statuses = tuple(entry["status"] for entry in channels.values())
     status = next((s for s in ("error", "published", "dry-run") if s in statuses), "skipped")
-    return {"status": status, "channels": {"instagram": instagram, "facebook": facebook}}
+    return {"status": status, "channels": channels}

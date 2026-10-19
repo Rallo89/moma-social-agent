@@ -15,6 +15,15 @@ on:
     - cron: "0 8-17 28-31 * *"
   workflow_dispatch:
     inputs:
+      channel:
+        description: "Canale: instagram = carosello, facebook = copertina, both = entrambi"
+        type: choice
+        required: true
+        default: both
+        options:
+          - both
+          - instagram
+          - facebook
       date:
         description: "Data nel mese PRECEDENTE a quello da pubblicare (AAAA-MM-GG)"
         required: false
@@ -57,6 +66,7 @@ jobs:
           POST_DATE: ${{ inputs.date }}
           POST_DRY_RUN: ${{ inputs.dry_run }}
           POST_FORCE: ${{ inputs.force }}
+          POST_CHANNEL: ${{ inputs.channel }}
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
           FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
@@ -71,7 +81,7 @@ jobs:
           # le intestazioni partono vuote e il post muore su un 401.
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: |
-          args=()
+          args=(--channel "${POST_CHANNEL:-both}")
           if [ -n "${POST_DATE:-}" ]; then args+=(--date "$POST_DATE"); fi
           if [ "${POST_DRY_RUN:-}" = "true" ]; then args+=(--dry-run); fi
           if [ "${POST_FORCE:-}" = "true" ]; then args+=(--force); fi
