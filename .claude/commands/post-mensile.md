@@ -21,6 +21,10 @@ Procedi cosi':
 3. Apri i PNG generati in `out/<data di oggi>/` con Read e controlla che le
    righe siano leggibili e che nessuna serata manchi.
 4. Mostra la caption e segnala eventuali problemi.
+   Controlla anche il PNG `artifacts.facebook_cover`: e' la copertina Facebook
+   con la griglia del mese, separata dalle slide. Se Facebook e' configurato e
+   attivato, la pubblicazione aggiorna anche la copertina della pagina.
+   Collegamento e prima attivazione sono descritti in `docs/FACEBOOK.md`.
 5. Pubblica **solo** se in `$ARGUMENTS` compare `--pubblica`, rilanciando lo
    stesso comando senza `--no-publish`. Altrimenti chiudi dicendo che il post
    e' pronto e come pubblicarlo.

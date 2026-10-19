@@ -12,7 +12,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from .config import Config
-from .errors import PublishError
+from .errors import ConfigError, MtgSocialError, PublishError
+from .facebook import FacebookClient
 from .instagram import InstagramClient
 from .models import PostDraft
 from .uploader import upload_all
@@ -76,7 +77,8 @@ def save_draft_files(cfg: Config, draft: PostDraft) -> Path:
     meta_path = out_dir / f"{stem}.json"
     meta_path.write_text(
         json.dumps(
-            {"kind": draft.kind, "images": draft.images, "caption": draft.caption,
+            {"kind": draft.kind, "images": draft.images, "artifacts": draft.artifacts,
+             "caption": draft.caption,
              "meta": draft.meta, "dedupe_key": dedupe_key(draft)},
             ensure_ascii=False, indent=2,
         ),
@@ -85,8 +87,8 @@ def save_draft_files(cfg: Config, draft: PostDraft) -> Path:
     return meta_path
 
 
-def publish_draft(cfg: Config, draft: PostDraft, *, dry_run: bool = False,
-                  force: bool = False) -> dict:
+def _publish_instagram_draft(cfg: Config, draft: PostDraft, *, dry_run: bool = False,
+                             force: bool = False) -> dict:
     """Pubblica un draft. In dry-run si ferma prima di toccare la rete."""
     save_draft_files(cfg, draft)
     key = dedupe_key(draft)
@@ -95,6 +97,7 @@ def publish_draft(cfg: Config, draft: PostDraft, *, dry_run: bool = False,
         "kind": draft.kind,
         "dedupe_key": key,
         "images": draft.images,
+        "artifacts": draft.artifacts,
         "meta": draft.meta,
         "caption_chars": len(draft.caption),
     }
@@ -128,7 +131,7 @@ def publish_draft(cfg: Config, draft: PostDraft, *, dry_run: bool = False,
             post_id = client.publish_story(urls[0])
         else:
             post_id = client.publish_post(urls, draft.caption)
-    except PublishError as exc:
+    except MtgSocialError as exc:
         entry["status"] = "error"
         entry["error"] = str(exc)
         record(cfg, entry)
@@ -139,3 +142,90 @@ def publish_draft(cfg: Config, draft: PostDraft, *, dry_run: bool = False,
     entry["permalink"] = "" if draft.kind == "story_event" else client.permalink(post_id)
     record(cfg, entry)
     return entry
+
+
+def _facebook_entries(cfg: Config) -> list[dict]:
+    path = ledger_path(cfg)
+    if not path.exists():
+        return []
+    entries = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(entry, dict) and entry.get("kind") == "facebook_cover":
+            entries.append(entry)
+    return entries
+
+
+def publish_facebook_cover(cfg: Config, path: str, month: str, *, dry_run: bool = False,
+                           force: bool = False, bootstrap: bool = False) -> dict:
+    """Checkpoint della foto prima della scrittura: un retry riusa lo stesso ID.
+
+    bootstrap e' riservato al comando manuale fb-cover: il primo successo
+    abilita la pagina/versione ai run automatici, se publish_enabled e' acceso.
+    """
+    page_id = str(cfg.get("facebook.page_id", ""))
+    version = cfg.get("facebook.api_version", "v26.0")
+    key = f"facebook_cover:{page_id}:{version}:{month}"
+    entry = {"ts": datetime.now(UTC).isoformat(), "kind": "facebook_cover",
+             "dedupe_key": key, "page_id": page_id, "api_version": version,
+             "month_start": month, "images": [path]}
+
+    def finish(status, **details):
+        entry.update(status=status, **details)
+        record(cfg, entry)
+        return entry
+
+    if dry_run:
+        return finish("dry-run")
+    if not bootstrap and not cfg.get("facebook.publish_enabled", False):
+        return finish("skipped", reason="facebook.publish_enabled disabilitato")
+    try:
+        entries = _facebook_entries(cfg)
+        if not bootstrap and not any(
+            e.get("page_id") == page_id and e.get("api_version") == version
+            and e.get("status") == "published" for e in entries
+        ):
+            raise ConfigError("Prima attivazione richiesta: verificare fb-setup, poi eseguire "
+                              "fb-cover --file PNG --month AAAA-MM-01")
+        previous = None if force else already_published(cfg, key)
+        if previous:
+            return finish("skipped", reason="Copertina gia' impostata per questo mese",
+                          photo_id=previous.get("photo_id"))
+        client = FacebookClient(cfg)
+        client.page()  # Verifica l'identita' prima di ogni scrittura.
+        pending = next((e for e in reversed(entries)
+                        if e.get("dedupe_key") == key and e.get("status") == "uploaded"), None)
+        photo_id = None if force else (pending or {}).get("photo_id")
+        if not photo_id:
+            photo_id = client.upload_photo(Path(path))
+            record(cfg, {**entry, "status": "uploaded", "photo_id": photo_id})
+        entry["photo_id"] = photo_id
+        if not client.verify_cover(photo_id):
+            client.set_cover(photo_id)
+            if not client.verify_cover(photo_id):
+                raise PublishError("Copertina non ancora confermata dalla lettura Facebook; "
+                                   "rilanciare per verificare senza ricaricare la foto")
+        return finish("published")
+    except MtgSocialError as exc:
+        return finish("error", error=str(exc))
+
+
+def publish_draft(cfg: Config, draft: PostDraft, *, dry_run: bool = False,
+                  force: bool = False) -> dict:
+    """I due canali del mensile hanno esiti e retry indipendenti."""
+    if draft.kind != "monthly_calendar" or "facebook_cover" not in draft.artifacts:
+        return _publish_instagram_draft(cfg, draft, dry_run=dry_run, force=force)
+    try:
+        instagram = _publish_instagram_draft(cfg, draft, dry_run=dry_run, force=force)
+    except MtgSocialError as exc:
+        instagram = {"status": "error", "error": str(exc)}
+    facebook = publish_facebook_cover(
+        cfg, draft.artifacts["facebook_cover"], draft.meta["month_start"],
+        dry_run=dry_run, force=force,
+    )
+    statuses = (instagram["status"], facebook["status"])
+    status = next((s for s in ("error", "published", "dry-run") if s in statuses), "skipped")
+    return {"status": status, "channels": {"instagram": instagram, "facebook": facebook}}

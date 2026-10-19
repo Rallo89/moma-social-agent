@@ -7,6 +7,7 @@ caption -> restituisce un PostDraft. La pubblicazione e' un passo separato
 
 from __future__ import annotations
 
+import calendar
 import datetime as dt
 import hashlib
 import json
@@ -408,6 +409,22 @@ def weekly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
 
 
 # ── 1bis. Calendario del mese (il 30, per il mese dopo) ─────────────────────
+def _griglia_mensile(cfg: Config, inizio: dt.date, events: list) -> list:
+    """Settimane complete, da lunedi: mai limitate dalle slide Instagram."""
+    per_data = {}
+    for evento in sorted(events, key=lambda e: (e.date, e.start_time or "99:99", e.label)):
+        per_data.setdefault(evento.date, []).append({
+            "ora": evento.start_time or cfg.get("content.evento.ora_default", ""),
+            "nome": evento.format or evento.label,
+        })
+    return [[{"numero": data.day if data.month == inizio.month else None,
+              "eventi": per_data.get(data, [])[:3] if data.month == inizio.month else [],
+              "altri": max(0, len(per_data.get(data, [])) - 3)}
+             for data in settimana]
+            for settimana in calendar.Calendar(firstweekday=0).monthdatescalendar(
+                inizio.year, inizio.month)]
+
+
 def monthly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
     """Tutti gli appuntamenti del mese successivo, in elenco.
 
@@ -456,8 +473,20 @@ def monthly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
          "signup_url": cfg.get("content.evento.link", "")},
         extra_hashtags=[f"#{f.replace(' ', '')}" for f in formats_on(events)],
     )
+    artifacts = {}
+    if cfg.get("posts.monthly_calendar.facebook_cover.enabled", True):
+        prefix = "posts.monthly_calendar.facebook_cover"
+        cover = render(
+            cfg, cfg.get(f"{prefix}.image_template", "facebook_cover.html.j2"),
+            {**comuni, "mese": mese, "settimane": _griglia_mensile(cfg, inizio, events)},
+            _stamp(cfg, "mese", inizio, "facebook-cover"),
+            size=(int(cfg.get(f"{prefix}.width", 1640)),
+                  int(cfg.get(f"{prefix}.height", 720))),
+            scale=1,
+        )
+        artifacts["facebook_cover"] = str(cover)
     return PostDraft(
-        kind="monthly_calendar",
+        kind="monthly_calendar", artifacts=artifacts,
         images=[str(path) for path in immagini],
         caption=caption,
         meta={"month_start": inizio.isoformat(), "month_end": fine.isoformat(),

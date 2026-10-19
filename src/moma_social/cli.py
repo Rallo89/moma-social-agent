@@ -17,7 +17,7 @@ from pathlib import Path
 from . import __version__, config, tokenstate
 from .errors import ConfigError, MtgSocialError, NoDataError
 from .pipelines import drafts
-from .publish import publish_draft
+from .publish import publish_draft, publish_facebook_cover, save_draft_files
 from .timeutil import (
     fmt_range,
     is_monthly_run_day,
@@ -81,17 +81,28 @@ def _genera(cfg, kind, day, kwargs, args) -> list[tuple[str, str]]:
         if len(bozze) > 1 and etichetta:
             print(f"» {etichetta}")
         print(f"Immagini: {', '.join(draft.images)}")
+        for nome, path in draft.artifacts.items():
+            print(f"Artefatto {nome}: {path}")
         print("-" * 60)
         print(draft.caption)
         print("-" * 60)
 
         if args.no_publish:
+            save_draft_files(cfg, draft)
             esiti.append(("drafted", f"{len(draft.images)} slide"
                           + (f" · {etichetta}" if etichetta else "")))
             continue
 
         result = publish_draft(cfg, draft, dry_run=args.dry_run, force=args.force)
         print(json.dumps(result, ensure_ascii=False, indent=2))
+        if "channels" in result:
+            note = []
+            for channel, outcome in result["channels"].items():
+                note.append(f"{channel}: {outcome['status']} - " + (
+                    outcome.get("error") or outcome.get("reason") or
+                    outcome.get("permalink") or "completato"))
+            esiti.append((result["status"], "; ".join(note)))
+            continue
         esiti.append((result["status"],
                       result.get("reason") or result.get("permalink", "")))
     return esiti
@@ -198,7 +209,30 @@ def cmd_post(args) -> int:
         )
     for esito, nota in risultati:
         _summary(f"**{args.kind}** - {esito}" + (f" - {nota}" if nota else ""))
+    return EXIT_ERROR if any(esito == "error" for esito, _ in risultati) else EXIT_OK
+
+
+def cmd_fb_setup(args) -> int:
+    """Controllo di sola lettura: nessuna impostazione della pagina cambia."""
+    from .facebook import FacebookClient
+    page = FacebookClient(config.load(args.config)).page()
+    print(json.dumps(page, ensure_ascii=False, indent=2))
+    print("Lettura riuscita. La capacita' di scrittura si verifica con fb-cover.")
     return EXIT_OK
+
+
+def cmd_fb_cover(args) -> int:
+    try:
+        month = dt.date.fromisoformat(args.month)
+    except ValueError:
+        raise ConfigError("--month richiede AAAA-MM-01") from None
+    if month.day != 1:
+        raise ConfigError("--month deve essere il primo giorno del mese")
+    cfg = config.load(args.config)
+    result = publish_facebook_cover(cfg, str(cfg.resolve_path(args.file)), month.isoformat(),
+                                    dry_run=args.dry_run, force=args.force, bootstrap=True)
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    return EXIT_ERROR if result["status"] == "error" else EXIT_OK
 
 
 def cmd_gate(args) -> int:
@@ -819,6 +853,15 @@ def build_parser() -> argparse.ArgumentParser:
         if kind == "leg_results":
             p.add_argument("--no-meta", action="store_true", dest="no_meta",
                            help="solo le slide dei risultati, senza il meta")
+
+    p = sub.add_parser("fb-setup", help="verifica token e identita' pagina senza modificarla")
+    p.set_defaults(func=cmd_fb_setup)
+    p = sub.add_parser("fb-cover", help="imposta e verifica la prima copertina Facebook")
+    p.set_defaults(func=cmd_fb_cover)
+    p.add_argument("--file", required=True, help="PNG della copertina")
+    p.add_argument("--month", required=True, help="mese rappresentato: AAAA-MM-01")
+    p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--force", action="store_true")
 
     p = sub.add_parser("gate", help="verifica che sia l'ora locale giusta (per i cron)")
     p.set_defaults(func=cmd_gate)

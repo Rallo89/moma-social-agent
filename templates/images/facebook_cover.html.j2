@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<style>
+* { box-sizing: border-box; }
+html, body { margin: 0; width: {{ width }}px; height: {{ height }}px; }
+body { background: #25292d; color: white; font-family: Arial, sans-serif; }
+.art { width: 1640px; height: 720px; padding: 24px 52px 20px;
+  transform: scale({{ width / 1640 }}, {{ height / 720 }}); transform-origin: top left;
+  display: grid; grid-template-rows: 74px 25px 1fr 30px; gap: 6px; }
+header { display: flex; align-items: center; justify-content: space-between; }
+h1 { margin: 0; font-size: 40px; color: #f28c28; text-transform: uppercase;
+  text-shadow: -1px 1px #e522ce, 1px -1px #2fe0e5; }
+header small { display: block; font-size: 15px; color: white; letter-spacing: 3px; }
+.loghi { display: flex; gap: 20px; align-items: center; }
+.loghi img { width: 112px; max-height: 55px; object-fit: contain; }
+.critico { filter: brightness(0) invert(1); }
+.giorni, .griglia { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.giorni { color: #a9d227; font-size: 17px; text-align: center; }
+.griglia { grid-template-rows: repeat({{ settimane|length }}, minmax(0, 1fr));
+  gap: 5px; min-height: 0; }
+.cella { background: #32383d; border-top: 2px solid #515a60; padding: 4px 8px;
+  min-width: 0; overflow: hidden; }
+.cella.attiva { border-color: #f28c28; }
+.numero { float: right; font-size: 18px; color: #a9d227; margin-left: 4px; }
+.evento { font-size: 16px; line-height: 19px; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; }
+.ora { color: #f28c28; }
+.altri { font-size: 12px; color: #a9d227; line-height: 14px; }
+.vuota { opacity: .25; }
+footer { display: flex; justify-content: space-between; align-items: end;
+  font-size: 16px; color: #d5dad6; }
+footer span:last-child { color: #a9d227; }
+</style></head><body><main class="art">
+<header><h1><small>Calendario tornei</small>{{ mese }}</h1><div class="loghi">
+{% for asset_path, classe, nome in [
+  ('templates/images/assets/unocritico.png', 'critico', 'Uno Critico'),
+  ('templates/images/assets/logo-modena-magic.png', '', 'Modena Magic')] %}
+{% set logo = asset_path|asset %}{% if logo %}<img class="{{ classe }}" src="{{ logo }}" alt="{{ nome }}">{% endif %}
+{% endfor %}
+</div></header>
+<div class="giorni">{% for nome in ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'] %}<div>{{ nome }}</div>{% endfor %}</div>
+<div class="griglia">{% for settimana in settimane %}{% for giorno in settimana %}
+<section class="cella {{ 'vuota' if giorno.numero is none else '' }} {{ 'attiva' if giorno.eventi else '' }}">
+{% if giorno.numero is not none %}<span class="numero">{{ giorno.numero }}</span>{% endif %}
+{% for evento in giorno.eventi %}<div class="evento"><span class="ora">{{ evento.ora }}</span> {{ evento.nome }}</div>{% endfor %}
+{% if giorno.altri %}<div class="altri">+{{ giorno.altri }} eventi</div>{% endif %}
+</section>{% endfor %}{% endfor %}</div>
+<footer><span>Programma completo e iscrizioni</span><span>{{ link }}</span></footer>
+</main></body></html>

@@ -59,6 +59,8 @@ jobs:
           POST_FORCE: ${{ inputs.force }}
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+          FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
           MEDIA_BUCKET: ${{ secrets.MEDIA_BUCKET }}
           MEDIA_PUBLIC_BASE: ${{ vars.MEDIA_PUBLIC_BASE }}
           IMGBB_API_KEY: ${{ secrets.IMGBB_API_KEY }}
@@ -86,7 +88,7 @@ jobs:
           exit $code
 
       - name: Archivia immagini e caption
-        if: steps.post.conclusion != 'skipped'
+        if: always() && steps.post.outcome != 'skipped'
         uses: actions/upload-artifact@v4
         with:
           name: post-calendario-mensile-${{ github.run_id }}
@@ -98,5 +100,5 @@ jobs:
       # ed e' l'unica traccia che resta di un guasto notturno dopo che i log
       # della run sono scaduti.
       - name: Aggiorna il registro pubblicazioni
-        if: steps.post.conclusion != 'skipped'
+        if: always() && steps.post.outcome != 'skipped'
         uses: ./.github/actions/commit-ledger

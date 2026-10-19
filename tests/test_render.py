@@ -223,7 +223,7 @@ def test_su_macos_cerca_nelle_applicazioni(monkeypatch):
     from moma_social.render import _installed_browsers
 
     monkeypatch.setattr(_sys, "platform", "darwin")
-    percorsi = [str(p) for p in _installed_browsers()]
+    percorsi = [p.as_posix() for p in _installed_browsers()]
     assert any("/Applications/Google Chrome.app" in p for p in percorsi)
 
 

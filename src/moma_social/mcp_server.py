@@ -99,7 +99,8 @@ def genera_post(tipo: str, data: str = "", formato: str = "",
                 id_torneo: str = "") -> str:
     """Genera immagini e caption di un post SENZA pubblicarlo.
 
-    tipo: weekly_calendar | story_event | format_spotlight | leg_results
+    tipo: weekly_calendar | monthly_calendar | standings_update |
+          story_event | format_spotlight | leg_results
     Restituisce i path delle immagini e il testo, da rivedere prima di pubblicare.
     """
     tipi = {**PIPELINES, **PIPELINES_MULTI}
@@ -111,12 +112,13 @@ def genera_post(tipo: str, data: str = "", formato: str = "",
         return "id_torneo non si combina con data o formato"
     cfg = _cfg()
     kwargs = ({"tournament_id": id_torneo} if id_torneo else
-              {} if tipo == "weekly_calendar" else {"fmt": formato})
+              {} if tipo in {"weekly_calendar", "monthly_calendar", "standings_update"}
+              else {"fmt": formato})
     # Una serata con due tornei sono due post: si restituiscono entrambi.
     bozze = drafts(cfg, tipo, _day(data) if data else None, **kwargs)
     from .publish import save_draft_files
     return json.dumps(
-        [{"tipo": draft.kind, "immagini": draft.images,
+        [{"tipo": draft.kind, "immagini": draft.images, "artifacts": draft.artifacts,
           "carosello": draft.is_carousel, "caption": draft.caption,
           "meta": draft.meta, "anteprima": str(save_draft_files(cfg, draft))}
          for draft in bozze],
@@ -129,6 +131,7 @@ def pubblica_post(tipo: str, data: str = "", formato: str = "",
                   conferma: bool = False, id_torneo: str = "") -> str:
     """Genera e PUBBLICA su Instagram. Richiede conferma=true.
 
+    Il mensile aggiorna anche la copertina Facebook, se attivata.
     Senza conferma esegue un dry-run: mostra cosa uscirebbe senza pubblicare.
     """
     tipi = {**PIPELINES, **PIPELINES_MULTI}
@@ -140,7 +143,8 @@ def pubblica_post(tipo: str, data: str = "", formato: str = "",
         return "id_torneo non si combina con data o formato"
     cfg = _cfg()
     kwargs = ({"tournament_id": id_torneo} if id_torneo else
-              {} if tipo == "weekly_calendar" else {"fmt": formato})
+              {} if tipo in {"weekly_calendar", "monthly_calendar", "standings_update"}
+              else {"fmt": formato})
     bozze = drafts(cfg, tipo, _day(data) if data else None, **kwargs)
     return json.dumps([publish_draft(cfg, draft, dry_run=not conferma)
                        for draft in bozze], ensure_ascii=False, indent=2)

@@ -288,6 +288,7 @@ class PostDraft:
     images: list[str]
     caption: str
     meta: dict = field(default_factory=dict)
+    artifacts: dict[str, str] = field(default_factory=dict)
 
     @property
     def is_carousel(self) -> bool:

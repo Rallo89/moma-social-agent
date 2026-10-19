@@ -19,7 +19,7 @@ RENDERED: list[tuple[str, dict]] = []
 def fake_render(monkeypatch, tmp_path):
     RENDERED.clear()
 
-    def _render(cfg, template, context, out_name, size=None):
+    def _render(cfg, template, context, out_name, size=None, scale=None):
         RENDERED.append((template, context))
         path = tmp_path / f"{out_name}.png"
         path.write_bytes(b"png")
@@ -550,7 +550,7 @@ def test_calendario_mensile_impagina_invece_di_rimpicciolire(cfg):
     assert RENDERED[1][1]["pagina"] == 1
     assert RENDERED[1][1]["pagine"] == 3
     assert sum(len(giorno["tornei"]) for _, contesto in RENDERED[1:]
-               for giorno in contesto["giorni"]) == 5
+               for giorno in contesto.get("giorni", [])) == 5
 
 
 def test_didascalia_mensile_raggruppa_per_formato_e_ripete_le_date(cfg):

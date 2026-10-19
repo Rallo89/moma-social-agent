@@ -90,6 +90,11 @@ momasocial results --date 2026-03-11 --no-publish
 
 Ogni run lascia in `out/`: il PNG, l'HTML sorgente, la caption e i metadati.
 
+Il mensile genera anche una **copertina Facebook con la griglia del mese**,
+separata dal carosello. Per collegare la pagina e abilitarne l'aggiornamento
+automatico: **[docs/FACEBOOK.md](docs/FACEBOOK.md)**. I comandi `fb-setup`
+(sola lettura) e `fb-cover` (prima impostazione reale) verificano il collegamento.
+
 ### Da Claude Code
 
 Il repo e' attrezzato come progetto Claude Code:
