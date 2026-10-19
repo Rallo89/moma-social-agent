@@ -54,8 +54,14 @@ class FacebookClient:
         if not response.ok or "error" in data:
             error = data.get("error", {})
             code = error.get("code") if isinstance(error, dict) else None
+            permission_hint = ""
+            if (code == 283 and isinstance(error, dict)
+                    and "pages_manage_metadata" in str(error.get("message", ""))):
+                permission_hint = ("Manca pages_manage_metadata: aggiungerlo al caso d'uso "
+                                   "della Pagina e rigenerare il token con questa autorizzazione. ")
             raise PublishError(
                 f"Facebook API: HTTP {response.status_code}, codice {code}. "
+                + permission_hint +
                 "Verificare token, ruoli e permessi della pagina; "
                 "la copertina non risulta confermata.", code=code,
             )

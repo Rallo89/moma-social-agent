@@ -15,6 +15,9 @@ Verifica documentale effettuata il 19 ottobre 2026 sulle fonti ufficiali:
   `POST /{page-id}`, parametro `cover` con ID numerico della foto;
   la documentazione richiede Page Admin o Page Editor con `EDIT_PROFILE`
   e permesso `business_management` per questo campo.
+  La verifica reale del 19 ottobre 2026 ha inoltre restituito codice 283,
+  `Requires pages_manage_metadata permission to manage the object`:
+  aggiungere anche `pages_manage_metadata` al caso d'uso e al token.
 - [Page Photos](https://developers.facebook.com/docs/graph-api/reference/page/photos/):
   `POST /{page-id}/photos`, upload `source`, `published=false`; token della
   pagina con task `CREATE_CONTENT` e permessi `pages_read_engagement`,
@@ -118,6 +121,13 @@ Il workflow conserva output e registro anche quando la pubblicazione fallisce.
 Token scaduti o permessi revocati producono un errore esplicito: correggere
 le credenziali e rilanciare. L'aggiornamento della copertina richiede una lettura
 di conferma; un semplice HTTP 200 non viene registrato come successo.
+
+Se la foto viene caricata ma l'impostazione fallisce con codice 283 e
+`pages_manage_metadata`, aggiungere questo permesso in **Gestisci tutto sulla
+tua Pagina → Personalizza → Autorizzazioni e funzioni**. Selezionarlo anche
+nel Graph API Explorer e generare nuovamente un token autorizzando la pagina.
+Aggiornare il `.env` e il secret `FB_PAGE_ACCESS_TOKEN` con il nuovo valore.
+Rilanciare con `force=false`: la foto gia' caricata viene riutilizzata.
 
 ## Grafica
 

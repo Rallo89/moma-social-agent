@@ -454,3 +454,16 @@ def test_secret_malformati_errore_senza_mostrare_valore(fb, field, value):
     with pytest.raises(ConfigError) as exc:
         FacebookClient(cfg)
     assert value not in str(exc.value)
+
+
+@responses.activate
+def test_errore_283_indica_permesso_mancante_senza_esporre_token(fb):
+    cfg, _ = fb
+    responses.post(f"{BASE}/123", json={"error": {
+        "code": 283,
+        "message": "Requires pages_manage_metadata permission SEGRETO",
+    }}, status=400)
+    with pytest.raises(PublishError) as exc:
+        FacebookClient(cfg).set_cover("55")
+    assert "pages_manage_metadata" in str(exc.value)
+    assert "SEGRETO" not in str(exc.value)
