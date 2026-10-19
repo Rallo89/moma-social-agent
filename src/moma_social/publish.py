@@ -163,7 +163,7 @@ def publish_facebook_cover(cfg: Config, path: str, month: str, *, dry_run: bool 
                            force: bool = False, bootstrap: bool = False) -> dict:
     """Checkpoint della foto prima della scrittura: un retry riusa lo stesso ID.
 
-    bootstrap e' riservato al comando manuale fb-cover: il primo successo
+    bootstrap e' usato da fb-cover e dalla scelta esplicita del solo Facebook: il primo successo
     abilita la pagina/versione ai run automatici, se publish_enabled e' acceso.
     """
     page_id = str(cfg.get("facebook.page_id", ""))
@@ -189,6 +189,7 @@ def publish_facebook_cover(cfg: Config, path: str, month: str, *, dry_run: bool 
             and e.get("status") == "published" for e in entries
         ):
             raise ConfigError("Prima attivazione richiesta: verificare fb-setup, poi eseguire "
+                              "monthly --channel facebook oppure "
                               "fb-cover --file PNG --month AAAA-MM-01")
         previous = None if force else already_published(cfg, key)
         if previous:
@@ -234,9 +235,13 @@ def publish_draft(cfg: Config, draft: PostDraft, *, dry_run: bool = False,
             channels["instagram"] = {"status": "error", "error": str(exc)}
     else:
         save_draft_files(cfg, draft)
+    # La scelta esplicita Facebook permette la prima impostazione dal workflow.
+    # Il kill switch resta valido; both e i cron richiedono il successo precedente.
+    facebook_kwargs = ({"bootstrap": True} if channel == "facebook"
+                       and cfg.get("facebook.publish_enabled", False) else {})
     channels["facebook"] = publish_facebook_cover(
         cfg, draft.artifacts["facebook_cover"], draft.meta["month_start"],
-        dry_run=dry_run, force=force,
+        dry_run=dry_run, force=force, **facebook_kwargs,
     )
     statuses = tuple(entry["status"] for entry in channels.values())
     status = next((s for s in ("error", "published", "dry-run") if s in statuses), "skipped")

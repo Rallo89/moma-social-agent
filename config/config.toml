@@ -332,8 +332,9 @@ width = 1640
 height = 720
 
 [facebook]
-# Attivare solo dopo fb-setup e un primo fb-cover riuscito.
-publish_enabled = false
+# I run automatici richiedono comunque una prima impostazione verificata.
+# Eseguirla con monthly --channel facebook oppure con fb-cover.
+publish_enabled = true
 api_version = "v26.0"
 page_id = "${FB_PAGE_ID}"
 access_token = "${FB_PAGE_ACCESS_TOKEN}"

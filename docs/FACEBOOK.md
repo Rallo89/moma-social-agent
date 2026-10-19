@@ -55,15 +55,20 @@ rimane disponibile. Non si tenta un metodo alternativo non documentato.
    e' il comando esplicito di prima impostazione. `--dry-run` produce soltanto
    la registrazione di anteprima. Non usare una copertina di un mese diverso.
 
-5. Solo dopo l'esito `published`, impostare `facebook.publish_enabled = true`.
-   In locale puo' stare in `config/config.local.toml`; per GitHub Actions
-   aggiornare la configurazione versionata. Conservare e committare la riga
-   riuscita di `state/published.jsonl`: l'automatismo richiede un precedente
-   successo per lo stesso ID pagina e la stessa versione API.
+5. La configurazione versionata abilita `facebook.publish_enabled`, ma i run
+   automatici richiedono comunque un precedente successo per la stessa pagina
+   e versione API. Conservare e committare la riga riuscita di
+   `state/published.jsonl` se la prima impostazione e' stata eseguita in locale.
 
 6. Aggiungere `FB_PAGE_ID` e `FB_PAGE_ACCESS_TOKEN` ai GitHub Secrets del
    repository. I segreti non vanno nei file versionati. Il workflow mensile
    li passa gia' al comando.
+
+In alternativa alla prima impostazione locale, usare **Run workflow** con
+`channel=facebook`, `dry_run=false` e una data del mese precedente a quello
+desiderato (per ottobre: `2026-09-30`). Questa scelta esplicita esegue anche
+la prima impostazione verificata e il workflow conserva il registro su GitHub.
+`force` puo' restare falso: i precedenti tentativi saltati non bloccano il rilancio.
 
 Da quel momento la copertina cambia insieme alla pubblicazione mensile,
 normalmente il 30 alle 10:00 Europe/Rome (ultimo giorno nei mesi piu' corti).
@@ -87,9 +92,12 @@ momasocial monthly --channel facebook --dry-run
 momasocial monthly --channel facebook --force
 ```
 
-La selezione non scavalca le abilitazioni: per Facebook restano necessari
-`facebook.publish_enabled = true` e una prima impostazione riuscita con
-`fb-cover`. Tutte le anteprime vengono comunque generate e archiviate.
+La selezione rispetta `facebook.publish_enabled`: se falso, nessuna chiamata
+di pubblicazione del mensile modifica Facebook. Con l'abilitazione attiva,
+`channel=facebook` consente anche la prima impostazione; `both` e i run
+programmati richiedono invece una verifica reale precedente, riuscita con
+`fb-cover` oppure `monthly --channel facebook`.
+Tutte le anteprime vengono comunque generate e archiviate.
 
 Instagram e Facebook hanno chiavi ed esiti separati nel registro. Se un canale
 fallisce, si tenta comunque l'altro e il comando termina con errore, riportando

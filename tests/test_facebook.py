@@ -313,6 +313,8 @@ def test_scelta_canale_isola_pubblicazione_e_flag(fb, monkeypatch, channel, flag
     else:
         ig.assert_not_called()
     if channel in ("facebook", "both"):
+        if channel == "facebook":
+            expected_flags["bootstrap"] = True
         facebook.assert_called_once_with(cfg, path, "2026-08-01", **expected_flags)
     else:
         facebook.assert_not_called()
@@ -357,3 +359,29 @@ def test_facebook_senza_copertina_non_ripiega_su_instagram(fb, monkeypatch):
     with pytest.raises(ConfigError, match="copertina generata"):
         publish.publish_draft(cfg, draft, channel="facebook")
     ig.assert_not_called()
+
+
+@responses.activate
+def test_prima_impostazione_dal_mensile_facebook(fb):
+    cfg, path = fb
+    draft = PostDraft("monthly_calendar", [path], "caption",
+                      {"month_start": "2026-08-01"}, {"facebook_cover": path})
+    responses.get(f"{BASE}/me", json=_pagina("55"))
+    responses.post(f"{BASE}/123/photos", json={"id": "55"})
+    result = publish.publish_draft(cfg, draft, channel="facebook")
+    assert result["status"] == "published"
+    assert set(result["channels"]) == {"facebook"}
+    assert all("graph.facebook.com" in c.request.url for c in responses.calls)
+    # Dopo la prima verifica il percorso automatico e' attivo, senza nuovo upload.
+    assert publish.publish_facebook_cover(cfg, path, "2026-08-01")["status"] == "skipped"
+
+
+@responses.activate
+def test_scelta_facebook_rispetta_kill_switch(fb):
+    cfg, path = fb
+    cfg.data["facebook"]["publish_enabled"] = False
+    draft = PostDraft("monthly_calendar", [path], "caption",
+                      {"month_start": "2026-08-01"}, {"facebook_cover": path})
+    result = publish.publish_draft(cfg, draft, channel="facebook")
+    assert result["channels"]["facebook"]["status"] == "skipped"
+    assert not responses.calls
