@@ -13,10 +13,27 @@ from .config import Config
 from .errors import ConfigError, PublishError
 
 
+def _credential(value: str, name: str) -> str:
+    value = str(value).strip().removeprefix(f"{name}=").strip().strip("\"'")
+    if any(c.isspace() for c in value):
+        raise ConfigError(f"{name} deve contenere un solo valore, senza spazi o righe aggiuntive")
+    return value
+
+
+def facebook_page_id(cfg: Config) -> str:
+    value = _credential(cfg.get("facebook.page_id", ""), "FB_PAGE_ID")
+    if value and not (value.isascii() and value.isdigit()):
+        raise ConfigError("FB_PAGE_ID deve contenere soltanto l'ID numerico della pagina")
+    return value
+
+
 class FacebookClient:
     def __init__(self, cfg: Config):
-        self.page_id = str(cfg.require("facebook.page_id"))
-        self.token = cfg.require("facebook.access_token")
+        cfg.require("facebook.page_id")
+        self.page_id = facebook_page_id(cfg)
+        self.token = _credential(cfg.require("facebook.access_token"), "FB_PAGE_ACCESS_TOKEN")
+        if not self.page_id or not self.token:
+            raise ConfigError("FB_PAGE_ID e FB_PAGE_ACCESS_TOKEN non possono essere vuoti")
         self.base = f"https://graph.facebook.com/{cfg.get('facebook.api_version', 'v26.0')}"
 
     def _request(self, method: str, path: str, **kwargs) -> dict:
@@ -46,9 +63,38 @@ class FacebookClient:
 
     def page(self) -> dict:
         page = self._request("GET", "me", params={"fields": "id,name,cover"})
-        if str(page.get("id")) != self.page_id:
-            raise ConfigError("Il token Facebook non appartiene a FB_PAGE_ID")
-        return page
+        if str(page.get("id")) == self.page_id:
+            return page
+        # Un token utente puo' elencare piu' pagine: scegliamo solo l'ID configurato.
+        # Il token derivato resta in memoria e non finisce nel registro o nei log.
+        original_id = str(page.get("id", ""))
+        params = {"fields": "id,access_token", "limit": 100}
+        seen = set()
+        try:
+            while True:
+                accounts = self._request("GET", "me/accounts", params=params)
+                selected = next((p for p in accounts.get("data", [])
+                                 if str(p.get("id")) == self.page_id), None)
+                if selected and selected.get("access_token"):
+                    self.token = selected["access_token"]
+                    page = self._request("GET", "me", params={"fields": "id,name,cover"})
+                    if str(page.get("id")) == self.page_id:
+                        return page
+                    break
+                after = accounts.get("paging", {}).get("cursors", {}).get("after")
+                if not accounts.get("paging", {}).get("next") or not after or after in seen:
+                    break
+                seen.add(after)
+                params = {**params, "after": after}
+        except PublishError as exc:
+            raise ConfigError(
+                f"Il token Facebook non appartiene a FB_PAGE_ID={self.page_id}; "
+                "impossibile ricavare il token della pagina. " + str(exc)
+            ) from None
+        actual_id = original_id if original_id.isascii() and original_id.isdigit() else "ignoto"
+        raise ConfigError(f"Il token Facebook non appartiene a FB_PAGE_ID={self.page_id} "
+                          f"(identita' iniziale {actual_id}). La pagina richiesta non e' "
+                          "accessibile con questo token: verificare ID e autorizzazioni.")
 
     def upload_photo(self, path: Path) -> str:
         if not path.is_file():

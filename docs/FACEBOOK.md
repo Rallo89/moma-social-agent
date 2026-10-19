@@ -39,7 +39,11 @@ rimane disponibile. Non si tenta un metodo alternativo non documentato.
    ```
 
 2. Eseguire `momasocial fb-setup`. Mostra nome, ID e copertina della pagina
-   senza modificarla; rifiuta un token appartenente a una pagina diversa.
+   senza modificarla. Con un token utente autorizzato, ricava in memoria il
+   token della sola pagina indicata da `FB_PAGE_ID`. Un token di un'altra
+   pagina o senza accesso alla pagina richiesta viene rifiutato prima di scrivere.
+   Sono tollerati spazi esterni, virgolette e la riga `NOME=valore` incollata
+   per intero nei Secrets; il valore consigliato resta il solo token della pagina.
 
 3. Generare il mensile con `momasocial monthly --no-publish`, quindi aprire il
    PNG indicato come `facebook_cover`. `--date` indica sempre una data nel

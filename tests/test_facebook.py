@@ -2,6 +2,7 @@
 
 import datetime as dt
 import json
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
@@ -385,3 +386,71 @@ def test_scelta_facebook_rispetta_kill_switch(fb):
     result = publish.publish_draft(cfg, draft, channel="facebook")
     assert result["channels"]["facebook"]["status"] == "skipped"
     assert not responses.calls
+
+
+@responses.activate
+def test_token_utente_ricava_solo_la_pagina_configurata(fb, capsys):
+    cfg, path = fb
+    cfg.data["facebook"]["access_token"] = "TOKEN_UTENTE"
+    responses.get(f"{BASE}/me", json={"id": "999", "name": "Profilo"})
+    responses.get(f"{BASE}/me", json=_pagina())
+    responses.get(f"{BASE}/me/accounts", json={"data": [
+        {"id": "456", "access_token": "ALTRA_PAGINA"},
+        {"id": "123", "access_token": "TOKEN_PAGINA"},
+    ]})
+    responses.post(f"{BASE}/123/photos", json={"id": "55"})
+    client = FacebookClient(cfg)
+    assert client.page()["id"] == "123"
+    assert client.upload_photo(Path(path)) == "55"
+    assert responses.calls[-1].request.headers["Authorization"] == "Bearer TOKEN_PAGINA"
+    assert cfg.get("facebook.access_token") == "TOKEN_UTENTE"
+    assert capsys.readouterr().out == ""
+
+
+@responses.activate
+def test_ricerca_pagina_con_paginazione(fb):
+    cfg, _ = fb
+    responses.get(f"{BASE}/me", json={"id": "999"})
+    responses.get(f"{BASE}/me", json=_pagina())
+    responses.get(f"{BASE}/me/accounts", json={
+        "data": [{"id": "456"}],
+        "paging": {"next": "https://url-da-non-seguire.invalid", "cursors": {"after": "A"}},
+    })
+    responses.get(f"{BASE}/me/accounts", json={
+        "data": [{"id": "123", "access_token": "TOKEN_PAGINA"}]})
+    assert FacebookClient(cfg).page()["id"] == "123"
+    assert "after=A" in responses.calls[-2].request.url
+    assert all(c.request.url.startswith(BASE) for c in responses.calls)
+
+
+@responses.activate
+def test_token_senza_accesso_alla_pagina_non_scrive(fb):
+    cfg, path = fb
+    responses.get(f"{BASE}/me", json={"id": "999"})
+    responses.get(f"{BASE}/me/accounts", json={"data": [
+        {"id": "456", "access_token": "NON_MOSTRARE"}]})
+    result = publish.publish_facebook_cover(cfg, path, "2026-08-01", bootstrap=True)
+    assert result["status"] == "error"
+    assert "FB_PAGE_ID=123" in result["error"]
+    assert "NON_MOSTRARE" not in json.dumps(result)
+    assert all(c.request.method == "GET" for c in responses.calls)
+
+
+def test_secret_incollati_come_riga_env_vengono_normalizzati(fb):
+    cfg, _ = fb
+    cfg.data["facebook"].update(page_id=' FB_PAGE_ID="123" ',
+                                access_token=" FB_PAGE_ACCESS_TOKEN='TOKEN' ")
+    client = FacebookClient(cfg)
+    assert client.page_id == "123"
+    assert client.token == "TOKEN"
+    assert publish.facebook_page_id(cfg) == "123"
+
+
+@pytest.mark.parametrize("field,value", [("page_id", "NON_MOSTRARE"),
+                                         ("access_token", "TOKEN\nALTRA_RIGA")])
+def test_secret_malformati_errore_senza_mostrare_valore(fb, field, value):
+    cfg, _ = fb
+    cfg.data["facebook"][field] = value
+    with pytest.raises(ConfigError) as exc:
+        FacebookClient(cfg)
+    assert value not in str(exc.value)

@@ -13,7 +13,7 @@ from pathlib import Path
 
 from .config import Config
 from .errors import ConfigError, MtgSocialError, PublishError
-from .facebook import FacebookClient
+from .facebook import FacebookClient, facebook_page_id
 from .instagram import InstagramClient
 from .models import PostDraft
 from .uploader import upload_all
@@ -166,7 +166,7 @@ def publish_facebook_cover(cfg: Config, path: str, month: str, *, dry_run: bool 
     bootstrap e' usato da fb-cover e dalla scelta esplicita del solo Facebook: il primo successo
     abilita la pagina/versione ai run automatici, se publish_enabled e' acceso.
     """
-    page_id = str(cfg.get("facebook.page_id", ""))
+    page_id = facebook_page_id(cfg)
     version = cfg.get("facebook.api_version", "v26.0")
     key = f"facebook_cover:{page_id}:{version}:{month}"
     entry = {"ts": datetime.now(UTC).isoformat(), "kind": "facebook_cover",
