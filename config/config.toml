@@ -409,28 +409,28 @@ subject = "Colosso di Darksteel"
 generated = true
 
 [posts.leg_results]
-# Il template grafico dell'associazione e' quadrato e vale per entrambe le
-# slide del carosello: cambiano solo titolo, sottotitolo e righe.
-image_templates  = ["classifica.html.j2"]
+# Risultati Vaporwave 4:5: prime 8 posizioni, poi 16 per slide e meta finale.
+image_templates  = ["risultati_vaporwave.html.j2"]
+width = 1080
+height = 1350
 # Ultima slide del carosello: le quote degli archetipi della serata.
-image_template_meta = "meta.html.j2"
+image_template_meta = "risultati_meta.html.j2"
 meta_top_n       = 5            # oltre, si accorpa in "Altri"
 # Stessa grafica per entrambe le slide del carosello.
 background       = "templates/images/assets/sfondo_classifica.png"
 caption_template = "leg_results.txt.j2"
 hashtags         = ["#classifica", "#risultati"]
-# Righe per slide: la grafica ne prevede 16 su due colonne. Con piu'
-# partecipanti il post diventa un carosello con piu' slide di risultati.
+# Prima pagina: 8 righe ampie. Continuazioni: 16 righe su una colonna.
 # Trattamento dietro nome e punti: "strip" (striscia piena), "shadow" (alone
 # scuro attorno al testo) o "none" (testo nudo sulla foto).
 row_style          = "shadow"
+first_page_rows    = 8
 rows_per_slide     = 16
 # 0 = tutti i partecipanti. Un numero li limita ai primi N.
 top_n              = 0
 standings_top_n    = 16
 # La Graph API accetta al massimo 10 elementi per carosello (l'app 20, ma
-# noi pubblichiamo via API). Oltre questo limite le slide vengono tagliate,
-# partendo dalla classifica.
+# noi pubblichiamo via API). Oltre il limite l'export viene bloccato: nessun taglio.
 max_carousel_slides = 10
 
 # Seconda slide del carosello (classifica generale): puo' avere uno sfondo

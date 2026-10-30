@@ -776,8 +776,8 @@ def _spicchi(fette: list[dict], raggio: float = 190, centro: float = 200,
     return spicchi
 
 
-def _card_meta(cfg: Config, leg, kicker: str, suffisso: str) -> dict | None:
-    """Contesto della slide sul meta. None se non c'e' niente da mostrare."""
+def _card_meta(cfg: Config, leg, kicker: str, suffisso: str) -> dict:
+    """Contesto meta, con stato esplicito se i mazzi non sono registrati."""
     fette = meta_breakdown(
         leg.rows,
         massimo=cfg.get("posts.leg_results.meta_top_n", 5),
@@ -789,7 +789,7 @@ def _card_meta(cfg: Config, leg, kicker: str, suffisso: str) -> dict | None:
     # Una torta di un colore solo con scritto "non dichiarato" non e' un grafico
     # del meta: e' il promemoria che i mazzi non sono stati registrati.
     if not dichiarati:
-        return None
+        fette = []
     return {
         "kicker_1": kicker, "kicker_2": suffisso,
         "badge": leg.format, "sopratitolo": "",
@@ -798,6 +798,8 @@ def _card_meta(cfg: Config, leg, kicker: str, suffisso: str) -> dict | None:
             cfg.get("content.meta_altri", "Altri"): GRIGI_META["Altri"],
             ignoto: GRIGI_META["Non dichiarato"],
         }),
+        "mazzi_noti": sum(bool(r.deck.strip()) for r in leg.rows),
+        "totale_mazzi": len(leg.rows),
         "link": _senza_schema(cfg.get("content.evento.link", "")),
         "invito": cfg.get("content.evento.invito", "Iscriviti"),
         "background": _background(cfg, "leg_results_meta"), "density": "",
@@ -873,10 +875,32 @@ def _post_di_tappa(cfg: Config, day: dt.date, leg, senza_meta: bool) -> PostDraf
 
     # Il meta occupa una slide, quindi i risultati ne hanno una in meno.
     meta = None if senza_meta else _card_meta(cfg, leg, kicker, fmt_date(day))
-    pagine_tappa = _pagine(rows, per_slide)
+    prima_pagina = max(1, cfg.get("posts.leg_results.first_page_rows", per_slide))
+    pagine_tappa = ([rows[:prima_pagina]]
+                    + (_pagine(rows[prima_pagina:], per_slide)
+                       if len(rows) > prima_pagina else []) if rows else [])
     disponibili = max_slide - (1 if meta else 0)
     tagliate = max(0, len(pagine_tappa) - disponibili)
-    pagine_tappa = pagine_tappa[:disponibili]
+    if tagliate:
+        raise SourceError(
+            f"Classifica completa non esportabile: servono {len(pagine_tappa)} "
+            f"slide di risultati, ma ne sono disponibili {disponibili}. "
+            "Nessun giocatore è stato omesso: esportazione interrotta."
+        )
+
+    totale_carosello = len(pagine_tappa) + (1 if meta else 0)
+    comune = {
+        "illustrazione": _story_illustration(cfg, leg.format),
+        "data_torneo": leg.day_label,
+        "titolo_tappa": titolo_tappa,
+        "nome_torneo": leg.leg,
+        "formato": leg.format,
+        "partecipanti": leg.players_count,
+        "sede": leg.venue,
+        "totale_slide": totale_carosello,
+    }
+    if meta:
+        meta.update(comune, numero_slide=totale_carosello)
 
     def _slide(pagina, indice, totale):
         # Il numero di pagina compare solo quando ce n'e' piu' di una.
@@ -897,9 +921,11 @@ def _post_di_tappa(cfg: Config, day: dt.date, leg, senza_meta: bool) -> PostDraf
              "subtitle": (titolo_tappa
                           + (f" · {indice + 1}/{totale}" if totale > 1 else "")),
              "background": _background(cfg, "leg_results") or background,
-             "density": _density(len(pagina))},
+             "density": _density(len(pagina)),
+             **comune, "numero_slide": indice + 1},
             f"{nome}-{indice + 1}" if totale > 1 else nome,
             size=post_size(cfg, "leg_results"),
+            scale=1,
         )
 
     immagini = [_slide(pagina, i, len(pagine_tappa))
@@ -911,6 +937,7 @@ def _post_di_tappa(cfg: Config, day: dt.date, leg, senza_meta: bool) -> PostDraf
             meta,
             _stamp(cfg, "meta", day, nome_tappa),
             size=post_size(cfg, "leg_results"),
+            scale=1,
         ))
 
     caption = render_caption(

@@ -1,0 +1,33 @@
+{% set accent = illustrazione.get('color', '#ffffff') %}
+{% set art = illustrazione.get('asset', '')|asset %}
+<!doctype html><html lang="it"><head><meta charset="utf-8"><style>
+{% include '_fonts.css.j2' %}
+@page { size:1080px 1350px; margin:0; }
+* { box-sizing:border-box; }
+html,body { margin:0; width:1080px; height:1350px; }
+body { background:#030617; color:#fff; font-family:'Barlow Condensed',sans-serif; }
+.slide { --accent:{{ accent }}; position:relative; width:1080px; height:1350px; overflow:hidden; }
+.art { position:absolute; top:-170px; left:0; width:1080px; height:1920px; object-fit:cover; }
+.veil { position:absolute; inset:0; background:linear-gradient(180deg,#03061733 0%,#03061733 18%,#030617c9 33%,#030617f5 48%,#030617cc 100%); }
+.grid { position:absolute; left:-50%; right:-50%; bottom:-270px; height:500px; background-image:linear-gradient({{ accent }}22 1px,transparent 1px),linear-gradient(90deg,{{ accent }}22 1px,transparent 1px); background-size:100px 60px; transform:perspective(400px) rotateX(50deg); }
+.header { position:absolute; left:64px; right:64px; top:44px; }
+.logo { width:330px; height:100px; object-fit:contain; object-position:left center; display:block; }
+.badge-line { display:flex; align-items:center; gap:22px; margin-top:19px; }
+.badge { display:inline-block; padding:6px 23px; border:2px solid var(--accent); background:#03061788; font:700 23px 'JetBrains Mono',monospace; letter-spacing:.22em; text-transform:uppercase; color:var(--accent); box-shadow:0 0 16px {{ accent }}33; }
+.player-count { font:600 26px 'Barlow Condensed',sans-serif; color:#eef2ff; text-shadow:0 2px 8px #030617; }
+.player-count strong { color:var(--accent); font-weight:700; }
+h1 { font:400 112px/.98 'Bebas Neue',sans-serif; margin:15px 0 9px; text-transform:uppercase; text-shadow:0 2px 18px #000; }
+h1.long { font-size:70px; }
+.date { margin:0; font:400 23px 'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.06em; }
+.panel { border:2px solid {{ accent }}bb; background:linear-gradient(140deg,{{ accent }}09,#030617f5); box-shadow:0 0 24px {{ accent }}15; }
+.foot { position:absolute; left:64px; right:64px; bottom:44px; display:flex; justify-content:space-between; align-items:center; gap:24px; }
+.partner { width:300px; height:90px; object-fit:contain; object-position:left center; }
+.page { flex:none; font:400 30px 'JetBrains Mono',monospace; }
+.page span { font-size:48px; line-height:1; vertical-align:-4px; color:var(--accent); margin-left:18px; }
+{% block styles %}{% endblock %}
+</style></head><body><main class="slide">
+{% if art %}<img class="art" src="{{ art }}" alt="">{% endif %}<div class="veil"></div><div class="grid"></div>
+<header class="header"><img class="logo" src="{{ 'templates/images/assets/logo-modena-magic.png'|asset }}" alt="Modena Magic"><div class="badge-line"><span class="badge">{{ formato }}</span></div><h1 class="{{ 'long' if titolo_tappa|length > 22 else '' }}">{{ titolo_tappa }}</h1><p class="date">{{ data_torneo }}</p></header>
+{% block body %}{% endblock %}
+<footer class="foot"><img class="partner" src="{{ 'templates/images/assets/unocritico.png'|asset }}" alt="Uno Critico"><span class="page">{{ numero_slide }}/{{ totale_slide }}<span>»</span></span></footer>
+</main></body></html>

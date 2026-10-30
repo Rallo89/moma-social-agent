@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from moma_social import pipelines
-from moma_social.errors import NoDataError
+from moma_social.errors import NoDataError, SourceError
 
 RENDERED: list[tuple[str, dict]] = []
 
@@ -156,9 +156,9 @@ def test_un_formato_forzato_resta_un_post_solo(cfg, tmp_path):
 def test_le_slide_usano_gli_slot_della_card(cfg):
     """Risultati e meta parlano la lingua delle card del calendario."""
     pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
-    tappa, meta = RENDERED[0][1], RENDERED[1][1]
-    assert RENDERED[0][0] == "classifica.html.j2"
-    assert RENDERED[1][0] == "meta.html.j2"
+    tappa, meta = RENDERED[0][1], RENDERED[-1][1]
+    assert RENDERED[0][0] == "risultati_vaporwave.html.j2"
+    assert RENDERED[-1][0] == "risultati_meta.html.j2"
 
     assert tappa["badge"] == "Pauper"
     assert tappa["kicker_1"] == "Risultati di tappa"
@@ -170,16 +170,16 @@ def test_le_slide_usano_gli_slot_della_card(cfg):
     assert meta["spicchi"]
 
     # Il vecchio template su sfondo Canva resta selezionabile e coerente.
-    assert tappa["subtitle"] == "Tappa 10"
+    assert tappa["subtitle"].startswith("Tappa 10")
 
 
-def test_risultati_sono_un_carosello_di_due_slide(cfg):
+def test_risultati_sono_un_carosello_con_meta_finale(cfg):
     draft = pipelines.leg_results(cfg, dt.date(2026, 3, 11))
     assert draft.is_carousel
-    assert len(draft.images) == 2
+    assert len(draft.images) == 3
     # L'ordine e' parte del contenuto: prima la serata, poi il suo meta.
     assert "risultati" in Path(draft.images[0]).name
-    assert "meta" in Path(draft.images[1]).name
+    assert "meta" in Path(draft.images[-1]).name
 
 
 
@@ -220,12 +220,12 @@ def _tappa_con(cfg, monkeypatch, giocatori: int, mazzi=False):
     return leg
 
 
-def test_sedici_giocatori_restano_una_slide_di_risultati(cfg, monkeypatch):
+def test_sedici_giocatori_hanno_due_slide_di_risultati(cfg, monkeypatch):
     _tappa_con(cfg, monkeypatch, 16, mazzi=True)
     draft = pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
-    assert draft.meta["slide_tappa"] == 1
+    assert draft.meta["slide_tappa"] == 2
     assert draft.meta["slide_meta"] == 1
-    assert draft.meta["slide"] == 2
+    assert draft.meta["slide"] == 3
 
 
 def test_venti_giocatori_diventano_tre_slide(cfg, monkeypatch):
@@ -237,7 +237,7 @@ def test_venti_giocatori_diventano_tre_slide(cfg, monkeypatch):
     tutti = [r.player for pagina in (RENDERED[0][1]["rows"], RENDERED[1][1]["rows"])
              for r in pagina]
     assert len(tutti) == 20
-    assert tutti[16] == "Giocatore 17"
+    assert tutti[8] == "Giocatore 9"
 
 
 def test_numero_di_pagina_solo_quando_serve(cfg, monkeypatch):
@@ -255,22 +255,47 @@ def test_nomi_dei_file_distinti_fra_le_pagine(cfg, monkeypatch):
     assert len(set(draft.images)) == len(draft.images)
 
 
-def test_carosello_non_supera_il_limite_della_graph_api(cfg, monkeypatch):
-    """200 giocatori sarebbero 13 slide: la Graph API ne accetta 10."""
-    from moma_social.instagram import MAX_CAROUSEL
-
+def test_carosello_troppo_lungo_blocca_export_senza_omettere_giocatori(cfg, monkeypatch):
     _tappa_con(cfg, monkeypatch, 200)
-    draft = pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
-    assert len(draft.images) <= MAX_CAROUSEL
-    assert draft.meta["slide_tagliate"] > 0
+    with pytest.raises(SourceError, match="Nessun giocatore è stato omesso"):
+        pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
+    assert not RENDERED
 
 
 def test_ordine_delle_slide_risultati_poi_meta(cfg, monkeypatch):
     _tappa_con(cfg, monkeypatch, 20, mazzi=True)
     pipelines.leg_results(cfg, dt.date(2026, 3, 13), fmt="Pauper")
     templates = [t for t, _ in RENDERED]
-    assert templates[:2] == ["classifica.html.j2"] * 2   # due pagine di risultati
-    assert templates[2] == "meta.html.j2"                # poi il meta
+    assert templates[:2] == ["risultati_vaporwave.html.j2"] * 2   # due pagine di risultati
+    assert templates[2] == "risultati_meta.html.j2"                # poi il meta
+
+
+@pytest.mark.parametrize("players,expected", [(1, 1), (8, 1), (9, 2), (24, 2), (25, 3)])
+def test_risultati_paginazione_completa_e_numerazione_carosello(
+    cfg, monkeypatch, players, expected,
+):
+    leg = _tappa_con(cfg, monkeypatch, players)
+    draft = pipelines.leg_results(cfg, leg.date)
+    assert draft.meta["slide_tappa"] == expected
+    assert draft.meta["slide_meta"] == 1
+    pages = [context for _, context in RENDERED if "rows" in context]
+    assert [row.rank for page in pages for row in page["rows"]] == list(range(1, players + 1))
+    assert [context["numero_slide"] for _, context in RENDERED] == list(range(1, expected + 2))
+    assert all(context["totale_slide"] == expected + 1 for _, context in RENDERED)
+    meta = RENDERED[-1][1]
+    assert meta["mazzi_noti"] == 0
+    assert meta["spicchi"] == []
+
+
+def test_meta_parziale_conteggi_e_denominatore(cfg, monkeypatch):
+    leg = _tappa_con(cfg, monkeypatch, 9, mazzi=True)
+    leg.rows[0].deck = ""
+    pipelines.leg_results(cfg, leg.date)
+    meta = RENDERED[-1][1]
+    assert meta["mazzi_noti"] == 8
+    assert meta["totale_mazzi"] == 9
+    assert sum(s["conta"] for s in meta["spicchi"]) == 9
+    assert next(s for s in meta["spicchi"] if s["nome"] == "Non dichiarato")["conta"] == 1
 
 
 # ── la classifica e' facoltativa ────────────────────────────────────────────
@@ -314,7 +339,7 @@ def test_tornei_stesso_formato_non_sovrascrivono_le_slide(
 ):
     import json
 
-    def render_con_contenuto(cfg, template, context, out_name, size=None):
+    def render_con_contenuto(cfg, template, context, out_name, size=None, scale=None):
         path = tmp_path / f"{out_name}.png"
         contenuto = (context["rows"][0].player if "rows" in context
                      else context["spicchi"][0]["nome"])

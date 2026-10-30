@@ -1,0 +1,26 @@
+{% extends '_risultati_vaporwave.html.j2' %}
+{% set prima = numero_slide == 1 %}
+{% block styles %}
+.stats { position:absolute; left:64px; right:64px; top:400px; height:95px; display:flex; align-items:center; gap:30px; padding:15px 23px; }
+.stat { min-width:0; font-size:29px; line-height:1.05; }
+.stat.tournament { flex:1; font-size:{{ 33 if nome_torneo|length < 50 else 28 }}px; overflow-wrap:anywhere; }
+.stats .player-count { flex:none; text-align:right; padding-left:24px; border-left:1px solid {{ accent }}55; }
+.stat strong { font-size:38px; color:var(--accent); margin-right:8px; }
+.stat small { display:block; font:400 16px 'JetBrains Mono',monospace; text-transform:uppercase; color:#c6cbdc; margin-top:5px; }
+.stat.venue { flex:1; padding-left:28px; border-left:1px solid {{ accent }}55; }
+.standings { position:absolute; left:64px; right:64px; top:{{ 518 if prima else 406 }}px; padding:10px 24px 17px; }
+table { width:100%; border-collapse:collapse; table-layout:fixed; }
+col.rank { width:65px; } col.points { width:106px; } col.record { width:146px; }
+th { height:44px; font:400 21px 'JetBrains Mono',monospace; color:var(--accent); text-transform:uppercase; text-align:left; }
+td { height:{{ 77 if prima else 44 }}px; border-top:1px solid {{ accent }}44; padding:{{ 9 if prima else 4 }}px 0; font-size:{{ 43 if prima else 35 }}px; line-height:1.1; vertical-align:middle; }
+td.player { overflow-wrap:anywhere; padding-right:16px; }
+td.rank,td.points { color:var(--accent); font-weight:700; }
+td.record { color:#dce1f0; }
+th.points,td.points,th.record,td.record { text-align:right; }
+{% endblock %}
+{% block body %}
+{% if prima %}<section class="stats panel"><div class="stat tournament">{{ nome_torneo }}<small>Torneo</small></div>{% if sede %}<div class="stat venue">{{ sede }}<small>Sede</small></div>{% endif %}<div class="player-count"><strong>{{ partecipanti }}</strong> giocatori</div></section>{% endif %}
+<section class="standings panel"><table aria-label="Classifica del torneo"><colgroup><col class="rank"><col><col class="points"><col class="record"></colgroup><thead><tr><th>#</th><th>Giocatore</th><th class="points">Punti</th><th class="record">Record</th></tr></thead><tbody>
+{% for r in righe %}<tr><td class="rank">{{ r.rank }}</td><td class="player">{{ r.player }}</td><td class="points">{{ r.points }}</td><td class="record">{{ r.record or '—' }}</td></tr>{% endfor %}
+</tbody></table></section>
+{% endblock %}

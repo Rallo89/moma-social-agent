@@ -1,0 +1,27 @@
+{% extends '_risultati_vaporwave.html.j2' %}
+{% block styles %}
+.meta-title { position:absolute; left:64px; right:64px; top:393px; font:400 31px 'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.08em; }
+.meta-panel { position:absolute; top:458px; left:64px; right:64px; min-height:655px; padding:34px 28px; }
+.coverage { margin:0 0 29px; color:#c6cbdc; font-size:29px; }
+.chart { display:flex; align-items:center; gap:30px; }
+.donut { position:relative; width:360px; height:360px; flex:none; }
+.donut svg { width:360px; height:360px; }
+.donut circle { fill:#030617; }
+.donut-label { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; font:400 32px 'Bebas Neue',sans-serif; }
+.donut-label strong { font:400 76px 'Bebas Neue',sans-serif; }
+.legend { flex:1; min-width:0; }
+.legend-head,.entry { display:grid; grid-template-columns:22px minmax(0,1fr) 65px 35px; align-items:center; gap:10px; }
+.legend-head { color:var(--accent); font:400 19px 'JetBrains Mono',monospace; padding-bottom:13px; }
+.entry { min-height:55px; font-size:28px; line-height:1.15; padding:9px 0; border-top:1px solid {{ accent }}44; }
+.entry .name { overflow-wrap:anywhere; }
+.dot { width:20px; height:20px; border-radius:50%; }
+.num { text-align:right; }
+.explain { margin:30px 0 0; font:400 19px/1.4 'JetBrains Mono',monospace; color:#c6cbdc; }
+.empty { padding:125px 50px; font-size:44px; text-align:center; }
+{% endblock %}
+{% block body %}<h2 class="meta-title">Meta del torneo</h2><section class="meta-panel panel">
+<p class="coverage">Mazzi registrati: {{ mazzi_noti }} su {{ totale_mazzi }}</p>
+{% if spicchi %}<div class="chart"><div class="donut"><svg viewBox="0 0 400 400" role="img" aria-label="Distribuzione dei mazzi"><title>Percentuali sul totale di {{ totale_mazzi }} partecipanti</title>{% for s in spicchi %}<path d="{{ s.percorso }}" fill="{{ s.colore }}"></path>{% endfor %}<circle cx="200" cy="200" r="110"></circle></svg><div class="donut-label"><strong>{{ totale_mazzi }}</strong>giocatori</div></div>
+<div class="legend"><div class="legend-head"><span></span><span>Archetipo</span><span class="num">%</span><span class="num">N°</span></div>{% for s in spicchi %}<div class="entry"><span class="dot" style="background:{{ s.colore }}"></span><span class="name">{{ s.nome }}</span><span class="num">{{ s.percento }}%</span><span class="num">{{ s.conta }}</span></div>{% endfor %}</div></div>
+<p class="explain">Percentuali sul totale dei partecipanti.{% if mazzi_noti < totale_mazzi %}<br>“Non dichiarato” indica un mazzo non registrato.{% endif %}</p>
+{% else %}<div class="empty">Dati dei mazzi non disponibili</div>{% endif %}</section>{% endblock %}
