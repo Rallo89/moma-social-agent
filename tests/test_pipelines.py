@@ -30,6 +30,7 @@ def fake_render(monkeypatch, tmp_path):
 
 def test_calendario_settimanale(cfg):
     """Il lunedi: una card di riepilogo, poi una card per evento."""
+    cfg.data["posts"]["weekly_calendar"].update(layout="legacy", image_template="evento.html.j2")
     draft = pipelines.weekly_calendar(cfg, dt.date(2026, 3, 7))
     assert draft.kind == "weekly_calendar"
     assert draft.meta["events"] == 5
@@ -54,6 +55,7 @@ def test_calendario_settimanale(cfg):
 
 def test_calendario_senza_riepilogo(cfg):
     cfg.data["posts"]["weekly_calendar"]["riepilogo"] = False
+    cfg.data["posts"]["weekly_calendar"].update(layout="legacy", image_template="evento.html.j2")
     draft = pipelines.weekly_calendar(cfg, dt.date(2026, 3, 7))
     assert len(draft.images) == 5
     assert RENDERED[0][0] == "evento.html.j2"
@@ -62,6 +64,7 @@ def test_calendario_senza_riepilogo(cfg):
 def test_calendario_non_supera_il_limite_della_graph_api(cfg):
     """Il riepilogo occupa una slide: le serate che restano sono una in meno."""
     cfg.data["posts"]["weekly_calendar"]["max_carousel_slides"] = 3
+    cfg.data["posts"]["weekly_calendar"].update(layout="legacy", image_template="evento.html.j2")
     draft = pipelines.weekly_calendar(cfg, dt.date(2026, 3, 7))
     assert len(draft.images) == 3          # riepilogo + 2 serate
     assert draft.meta["slide_tagliate"] == 3
@@ -73,6 +76,40 @@ def test_calendario_non_supera_il_limite_della_graph_api(cfg):
 def test_calendario_senza_eventi(cfg):
     with pytest.raises(NoDataError):
         pipelines.weekly_calendar(cfg, dt.date(2030, 1, 1))
+
+
+def test_calendario_schede_include_tutti_gli_eventi_e_colori(cfg):
+    draft = pipelines.weekly_calendar(cfg, dt.date(2026, 3, 7))
+    assert draft.meta["schede"] == 5
+    assert len(draft.images) == 2
+    cards = [card for _, context in RENDERED for card in context["schede"]]
+    assert len(cards) == 5
+    assert len({(c["data"], c["nome"]) for c in cards}) == 5
+    assert all(len(ctx["schede"]) <= 3 for _, ctx in RENDERED)
+    for card in cards:
+        assert card["colore"] == pipelines._story_illustration(cfg, card["formato"])["color"]
+    assert RENDERED[1][1]["numero_slide"] == 2
+    assert RENDERED[1][1]["totale_slide"] == 2
+
+
+def test_calendario_schede_blocca_il_taglio_di_eventi(cfg):
+    cfg.data["posts"]["weekly_calendar"]["max_carousel_slides"] = 1
+    with pytest.raises(SourceError, match="Nessun evento è stato omesso"):
+        pipelines.weekly_calendar(cfg, dt.date(2026, 3, 7))
+    assert not RENDERED
+
+
+def test_calendario_schede_settimana_a_cavallo_dell_anno(cfg, monkeypatch):
+    from moma_social.models import Event
+    cfg.data["posts"]["weekly_calendar"]["settimana"] = "corrente"
+    event = Event(date=dt.date(2027, 1, 1), title="Serata Commander", format="Commander")
+    monkeypatch.setattr(pipelines, "fetch_events", lambda *_: [event])
+    pipelines.weekly_calendar(cfg, dt.date(2026, 12, 30))
+    ctx = RENDERED[0][1]
+    assert ctx["anno"] == "2026/2027"
+    assert ctx["schede"][0]["numero"] == 1
+    assert ctx["schede"][0]["mese"] == "gen"
+    assert ctx["schede"][0]["titolo"] == "Serata Commander"
 
 
 def test_formato_dedotto_dal_calendario(cfg):

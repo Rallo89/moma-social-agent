@@ -1,4 +1,6 @@
-# Classifiche delle leghe — proposta da approvare
+# Classifiche delle leghe — layout approvato
+
+Proposta approvata dall'utente prima di passare al calendario settimanale.
 
 Reference esclusiva: seconda riga «Classifiche generali» della griglia
 `social-design/references/griglia.png`. Il fondo scuro con accenti per formato

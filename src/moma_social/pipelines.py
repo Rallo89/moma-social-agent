@@ -335,6 +335,60 @@ def _pagine_mensili(giorni: list[dict], righe_per_pagina: int) -> list[list[dict
 
 
 # ── 1. Calendario settimanale (lunedi 10:00) ────────────────────────────────
+def _weekly_cards(cfg: Config, events: list, start: dt.date, end: dt.date) -> PostDraft:
+    """Calendario a schede orizzontali, senza omettere gli eventi in eccesso."""
+    unici = _una_card_per_tappa(events)
+    pages = _pagine(unici, max(1, min(cfg.get("posts.weekly_calendar.events_per_slide", 3), 3)))
+    maximum = min(cfg.get("posts.weekly_calendar.max_carousel_slides", 10), 10)
+    if len(pages) > maximum:
+        raise SourceError("Calendario troppo lungo: impossibile includere tutti gli eventi "
+                          "nel limite del carosello. Nessun evento è stato omesso.")
+    mesi = ("", "gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic")
+
+    def card(event):
+        fields = _card_evento(cfg, event.date, event.format, event)
+        stage, final = stage_from_title(event.title)
+        return {
+            "id": event.tournament_id, "data": event.date.isoformat(),
+            "giorno": weekday_it(event.date)[:3], "numero": event.date.day,
+            "mese": mesi[event.date.month], "formato": event.format or "Evento",
+            "titolo": ("Finale" if final else f"Tappa {stage}" if stage else event.label),
+            "nome": event.title,
+            "colore": _story_illustration(cfg, event.format).get("color", "#ffffff"),
+            "ora": event.start_time or cfg.get("content.evento.ora_default", "") or "Da definire",
+            "sede": fields["voci"][1]["valore"],
+            "indirizzo": fields["voci"][1]["dettaglio"],
+            "quota": fields["voci"][2]["valore"] or "Da definire",
+        }
+
+    periodo = fmt_range(start, end)
+    images = [render(
+        cfg, cfg.require("posts.weekly_calendar.image_template"),
+        {"periodo": periodo,
+         "anno": str(end.year) if start.year == end.year else f"{start.year}/{end.year}",
+         "schede": [card(event) for event in page],
+         "background": cfg.get("posts.weekly_calendar.background", ""),
+         "link": _senza_schema(cfg.get("content.evento.link", "")),
+         "numero_slide": i + 1, "totale_slide": len(pages)},
+        _stamp(cfg, "calendario", start, f"{i + 1:02d}-settimana"),
+        size=post_size(cfg, "weekly_calendar"), scale=1,
+    ) for i, page in enumerate(pages)]
+    formats = formats_on(events)
+    caption = render_caption(
+        cfg, "weekly_calendar",
+        {"days": events_by_day(events), "periodo": periodo,
+         "events_count": len(events), "formats": formats,
+         "signup_url": _iscrizioni(cfg, events)},
+        extra_hashtags=[f"#{f.replace(' ', '')}" for f in formats],
+    )
+    return PostDraft(
+        kind="weekly_calendar", images=[str(path) for path in images], caption=caption,
+        meta={"week_start": start.isoformat(), "week_end": end.isoformat(),
+              "events": len(events), "schede": len(unici), "formats": formats,
+              "slide": len(images), "slide_tagliate": 0},
+    )
+
+
 def weekly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
     day = day or resolve_date("today", cfg.timezone)
     # Il post esce il sabato e annuncia la settimana che comincia: guarda
@@ -343,6 +397,8 @@ def weekly_calendar(cfg: Config, day: dt.date | None = None) -> PostDraft:
         day = day + dt.timedelta(days=7)
     start, end = week_bounds(day)
     events = fetch_events(cfg, start, end)
+    if cfg.get("posts.weekly_calendar.layout", "legacy") == "schede":
+        return _weekly_cards(cfg, events, start, end)
     days = events_by_day(events)
     formats = formats_on(events)
     periodo = fmt_range(start, end)

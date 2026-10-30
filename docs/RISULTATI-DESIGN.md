@@ -1,4 +1,4 @@
-# Risultati dei tornei — proposta Vaporwave
+# Risultati dei tornei — layout Vaporwave approvato
 
 Layout approvato dall'utente: logo Uno Critico in basso a sinistra e
 partecipanti a destra del nome del torneo nella fascia sopra la classifica.

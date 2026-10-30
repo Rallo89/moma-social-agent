@@ -299,16 +299,19 @@ target    = "templates/images/assets/sfondo_classifica.png"
 # diversi (un workflow rilanciato non produce un doppione).
 ledger = "state/published.jsonl"
 
-# Il lunedi esce un carosello: una card per evento della settimana, cosi'
-# ogni appuntamento resta leggibile invece di stare in una riga minuscola.
+# Calendario settimanale: tre schede orizzontali per slide, senza omettere eventi.
 [posts.weekly_calendar]
 # "prossima": lanciato il sabato, annuncia la settimana che comincia.
 # "corrente": racconta la settimana che contiene la data di lancio.
 settimana           = "prossima"
-tema                = "arancione"   # fondo arancione, testi scuri, etichette bianche
-image_template      = "evento.html.j2"
-# Prima slide: tutta la settimana in un colpo d'occhio, poi una card per
-# serata. `riepilogo = false` la toglie e lascia il solo carosello di card.
+tema                = "scuro"
+layout              = "schede"
+width               = 1080
+height              = 1350
+events_per_slide    = 3
+background          = "templates/images/assets/vaporwave-settimana.png"
+image_template      = "settimana_vaporwave.html.j2"
+# Le opzioni di riepilogo seguenti valgono soltanto con layout = "legacy".
 image_template_riepilogo = "settimana.html.j2"
 riepilogo           = true
 caption_template    = "weekly_calendar.txt.j2"

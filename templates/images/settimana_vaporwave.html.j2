@@ -1,0 +1,44 @@
+{% macro icon(kind) -%}<svg viewBox="0 0 48 48" aria-hidden="true">{% if kind == 'time' %}<circle cx="24" cy="24" r="19"/><path d="M24 12v13l9 5"/>{% elif kind == 'venue' %}<path d="M24 44S9 30 9 20a15 15 0 1 1 30 0C39 30 24 44 24 44Z"/><circle cx="24" cy="20" r="5"/>{% else %}<ellipse cx="24" cy="10" rx="17" ry="6"/><path d="M7 10v25c0 9 34 9 34 0V10M7 19c0 9 34 9 34 0M7 27c0 9 34 9 34 0"/>{% endif %}</svg>{%- endmacro %}
+<!doctype html><html lang="it"><head><meta charset="utf-8"><style>
+{% include '_fonts.css.j2' %}
+@page { size:1080px 1350px; margin:0; }
+* { box-sizing:border-box; }
+html,body { margin:0; width:1080px; height:1350px; }
+body { background:#030617; color:#fff; font-family:'Barlow Condensed',sans-serif; }
+.slide { position:relative; width:1080px; height:1350px; overflow:hidden; }
+.art { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.veil { position:absolute; inset:0; background:linear-gradient(180deg,#03061711,#03061744 26%,#030617bb 45%,#03061788 83%,#03061733); }
+.header { position:absolute; left:64px; right:64px; top:40px; }
+.logo { width:360px; height:110px; object-fit:contain; object-position:left center; }
+h1 { margin:32px 0 0; font:400 143px/.98 'Bebas Neue',sans-serif; text-transform:uppercase; text-shadow:0 0 15px #030617,2px 0 #a855f766; }
+.period { margin:14px 0 0; font:400 25px 'JetBrains Mono',monospace; letter-spacing:.08em; text-transform:uppercase; }
+.cards { position:absolute; left:64px; right:64px; top:390px; display:grid; gap:20px; }
+.card { min-height:235px; display:grid; grid-template-columns:100px 292px minmax(0,1fr); align-items:center; gap:22px; padding:24px; border:2px solid var(--tone); background:linear-gradient(120deg,#030617ee,#030617d9); box-shadow:0 0 20px color-mix(in srgb,var(--tone) 20%,transparent); }
+.date { text-align:center; font:400 25px 'JetBrains Mono',monospace; text-transform:uppercase; line-height:1.2; }
+.date strong { display:block; color:var(--tone); font:700 70px/1 'Barlow Condensed',sans-serif; }
+.event { padding:0 19px; border-left:1px solid color-mix(in srgb,var(--tone) 45%,transparent); border-right:1px solid color-mix(in srgb,var(--tone) 45%,transparent); min-width:0; }
+.format { display:inline-block; max-width:100%; color:var(--tone); border:1px solid var(--tone); padding:5px 9px; font:700 18px 'JetBrains Mono',monospace; letter-spacing:.1em; text-transform:uppercase; overflow-wrap:anywhere; }
+.title { margin:13px 0 0; font:400 59px/1 'Bebas Neue',sans-serif; text-transform:uppercase; overflow-wrap:anywhere; }
+.title.long { font-size:36px; }
+.info { display:grid; gap:12px; min-width:0; }
+.line { display:flex; align-items:center; gap:15px; font-size:31px; line-height:1.05; min-width:0; }
+.line svg { flex:none; width:29px; height:29px; fill:none; stroke:var(--tone); stroke-width:2.5; }
+.copy { min-width:0; overflow-wrap:anywhere; }
+.address { display:block; margin-top:5px; color:#c6cbdc; font-size:21px; line-height:1.1; }
+.foot { position:absolute; left:64px; right:64px; bottom:42px; display:flex; justify-content:space-between; align-items:center; gap:24px; }
+.cta { min-width:0; }
+.cta strong { font:400 44px 'Bebas Neue',sans-serif; color:#f472d0; display:block; }
+.link { font:400 17px 'JetBrains Mono',monospace; overflow-wrap:anywhere; }
+.partner { width:300px; height:100px; object-fit:contain; object-position:right center; }
+.page { position:absolute; bottom:17px; right:64px; font:400 18px 'JetBrains Mono',monospace; }
+</style></head><body><main class="slide">
+{% set art = background|asset %}{% if art %}<img class="art" src="{{ art }}" alt="">{% endif %}<div class="veil"></div>
+<header class="header"><img class="logo" src="{{ 'templates/images/assets/logo-modena-magic.png'|asset }}" alt="Modena Magic"><h1>La settimana</h1><p class="period">{{ periodo }} · {{ anno }}</p></header>
+<section class="cards" aria-label="Tornei della settimana">{% for e in schede %}<article class="card" style="--tone:{{ e.colore }}" aria-label="{{ e.nome }}">
+<div class="date">{{ e.giorno }}<strong>{{ e.numero }}</strong>{{ e.mese }}</div>
+<div class="event"><span class="format">{{ e.formato }}</span><h2 class="title {{ 'long' if e.titolo|length > 16 else '' }}">{{ e.titolo }}</h2></div>
+<div class="info"><div class="line">{{ icon('time') }}<span class="copy">{{ e.ora }}</span></div><div class="line">{{ icon('venue') }}<span class="copy">{{ e.sede or 'Sede da definire' }}{% if e.indirizzo %}<small class="address">{{ e.indirizzo }}</small>{% endif %}</span></div><div class="line">{{ icon('fee') }}<span class="copy">{{ e.quota }}</span></div></div>
+</article>{% endfor %}</section>
+<footer class="foot"><div class="cta"><strong>Iscriviti</strong><span class="link">{{ link }}</span></div><img class="partner" src="{{ 'templates/images/assets/unocritico.png'|asset }}" alt="Uno Critico"></footer>
+{% if totale_slide > 1 %}<span class="page">{{ numero_slide }}/{{ totale_slide }} »</span>{% endif %}
+</main></body></html>
