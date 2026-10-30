@@ -363,35 +363,50 @@ image_template = "storia_evento.html.j2"
 width = 1080
 height = 1920
 
-[posts.story_event.illustrations.modern]
-asset = "templates/images/assets/stories/modern.jpg"
-card = "Ragavan, Nimble Pilferer"
-artist = "Simon Dominic"
-focus = "52% 50%"
+# Palette dal tema scuro di Modena.Magic/src/app/globals.css.
 
 [posts.story_event.illustrations.pauper]
-asset = "templates/images/assets/stories/pauper.jpg"
-card = "Lightning Bolt"
-artist = "Christopher Moeller"
-focus = "48% 50%"
+asset = "templates/images/assets/stories/vaporwave/pauper.png"
+color = "#2dd4bf"
+subject = "Myr Enforcer"
+generated = true
 
-[posts.story_event.illustrations.limited]
-asset = "templates/images/assets/stories/limited.jpg"
-card = "Shivan Dragon"
-artist = "Donato Giancola"
-focus = "37% 50%"
+[posts.story_event.illustrations.modern]
+asset = "templates/images/assets/stories/vaporwave/modern.png"
+color = "#818cf8"
+subject = "Eldrazi"
+generated = true
+
+[posts.story_event.illustrations.premodern]
+asset = "templates/images/assets/stories/vaporwave/premodern.png"
+color = "#ffb77d"
+subject = "Phyrexian Dreadnought"
+generated = true
 
 [posts.story_event.illustrations.legacy]
-asset = "templates/images/assets/stories/legacy.jpg"
-card = "Force of Will"
-artist = "Donato Giancola"
-focus = "58% 50%"
+asset = "templates/images/assets/stories/vaporwave/legacy.png"
+color = "#c084fc"
+subject = "Griselbrand"
+generated = true
 
+[posts.story_event.illustrations.pioneer]
+asset = "templates/images/assets/stories/vaporwave/pioneer.png"
+color = "#ffb77d"
+subject = "Arclight Phoenix"
+generated = true
+
+[posts.story_event.illustrations.limited]
+asset = "templates/images/assets/stories/vaporwave/limited.png"
+color = "#81cfff"
+subject = "Drago"
+generated = true
+
+# Variante bianca scelta per i formati non mappati; non è un token del sito.
 [posts.story_event.illustrations.default]
-asset = "templates/images/assets/stories/general.jpg"
-card = "Sarkhan, Fireblood"
-artist = "Grzegorz Rutkowski"
-focus = "50% 50%"
+asset = "templates/images/assets/stories/vaporwave/default.png"
+color = "#ffffff"
+subject = "Colosso di Darksteel"
+generated = true
 
 [posts.leg_results]
 # Il template grafico dell'associazione e' quadrato e vale per entrambe le

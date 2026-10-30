@@ -25,6 +25,7 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoes
 from .config import Config
 from .errors import RenderError
 from .pngutil import crop_top_left
+from .storyutil import story_title
 from .timeutil import fmt_date, resolve_date, weekday_it
 
 # Nomi cercati nel PATH. msedge c'e' sempre su Windows ed e' Chromium:
@@ -98,6 +99,7 @@ def image_env(cfg: Config) -> Environment:
     env.filters["asset"] = lambda rel: _asset_data_uri(cfg.root, rel)
     env.filters["data"] = fmt_date
     env.filters["giorno"] = weekday_it
+    env.filters["story_title"] = story_title
     return env
 
 

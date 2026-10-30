@@ -2,11 +2,24 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from PIL import Image
 
 from .errors import RenderError
+
+
+def story_title(title: str, fmt: str) -> dict[str, str]:
+    """Separa solo il titolo stagionale riconosciuto; conserva ogni altro nome."""
+    match = re.fullmatch(
+        rf"{re.escape(fmt)}\s+((?:Fall|Spring|Summer|Winter|Autunno|Primavera|Estate|Inverno)"
+        r"\s+\d{4})\s*[-–—:]?\s*(Tappa\s+\d+.*)",
+        title.strip(), re.IGNORECASE,
+    ) if fmt else None
+    if match:
+        return {"name": fmt, "season": match[1], "stage": match[2]}
+    return {"name": title, "season": "", "stage": ""}
 
 
 def story_jpeg(png: Path, width: int = 1080, height: int = 1920) -> Path:

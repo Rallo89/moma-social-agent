@@ -15,7 +15,27 @@ from moma_social.models import Event, PostDraft
 from moma_social.publish import dedupe_key, publish_draft
 from moma_social.render import build_html, render
 from moma_social.repos import fetch_event_by_id
-from moma_social.storyutil import story_jpeg
+from moma_social.storyutil import story_jpeg, story_title
+
+
+def test_titolo_stagionale_separa_la_tappa_senza_perdere_il_suffisso():
+    assert story_title("Pauper Fall 2026 — Tappa 5 - Recupero", "Pauper") == {
+        "name": "Pauper", "season": "Fall 2026", "stage": "Tappa 5 - Recupero",
+    }
+
+
+@pytest.mark.parametrize("title", ["Torneo speciale di Halloween", "Modern Fall",
+                                  "Premodern Fall 2026 — Finale"])
+def test_titoli_non_standard_restano_integrali(title):
+    assert story_title(title, "Premodern")["name"] == title
+
+
+@pytest.mark.parametrize("fmt", ["Commander", "Standard", "Formato nuovo"])
+def test_altri_formati_usano_colosso_bianco_con_asset_locale(cfg, fmt):
+    artwork = pipelines._story_illustration(cfg, fmt)
+    assert artwork["subject"] == "Colosso di Darksteel"
+    assert artwork["color"] == "#ffffff"
+    assert (cfg.root / artwork["asset"]).is_file()
 
 
 def _event(day, ident, title="Modern Fall"):
@@ -56,7 +76,7 @@ def test_due_storie_per_due_giorni_e_tornei_distinti(cfg, monkeypatch, tmp_path)
     assert contexts[1][1]["quota"] == "10 €"
     assert contexts[0][1]["data_breve"] == "07/10/2026"
     assert contexts[0][1]["ora"] == "21:00"
-    assert contexts[0][1]["illustrazione"]["artist"] == "Simon Dominic"
+    assert contexts[0][1]["illustrazione"]["subject"] == "Eldrazi"
 
 
 def test_id_mancante_salta_solo_quel_torneo(cfg, monkeypatch, tmp_path):
@@ -161,10 +181,10 @@ def test_storia_per_id_fuori_dai_due_giorni(cfg, monkeypatch, tmp_path):
     assert context["fase"] == "evento"
     assert "12 novembre" in context["quando"].lower()
     assert "qr" not in context
-    assert context["illustrazione"]["card"] == "Ragavan, Nimble Pilferer"
+    assert context["illustrazione"]["subject"] == "Eldrazi"
 
 
-def test_storia_senza_quota_usa_illustrazione_generale(cfg, monkeypatch, tmp_path):
+def test_storia_senza_quota_usa_illustrazione_premodern(cfg, monkeypatch, tmp_path):
     ident = "92d6beb5-a1e3-44ad-9a65-7c8e982d7e44"
     event = _event(dt.date(2026, 10, 7), ident)
     event.format = "Premodern"
@@ -176,7 +196,7 @@ def test_storia_senza_quota_usa_illustrazione_generale(cfg, monkeypatch, tmp_pat
     monkeypatch.setattr(pipelines, "story_jpeg", lambda path, *_: path.with_suffix(".jpg"))
     pipelines.story_events_batch(cfg, tournament_id=ident)
     assert context["quota"] == ""
-    assert context["illustrazione"]["card"] == "Sarkhan, Fireblood"
+    assert context["illustrazione"]["subject"] == "Phyrexian Dreadnought"
 
 
 def test_cli_rifiuta_id_con_data_o_formato(cfg, monkeypatch):
@@ -223,7 +243,7 @@ def test_template_storia_reale_9_16(cfg):
         "quando": "Mercoledì 14 ottobre · 21:00", "dove": "Uno Critico",
         "data_breve": "14/10/2026", "giorno": "Mercoledì", "ora": "21:00",
         "quota": "10 €",
-        "illustrazione": cfg.data["posts"]["story_event"]["illustrations"]["default"],
+        "illustrazione": cfg.data["posts"]["story_event"]["illustrations"]["premodern"],
     }
     html = build_html(cfg, "storia_evento.html.j2", context)
     assert 'alt="Modena Magic"' in html
@@ -233,9 +253,11 @@ def test_template_storia_reale_9_16(cfg):
     assert 'class="art"' not in html
     assert "Link in bio" in html
     assert html.count('class="card-icon"') == 4
-    assert '<span class="date-line">14/10/2026</span>' in html
-    assert '<span class="date-meta">Mercoledì 21:00</span>' in html
-    assert "Grzegorz Rutkowski" in html
+    assert 'class="value date-line">14/10/2026</span>' in html
+    assert 'class="value">21:00</span>' in html
+    assert "Phyrexian Dreadnought" in html
+    assert "#ffb77d" in html
+    assert "Grzegorz Rutkowski" not in html
     png = render(cfg, "storia_evento.html.j2", context, "anteprima-storia",
                  size=(1080, 1920), scale=1)
     jpg = story_jpeg(png)
