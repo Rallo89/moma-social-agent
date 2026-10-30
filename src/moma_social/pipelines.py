@@ -528,10 +528,19 @@ def standings_update(cfg: Config, day: dt.date | None = None) -> PostDraft:
              "tema": cfg.get("posts.standings_update.tema", "chiaro"),
              "link": _senza_schema(cfg.get("content.evento.link", "")),
              "invito": cfg.get("content.evento.invito", "Iscriviti"),
-             "background": _background(cfg, "standings_update"), "density": ""},
+             "background": _background(cfg, "standings_update"), "density": "",
+             "illustrazione": _story_illustration(cfg, classifica.format),
+             "formato": classifica.format,
+             "nome_lega": classifica.season or classifica.format,
+             "stagione": (classifica.season[len(classifica.format):].strip()
+                          if classifica.season.lower().startswith(classifica.format.lower() + " ")
+                          else classifica.season),
+             "data_aggiornamento": f"{fmt_date(day)} {day.year}",
+             "numero_slide": indice + 1, "totale_slide": len(in_post)},
             _stamp(cfg, "classifiche", day,
                    f"{indice + 1:02d}-{classifica.format.lower().replace(' ', '-')}"),
             size=size,
+            scale=1,
         )
         for indice, classifica in enumerate(in_post)
     ]

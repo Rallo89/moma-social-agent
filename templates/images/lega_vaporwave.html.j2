@@ -1,0 +1,39 @@
+{% set accent = illustrazione.get('color', '#ffffff') %}
+{% set art = illustrazione.get('asset', '')|asset %}
+<!doctype html><html lang="it"><head><meta charset="utf-8"><style>
+{% include '_fonts.css.j2' %}
+@page { size:1080px 1350px; margin:0; }
+* { box-sizing:border-box; }
+html,body { margin:0; width:1080px; height:1350px; }
+body { background:#030617; color:#fff; font-family:'Barlow Condensed',sans-serif; }
+.slide { --accent:{{ accent }}; position:relative; width:1080px; height:1350px; overflow:hidden; }
+.art { position:absolute; top:-160px; left:0; width:1080px; height:1920px; object-fit:cover; }
+.veil { position:absolute; inset:0; background:linear-gradient(180deg,#03061722 0%,#03061744 22%,#030617d9 37%,#030617f5 51%,#030617cc 100%); }
+.grid { position:absolute; left:-50%; right:-50%; bottom:-270px; height:500px; background-image:linear-gradient({{ accent }}22 1px,transparent 1px),linear-gradient(90deg,{{ accent }}22 1px,transparent 1px); background-size:100px 60px; transform:perspective(400px) rotateX(50deg); }
+.header { position:absolute; left:64px; right:64px; top:44px; }
+.logo { width:330px; height:100px; object-fit:contain; object-position:left center; display:block; }
+.badge { display:inline-block; margin-top:89px; padding:7px 23px; border:2px solid var(--accent); background:#03061799; font:700 25px 'JetBrains Mono',monospace; letter-spacing:.2em; text-transform:uppercase; color:var(--accent); box-shadow:0 0 18px {{ accent }}33; }
+h1 { margin:12px 0 14px; font:700 italic {{ 99 if stagione|length < 20 else 67 }}px/1.05 'Barlow Condensed',sans-serif; text-transform:uppercase; color:var(--accent); letter-spacing:-.025em; text-shadow:0 2px 18px #030617; overflow-wrap:anywhere; }
+.subtitle { margin:0; font:400 24px 'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.15em; }
+.standings { position:absolute; left:64px; right:64px; top:475px; padding:12px 24px 18px; border:2px solid {{ accent }}bb; background:linear-gradient(140deg,{{ accent }}09,#030617f5); box-shadow:0 0 24px {{ accent }}22; }
+table { width:100%; border-collapse:collapse; table-layout:fixed; }
+col.rank { width:65px; } col.points { width:110px; } col.played { width:105px; }
+th { height:49px; font:400 20px 'JetBrains Mono',monospace; color:var(--accent); text-transform:uppercase; text-align:left; }
+td { height:78px; border-top:1px solid {{ accent }}44; padding:9px 0; font-size:41px; line-height:1.1; vertical-align:middle; }
+td.player { overflow-wrap:anywhere; padding-right:16px; }
+td.rank,td.points { color:var(--accent); font-weight:700; }
+td.played { color:#dce1f0; }
+th.points,td.points,th.played,td.played { text-align:right; }
+.foot { position:absolute; left:64px; right:64px; bottom:44px; display:flex; justify-content:space-between; align-items:center; gap:20px; }
+.partner { width:300px; height:90px; object-fit:contain; object-position:left center; }
+.updated { text-align:right; font:600 24px/1.3 'Barlow Condensed',sans-serif; color:#c6cbdc; }
+.page { display:block; margin-top:5px; font:400 24px 'JetBrains Mono',monospace; color:#fff; }
+.page span { color:var(--accent); font-size:35px; vertical-align:-2px; margin-left:12px; }
+</style></head><body><main class="slide">
+{% if art %}<img class="art" src="{{ art }}" alt="">{% endif %}<div class="veil"></div><div class="grid"></div>
+<header class="header"><img class="logo" src="{{ 'templates/images/assets/logo-modena-magic.png'|asset }}" alt="Modena Magic"><span class="badge">{{ formato }}</span><h1>{{ stagione or nome_lega }}</h1><p class="subtitle">Classifica generale · Top {{ righe|length }}</p></header>
+<section class="standings"><table aria-label="{{ nome_lega }} — classifica di lega"><colgroup><col class="rank"><col><col class="points"><col class="played"></colgroup><thead><tr><th>#</th><th>Giocatore</th><th class="points">Punti</th><th class="played">Tappe</th></tr></thead><tbody>
+{% for r in righe %}<tr><td class="rank">{{ r.rank }}</td><td class="player">{{ r.player }}</td><td class="points">{{ r.points }}</td><td class="played">{{ r.events_played if r.events_played != '' else '—' }}</td></tr>{% endfor %}
+</tbody></table></section>
+<footer class="foot"><img class="partner" src="{{ 'templates/images/assets/unocritico.png'|asset }}" alt="Uno Critico"><div class="updated">Aggiornamento {{ data_aggiornamento }}<span class="page">{{ numero_slide }}/{{ totale_slide }}<span>»</span></span></div></footer>
+</main></body></html>

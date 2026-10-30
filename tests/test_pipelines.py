@@ -710,7 +710,11 @@ def test_una_slide_per_lega_con_la_top_otto(cfg, tmp_path):
     # leghe che interessano a meno gente.
     assert RENDERED[0][1]["titolo"] == "Pauper Fall 2026"
     assert len(RENDERED[0][1]["righe"]) == 8
-    assert RENDERED[0][1]["tema"] == "verde"
+    assert RENDERED[0][1]["tema"] == "scuro"
+    assert RENDERED[0][0] == "lega_vaporwave.html.j2"
+    assert RENDERED[0][1]["stagione"] == "Fall 2026"
+    assert RENDERED[0][1]["illustrazione"]["subject"] == "Myr Enforcer"
+    assert [r.rank for r in RENDERED[0][1]["righe"]] == list(range(1, 9))
 
 
 def test_le_leghe_chiuse_restano_fuori(cfg, tmp_path):

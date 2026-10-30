@@ -1,5 +1,8 @@
 # Risultati dei tornei — proposta Vaporwave
 
+Layout approvato dall'utente: logo Uno Critico in basso a sinistra e
+partecipanti a destra del nome del torneo nella fascia sopra la classifica.
+
 Reference: carosello multipagina «Infografica Neon Torneo Pauper Modena Magic».
 La classifica di lega nella parte destra di quella reference è esclusa.
 

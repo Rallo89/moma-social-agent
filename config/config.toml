@@ -339,13 +339,14 @@ api_version = "v26.0"
 page_id = "${FB_PAGE_ID}"
 access_token = "${FB_PAGE_ACCESS_TOKEN}"
 
-# Lunedi: una slide per lega con la top 8, a colori invertiti per staccarsi
-# dagli altri post nel feed.
+# Lunedi: top 8 delle leghe aperte, reference seconda riga della griglia.
 [posts.standings_update]
-image_template      = "classifica.html.j2"
+image_template      = "lega_vaporwave.html.j2"
+width = 1080
+height = 1350
 caption_template    = "standings_update.txt.j2"
 hashtags            = ["#classifica", "#lega"]
-tema                = "verde"
+tema                = "scuro"
 top_n               = 8
 max_carousel_slides = 10
 # Stati di `leagues.status` da pubblicare. Il database ne usa due, "aperto" e
