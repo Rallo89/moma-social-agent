@@ -10,21 +10,24 @@ body { background:#030617; color:#fff; font-family:'Barlow Condensed',sans-serif
 .veil { position:absolute; inset:0; background:linear-gradient(180deg,#03061711,#03061744 26%,#030617bb 45%,#03061788 83%,#03061733); }
 .header { position:absolute; left:64px; right:64px; top:40px; }
 .logo { width:360px; height:110px; object-fit:contain; object-position:left center; }
-h1 { margin:32px 0 0; font:400 143px/.98 'Bebas Neue',sans-serif; text-transform:uppercase; text-shadow:0 0 15px #030617,2px 0 #a855f766; }
+h1 { margin:80px 0 0; font:400 143px/.98 'Bebas Neue',sans-serif; text-transform:uppercase; text-shadow:0 0 15px #030617,2px 0 #a855f766; }
 .period { margin:14px 0 0; font:400 25px 'JetBrains Mono',monospace; letter-spacing:.08em; text-transform:uppercase; }
-.cards { position:absolute; left:64px; right:64px; top:390px; display:grid; gap:20px; }
-.card { min-height:235px; display:grid; grid-template-columns:100px 292px minmax(0,1fr); align-items:center; gap:22px; padding:24px; border:2px solid var(--tone); background:linear-gradient(120deg,#030617ee,#030617d9); box-shadow:0 0 20px color-mix(in srgb,var(--tone) 20%,transparent); }
-.date { text-align:center; font:400 25px 'JetBrains Mono',monospace; text-transform:uppercase; line-height:1.2; }
-.date strong { display:block; color:var(--tone); font:700 70px/1 'Barlow Condensed',sans-serif; }
-.event { padding:0 19px; border-left:1px solid color-mix(in srgb,var(--tone) 45%,transparent); border-right:1px solid color-mix(in srgb,var(--tone) 45%,transparent); min-width:0; }
-.format { display:inline-block; max-width:100%; color:var(--tone); border:1px solid var(--tone); padding:5px 9px; font:700 18px 'JetBrains Mono',monospace; letter-spacing:.1em; text-transform:uppercase; overflow-wrap:anywhere; }
-.title { margin:13px 0 0; font:400 59px/1 'Bebas Neue',sans-serif; text-transform:uppercase; overflow-wrap:anywhere; }
-.title.long { font-size:36px; }
-.info { display:grid; gap:12px; min-width:0; }
-.line { display:flex; align-items:center; gap:15px; font-size:31px; line-height:1.05; min-width:0; }
-.line svg { flex:none; width:29px; height:29px; fill:none; stroke:var(--tone); stroke-width:2.5; }
-.copy { min-width:0; overflow-wrap:anywhere; }
-.address { display:block; margin-top:5px; color:#c6cbdc; font-size:21px; line-height:1.1; }
+.cards { position:absolute; left:64px; right:64px; top:448px; display:grid; gap:20px; }
+.card { position:relative; min-height:224px; display:grid; grid-template-columns:110px 360px minmax(0,1fr); align-items:center; gap:28px; padding:24px 28px; }
+.card > :not(.frame) { position:relative; z-index:1; }
+.frame { position:absolute; inset:0; width:100%; height:100%; overflow:visible; filter:drop-shadow(0 0 5px color-mix(in srgb,var(--tone) 85%,transparent)) drop-shadow(0 0 18px color-mix(in srgb,var(--tone) 45%,transparent)); }
+.frame path { fill:#030617ed; stroke:var(--tone); stroke-width:3; }
+.date { text-align:center; font:400 25px 'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.16em; line-height:1.2; }
+.date strong { display:block; letter-spacing:0; color:var(--tone); font:400 76px/1 'Bebas Neue',sans-serif; }
+.event { padding:8px 36px; border-left:1px solid color-mix(in srgb,var(--tone) 45%,transparent); border-right:1px solid color-mix(in srgb,var(--tone) 45%,transparent); min-width:0; }
+.format { display:inline-block; max-width:100%; color:var(--tone); border:1px solid var(--tone); padding:5px 14px; font:400 25px 'JetBrains Mono',monospace; letter-spacing:.1em; text-transform:uppercase; overflow-wrap:anywhere; }
+.title { margin:18px 0 0; font:400 72px/1 'Bebas Neue',sans-serif; text-transform:uppercase; overflow-wrap:anywhere; }
+.title.long { font-size:38px; }
+.info { display:grid; gap:13px; min-width:0; padding-left:28px; }
+.line { display:flex; align-items:center; gap:25px; font:400 34px/1.05 'Barlow Condensed Regular',sans-serif; letter-spacing:.025em; min-width:0; }
+.line svg { flex:none; width:38px; height:38px; fill:none; stroke:var(--tone); stroke-width:2.5; }
+.copy { min-width:0; overflow-wrap:anywhere; text-transform:uppercase; }
+.address { display:block; margin-top:5px; color:#c6cbdc; max-width:235px; font:400 18px/1.15 'Barlow Condensed Regular',sans-serif; letter-spacing:.12em; text-transform:uppercase; }
 .foot { position:absolute; left:64px; right:64px; bottom:42px; display:flex; justify-content:space-between; align-items:center; gap:24px; }
 .cta { min-width:0; }
 .cta strong { font:400 44px 'Bebas Neue',sans-serif; color:#f472d0; display:block; }
@@ -35,6 +38,7 @@ h1 { margin:32px 0 0; font:400 143px/.98 'Bebas Neue',sans-serif; text-transform
 {% set art = background|asset %}{% if art %}<img class="art" src="{{ art }}" alt="">{% endif %}<div class="veil"></div>
 <header class="header"><img class="logo" src="{{ 'templates/images/assets/logo-modena-magic.png'|asset }}" alt="Modena Magic"><h1>La settimana</h1><p class="period">{{ periodo }} · {{ anno }}</p></header>
 <section class="cards" aria-label="Tornei della settimana">{% for e in schede %}<article class="card" style="--tone:{{ e.colore }}" aria-label="{{ e.nome }}">
+<svg class="frame" viewBox="0 0 952 224" preserveAspectRatio="none" aria-hidden="true"><path d="M16 2H936L950 16V208L936 222H16L2 208V16Z" vector-effect="non-scaling-stroke"></path></svg>
 <div class="date">{{ e.giorno }}<strong>{{ e.numero }}</strong>{{ e.mese }}</div>
 <div class="event"><span class="format">{{ e.formato }}</span><h2 class="title {{ 'long' if e.titolo|length > 16 else '' }}">{{ e.titolo }}</h2></div>
 <div class="info"><div class="line">{{ icon('time') }}<span class="copy">{{ e.ora }}</span></div><div class="line">{{ icon('venue') }}<span class="copy">{{ e.sede or 'Sede da definire' }}{% if e.indirizzo %}<small class="address">{{ e.indirizzo }}</small>{% endif %}</span></div><div class="line">{{ icon('fee') }}<span class="copy">{{ e.quota }}</span></div></div>

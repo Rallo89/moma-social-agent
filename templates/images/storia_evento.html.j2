@@ -1,7 +1,6 @@
 {% set artwork = illustrazione|default({}) %}
 {% set art = artwork.get('asset', '')|asset %}
 {% set accent = artwork.get('color', '#cbd5e1') %}
-{% set heading = titolo|story_title(formato) %}
 {% macro icon(kind) -%}
 <svg class="card-icon" viewBox="0 0 48 48" aria-hidden="true">
 {% if kind == 'date' %}<rect x="5" y="9" width="38" height="34" rx="3"/><path d="M14 3v12M34 3v12M5 20h38M14 28h7M28 28h6M14 35h7"/>
@@ -22,21 +21,30 @@ body { color:#fff; background:#030617; font-family:'Barlow Condensed',sans-serif
 .content { position:absolute; inset:205px 78px 260px; display:flex; flex-direction:column; }
 .header { display:flex; align-items:center; justify-content:space-between; }
 .logo { width:400px; height:144px; object-fit:contain; object-position:left center; }
-.hero { margin-top:236px; flex:none; }
+.hero { position:absolute; left:0; right:0; top:380px; }
 .format { display:inline-block; padding:9px 24px; border:2px solid var(--accent); color:var(--accent); font:700 28px 'JetBrains Mono',monospace; letter-spacing:.2em; text-transform:uppercase; box-shadow:0 0 20px {{ accent }}30; background:#03061799; }
 .title { font:400 110px/.98 'Bebas Neue',sans-serif; text-transform:uppercase; margin:24px 0 0; overflow-wrap:anywhere; text-shadow:0 3px 20px #000; }
-.title.medium { font-size:84px; } .title.long { font-size:64px; }
-.season { margin:4px 0 0; color:var(--accent); font:700 italic 91px/1.05 'Barlow Condensed',sans-serif; text-transform:uppercase; letter-spacing:-.035em; }
-.stage { margin:15px 0 0; font:400 28px 'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.16em; }
-.rule { margin:25px 0 30px; display:flex; gap:20px; align-items:center; font:400 21px 'JetBrains Mono',monospace; letter-spacing:.12em; text-transform:uppercase; color:#d1d5e5; }
+.rule { position:absolute; left:0; right:0; top:220px; margin:0; display:flex; gap:20px; align-items:center; font:400 21px 'JetBrains Mono',monospace; letter-spacing:.12em; text-transform:uppercase; color:#d1d5e5; }
 .rule::after { content:''; flex:1; height:2px; background:var(--accent); }
-.details { display:grid; flex:none; gap:21px; padding:27px 30px; border:1px solid {{ accent }}99; background:linear-gradient(120deg,{{ accent }}0c,#030617dc); clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px); }
-.detail { display:flex; align-items:center; gap:24px; min-width:0; }
-.card-icon { flex:none; width:43px; height:43px; fill:none; stroke:var(--accent); stroke-width:2.3; }
+.details { position:absolute; left:0; right:0; top:720px; height:590px; }
+.detail { display:flex; align-items:center; min-width:0; }
+.card-icon { flex:none; fill:none; stroke:var(--accent); stroke-width:2.3; }
 .copy { min-width:0; }
-.label { display:block; font:400 18px 'JetBrains Mono',monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:5px; }
-.value { display:block; font-size:39px; line-height:1.1; overflow-wrap:anywhere; }
-.date-line { display:block; }
+.label { display:block; font:400 30px 'JetBrains Mono',monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:12px; }
+.value { display:block; font-size:66px; line-height:1.1; overflow-wrap:anywhere; }
+.date-card { position:absolute; top:0; left:0; right:0; height:220px; padding:26px 24px; gap:54px; background:#080b1cdd; }
+.date-card .card-icon { width:108px; height:108px; }
+.date-card .label { font-size:44px; }
+.date-card .value { font-size:{{ 92 if data|default(data_breve|default(quando))|length <= 22 else 69 }}px; }
+.fee-card { position:absolute; top:230px; left:32px; width:495px; height:150px; gap:36px; }
+.fee-card .card-icon { width:108px; height:108px; }
+.time-card { position:absolute; top:230px; right:0; width:324px; height:150px; gap:28px; }
+.time-card .card-icon { width:108px; height:108px; }
+.venue-row { position:absolute; top:442px; left:14px; right:0; border-top:1px solid #808594; padding-top:32px; }
+.venue-card { margin-left:auto; width:306px; gap:28px; }
+.venue-card .card-icon { width:56px; height:56px; }
+.venue-card .label { font-size:26px; margin-bottom:10px; }
+.venue-card .value { font-size:{{ 50 if dove|length < 18 else 34 if dove|length < 36 else 24 }}px; }
 .bottom { display:flex; align-items:center; justify-content:space-between; margin-top:auto; padding-top:34px; gap:24px; }
 .cta { border-left:3px solid var(--accent); padding-left:20px; }
 .cta strong { display:block; font:400 49px 'Bebas Neue',sans-serif; color:var(--accent); letter-spacing:.04em; }
@@ -48,14 +56,13 @@ body { color:#fff; background:#030617; font-family:'Barlow Condensed',sans-serif
 <div class="veil"></div><div class="grid"></div><div class="content">
 <header class="header"><img class="logo" src="{{ 'templates/images/assets/logo-modena-magic.png'|asset }}" alt="Modena Magic"></header>
 <section class="hero"><span class="format">{{ formato }}</span>
-<h1 class="title {{ 'long' if heading.name|length > 52 else 'medium' if heading.name|length > 30 else '' }}">{{ heading.name }}</h1>
-{% if heading.season %}<p class="season">{{ heading.season }}</p><p class="stage">{{ heading.stage }}</p>{% endif %}
+<h1 class="title" style="font-size:{{ titolo|story_title_size }}px">{{ titolo }}</h1>
 <div class="rule">{% if fase|default('') == 'oggi' %}Si gioca oggi{% elif fase|default('') == 'domani' %}Si gioca domani{% else %}Prossimo appuntamento{% endif %}</div></section>
 <section class="details">
-<div class="detail">{{ icon('date') }}<div class="copy"><span class="label">Data</span><span class="value date-line">{{ data|default(data_breve|default(quando)) }}</span></div></div>
-<div class="detail">{{ icon('time') }}<div class="copy"><span class="label">Inizio</span><span class="value">{{ ora|default('') }}</span></div></div>
-{% if dove %}<div class="detail">{{ icon('venue') }}<div class="copy"><span class="label">Dove</span><span class="value">{{ dove }}</span></div></div>{% endif %}
-{% if quota|default('') %}<div class="detail">{{ icon('fee') }}<div class="copy"><span class="label">Iscrizione</span><span class="value">{{ quota }}</span></div></div>{% endif %}</section>
+<div class="detail date-card">{{ icon('date') }}<div class="copy"><span class="label">Data</span><span class="value date-line">{{ data|default(data_breve|default(quando)) }}</span></div></div>
+{% if quota|default('') %}<div class="detail fee-card">{{ icon('fee') }}<div class="copy"><span class="label">Iscrizione</span><span class="value">{{ quota }}</span></div></div>{% endif %}
+<div class="detail time-card">{{ icon('time') }}<div class="copy"><span class="label">Inizio</span><span class="value">{{ ora|default('') }}</span></div></div>
+{% if dove %}<div class="venue-row"><div class="detail venue-card">{{ icon('venue') }}<div class="copy"><span class="label">Dove</span><span class="value">{{ dove }}</span></div></div></div>{% endif %}</section>
 <footer class="bottom"><div class="cta"><strong>Iscriviti</strong><span>Link in bio ↗</span></div><img class="partner" src="{{ 'templates/images/assets/unocritico.png'|asset }}" alt="Uno Critico"></footer></div>
 <p class="notice">Contenuto fan non ufficiale, non approvato né sponsorizzato da Wizards of the Coast. Magic: The Gathering e relativi personaggi appartengono a Wizards of the Coast.</p>
 </main></body></html>

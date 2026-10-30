@@ -2,6 +2,12 @@
 
 Proposta approvata dall'utente prima di passare al calendario settimanale.
 
+Revisione della scritta stagionale: font Cyber Brush fornito dall'utente
+nell'archivio `cyber_brush_2.zip`, incorporato localmente come
+`templates/images/fonts/CyberBrush.ttf`. Mantiene l'inclinazione naturale,
+senza deformazioni artificiali, con bagliore neon nel colore del formato.
+Sostituisce la precedente approssimazione Road Rage su tutte le varianti.
+
 Reference esclusiva: seconda riga «Classifiche generali» della griglia
 `social-design/references/griglia.png`. Il fondo scuro con accenti per formato
 sostituisce la precedente indicazione verde del documento iniziale.

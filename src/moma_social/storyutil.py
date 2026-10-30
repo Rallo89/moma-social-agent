@@ -5,9 +5,18 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageFont
 
 from .errors import RenderError
+
+
+def story_title_size(title: str) -> int:
+    """Adatta il titolo alla riga della reference senza occupare l'area dati."""
+    font_path = (Path(__file__).resolve().parents[2] / "templates" / "images"
+                 / "fonts" / "BebasNeue-Regular.ttf")
+    font = ImageFont.truetype(str(font_path), 110)
+    width = font.getlength(title.upper())
+    return max(40, min(110, int(110 * 920 / max(width, 1))))
 
 
 def story_title(title: str, fmt: str) -> dict[str, str]:

@@ -5,6 +5,13 @@ Reference esclusiva: calendario a destra dell'immagine con due post,
 non viene utilizzata. Layout 1080 × 1350 con titolo «La settimana», intervallo
 di date, schede orizzontali e footer con iscrizioni e logo Uno Critico.
 
+Revisione di fedeltà alla reference: dettagli in Barlow Condensed Regular
+(font locale con famiglia separata, senza cambiare le Stories), maiuscole
+e indirizzo spaziato; titolo della tappa più grande, colonne e separatori
+spostati secondo la reference. Cornici SVG con quattro angoli smussati,
+contorno luminoso e doppio bagliore esterno. Tre schede con altezza minima di 224 px, distanti
+20 px, a partire da y=448 sul canvas 1080 × 1350.
+
 ## Dati e comportamento
 
 - Tre eventi per slide, con continuazione numerata per le settimane più ricche.

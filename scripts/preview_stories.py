@@ -21,8 +21,8 @@ def main():
         context = {
             "fase": "evento", "formato": fmt,
             "titolo": f"{fmt} Fall 2026 — Tappa 5",
-            "data": "Venerdì 30 ottobre 2026", "quando": "Venerdì 30 ottobre 2026 · 21:00",
-            "ora": "21:00", "dove": "Uno Critico · Via Cesare Balbo, 88/B · Modena",
+            "data": "Venerdì 30 ottobre", "quando": "Venerdì 30 ottobre 2026 · 21:00",
+            "ora": "21:00", "dove": "Uno Critico",
             "quota": "10 €",
             "illustrazione": cfg.section("posts.story_event.illustrations").get(
                 fmt.lower(), cfg.section("posts.story_event.illustrations.default")),

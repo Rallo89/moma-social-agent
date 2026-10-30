@@ -1,5 +1,17 @@
 # Stories Vaporwave — proposta da approvare
 
+## Revisione della disposizione informazioni
+
+La reference `social-design/references/stories-info-layout.png` aggiorna
+disposizione e dimensioni dei dati per tutte le varianti, compresa quella bianca.
+Su canvas 1080 × 1920: data a tutta larghezza da y=925 (testo 92 px,
+etichetta 44 px e icona 108 px), iscrizione a sinistra e orario a destra
+da y=1155 (valori 66 px), separatore a y=1367 e sede in basso a destra.
+I loghi e il footer approvati restano nelle loro posizioni.
+Il titolo mantiene integralmente il nome del torneo, adattando il corpo
+alla larghezza disponibile con le metriche del font locale, senza occupare
+la zona dati. I titoli stagionali non sono più separati su tre righe.
+
 Riferimento: prima riga **Tornei (annunci)** di `social-design/references/griglia.png`.
 Le altre righe e le altre reference non guidano il layout Stories.
 
